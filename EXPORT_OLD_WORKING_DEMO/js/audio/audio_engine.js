@@ -1,0 +1,239 @@
+/* Версия ассетов — при разработке меняется вручную или из query-строки.
+   В продакшене можно зафиксировать, например, по дате сборки. */
+const ASSET_VERSION =
+  new URLSearchParams(location.search).get('av') || '';   // ?av=2 → новая версия
+
+function bust(url) {
+  if (!ASSET_VERSION) return url;
+  const sep = url.includes('?') ? '&' : '?';
+  return `${url}${sep}v=${ASSET_VERSION}`;
+}
+
+/* ============================================================
+   Аудио-ядро: музыка (плейлист с fade) + SFX.
+   Все пути к файлам — заглушки. Пока файлов нет, движок молчит.
+   ============================================================ */
+
+export const SFX_LIST = {
+  // интерфейс — клики
+  tap:            'assets/sound/sfx/tap.mp3',           // внешние кнопки меню
+  tap_up:         'assets/sound/sfx/tap_up.mp3',        // кнопки внутри окон
+  button_click:   'assets/sound/sfx/button_click.mp3',  // кнопка игрока ПАС/БЕРУ
+  switch:         'assets/sound/sfx/switch.mp3',        // переключатели
+  buy:            'assets/sound/sfx/buy.mp3',           // покупка
+  cash:           'assets/sound/sfx/cash.mp3',          // награда за квест
+
+  // карты
+  card_selection: 'assets/sound/sfx/card_selection.mp3',// выбор карты в руке
+  card_shuffle:   'assets/sound/sfx/card_shuffle.mp3',  // шафл
+  card_fly:       'assets/sound/sfx/card_fly.mp3',      // вылет из колоды
+  card_flip:      'assets/sound/sfx/card_flip.mp3',     // переворот
+  card_hit:       'assets/sound/sfx/card_hit.mp3',      // упала на стол
+  card_deal:      'assets/sound/sfx/card_deal.mp3',     // в руку / взятие со стола
+  card_discard:   'assets/sound/sfx/card_discard.mp3',  // в отбой
+
+  // результат матча
+  win:            'assets/sound/sfx/win.mp3',
+  lose:           'assets/sound/sfx/lose.mp3',
+  draw:           'assets/sound/sfx/draw.mp3',
+};
+
+const MUSIC_PLAYLIST = [
+  'assets/sound/music/Joker_theme_variant_A.ogg',
+  'assets/sound/music/Joker_theme_variant_B.ogg',
+];
+
+const FADE_IN_MS     = 3000;
+const FADE_OUT_MS    = 1500;
+const MUSIC_GAP_MS   = 3000;
+const DEFAULT_VOLUME = 0.8;
+
+export class AudioEngine {
+  constructor() {
+    this.masterVolume = DEFAULT_VOLUME;
+    this.sfxEnabled   = true;
+    this.musicEnabled = true;
+
+    this._el            = null;    // текущий Audio
+    this._index         = 0;
+    this._firstPlayDone = false;
+    this._started       = false;
+	
+	this._sfxPool = new Set();   // ← активные SFX, чтобы их не съел GC
+  }
+
+  /* ---------- громкость ---------- */
+
+  setVolume(v) {
+    this.masterVolume = Math.max(0, Math.min(1, v));
+    if (this._el) {
+      this._el.volume = this.musicEnabled ? this.masterVolume : 0;
+    }
+  }
+  getVolume() { return this.masterVolume; }
+
+/* ---------- запуск с первого клика (autoplay policy) ---------- */
+
+ensureStarted() {
+  if (this._started) return;
+  this._started = true;
+  console.log('[audio] ensureStarted, musicEnabled =', this.musicEnabled);
+  if (this.musicEnabled) this.startMusic();
+}
+
+/* ---------- музыка ---------- */
+
+startMusic() {
+  if (this._el) return;
+  this._index = 0;
+  this._firstPlayDone = false;
+  this._playTrack(true);
+}
+
+stopMusic() {
+  if (!this._el) return;
+  const el = this._el;
+  this._el = null;
+  this._fade(el, el.volume, 0, 400, () => {
+    el.pause();
+    el.src = '';
+  });
+}
+
+enableMusic() {
+  this.musicEnabled = true;
+  // до первого жеста ничего не запускаем — стартанёт ensureStarted
+  if (!this._started) return;
+
+  if (!this._el) {
+    this._playTrack(false);
+    return;
+  }
+  this._fade(this._el, this._el.volume, this.masterVolume, 800);
+}
+
+disableMusic() {
+  this.musicEnabled = false;
+  if (!this._el) return;
+  this._fade(this._el, this._el.volume, 0, 800);
+}
+
+_playTrack(isFirst) {
+  const url = MUSIC_PLAYLIST[this._index];
+  console.log('[audio] play track:', url, 'first:', isFirst);
+
+  const el = new Audio(bust(url));
+  el.preload = 'auto';
+  el.volume = isFirst ? 0 : (this.musicEnabled ? this.masterVolume : 0);
+  this._el = el;
+
+  el.addEventListener('loadedmetadata', () => {
+    console.log('[audio] track loaded, duration =', el.duration.toFixed(1) + 's');
+  });
+el.addEventListener('error', (e) => {
+  console.error('[audio] track error:', url, e);
+  this._lastFailedIndex = this._index;    // ← пометка о сбое
+  this._onTrackEnded(isFirst);
+});
+el.addEventListener('ended', () => this._onTrackEnded(isFirst));
+
+el.load();   // ← форсируем перечитать метаданные (длительность)
+
+const p = el.play();
+  if (p && typeof p.catch === 'function') {
+    p.then(() => console.log('[audio] play() OK'))
+     .catch(err => {
+       console.warn('[audio] play() rejected:', err.message);
+       // однократный retry — на следующий pointerdown
+       const retry = () => {
+         document.removeEventListener('pointerdown', retry, true);
+         // если трек уже заменился — не пытаемся
+         if (this._el !== el) return;
+         el.play().then(() => console.log('[audio] retry OK'))
+                  .catch(() => {});
+       };
+       document.addEventListener('pointerdown', retry, true);
+     });
+  }
+
+  if (isFirst) {
+    this._fade(el, 0, this.masterVolume, FADE_IN_MS);
+  }
+}
+
+_onTrackEnded(isFirst) {
+  const prevIndex = this._index;
+  this._el = null;
+  this._index = (this._index + 1) % MUSIC_PLAYLIST.length;
+  this._firstPlayDone = true;
+
+  // защита от бесконечного цикла, если все треки падают:
+  // если два раза подряд не удалось — стоп.
+  if (this._lastFailedIndex === prevIndex) {
+    console.warn('[audio] playlist failed twice — stopping');
+    this.musicEnabled = false;
+    return;
+  }
+
+  setTimeout(() => {
+    if (!this.musicEnabled) return;
+    this._playTrack(false);
+  }, MUSIC_GAP_MS);
+}
+
+  /* ---------- SFX ---------- */
+
+playSfx(name) {
+  if (!this.sfxEnabled) return;
+  const url = SFX_LIST[name];
+  if (!url) return;
+  const el = new Audio(bust(url));
+  el.volume = this.masterVolume;
+  this._sfxPool.add(el);
+  const release = () => this._sfxPool.delete(el);
+  el.addEventListener('ended', release);
+  el.addEventListener('error', release);
+  el.play().catch(release);
+}
+
+/** Остановить все активные SFX (используется при паузе игры). */
+pauseAllSfx() {
+  if (!this._sfxPool) return;
+  for (const el of this._sfxPool) {
+    if (!el.paused) el.pause();
+  }
+}
+
+/** Возобновить ранее поставленные на паузу SFX. */
+resumeAllSfx() {
+  if (!this._sfxPool) return;
+  for (const el of this._sfxPool) {
+    if (el.paused && el.currentTime > 0 && el.currentTime < (el.duration || Infinity)) {
+      el.play().catch(() => {});
+    }
+  }
+}
+
+  setSfxEnabled(on) { this.sfxEnabled = !!on; }
+
+  /* ---------- утилита fade ---------- */
+
+	_fade(el, from, to, duration, done) {
+	  if (!el) return;
+	  const d = (typeof duration === 'number' && duration > 0) ? duration : 1;
+	  const a = Number.isFinite(from) ? from : 0;
+	  const b = Number.isFinite(to)   ? to   : 0;
+	  const t0 = performance.now();
+	  const step = () => {
+		if (!el) return;
+		const t = Math.min(1, (performance.now() - t0) / d);
+		el.volume = Math.max(0, Math.min(1, a + (b - a) * t));
+		if (t >= 1) { if (done) done(); return; }
+		requestAnimationFrame(step);
+	  };
+	  requestAnimationFrame(step);
+	}
+}
+
+/* Синглтон */
+export const audio = new AudioEngine();

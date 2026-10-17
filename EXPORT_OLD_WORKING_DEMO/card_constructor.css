@@ -1,0 +1,164 @@
+/* ==================================================================
+   Card Constructor — стили изолированы внутри .card__face
+   Все селекторы начинаются с .card__face, чтобы не конфликтовать
+   с нашей обёрткой .card (position, transform, z-index).
+   ================================================================== */
+
+.card__face {
+  --card-w: 220px;
+}
+
+.card__face .card {
+  --u: calc(var(--card-w) / 219);
+  position: relative;
+  width:  calc(219 * var(--u));
+  height: calc(340 * var(--u));
+  flex: 0 0 auto;
+  user-select: none;
+  -webkit-user-drag: none;
+  overflow: visible;
+}
+
+.card__face .card__shadow,
+.card__face .card__body {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+.card__face .card__shadow { z-index: 0; }
+.card__face .card__body   { z-index: 1; }
+
+.card__face .card__grid {
+  position: absolute;
+  left: 50%; top: 50%;
+  width:  calc(89  * var(--u));
+  height: calc(203 * var(--u));
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+.card__face .card--show-grid .card__grid { z-index: 100; }
+
+/* ---------- пипс ---------- */
+.card__face .pip {
+  position: absolute;
+  display: flex; align-items: center; justify-content: center;
+}
+.card__face .pip__img {
+  width: 100%; height: 100%;
+  object-fit: contain;
+  display: block; pointer-events: none;
+}
+
+/* ---------- портреты ---------- */
+.card__face .face {
+  position: absolute;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+.card__face .face--bottom { transform: rotate(180deg); }
+.card__face .face__img { width: 100%; height: 100%; object-fit: contain; display: block; }
+
+/* ---------- углы ---------- */
+.card__face .card__corner-layer {
+  position: absolute; inset: 0;
+  pointer-events: none; z-index: 3;
+}
+.card__face .card__corner-layer--rb { transform: rotate(180deg); }
+
+.card__face .corner {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.card__face .corner__rank-img {
+  position: absolute;
+  left:   calc(10 * var(--u));
+  top:    calc(11 * var(--u));
+  width:  calc(37 * var(--u));
+  height: calc(45 * var(--u));
+  background-color: var(--rank-color, #111);
+  -webkit-mask-image:    var(--src);
+  -webkit-mask-size:     contain;
+  -webkit-mask-position: center;
+  -webkit-mask-repeat:   no-repeat;
+  mask-image:    var(--src);
+  mask-size:     contain;
+  mask-position: center;
+  mask-repeat:   no-repeat;
+}
+
+/* [data-suit] не пересекается с нашими классами — оставляем без префикса */
+[data-suit="hearts"]   .corner__rank-img,
+[data-suit="diamonds"] .corner__rank-img,
+[data-suit="hearts"]   .center-rank__rank-img,
+[data-suit="diamonds"] .center-rank__rank-img { --rank-color: #d40000; }
+
+[data-suit="clubs"]    .corner__rank-img,
+[data-suit="spades"]   .corner__rank-img,
+[data-suit="clubs"]    .center-rank__rank-img,
+[data-suit="spades"]   .center-rank__rank-img { --rank-color: #111; }
+
+.card__face .corner__suit-img {
+  position: absolute;
+  left:   calc(16 * var(--u));
+  top:    calc(58 * var(--u));
+  width:  calc(25 * var(--u));
+  height: calc(26 * var(--u));
+  display: block;
+  object-fit: contain;
+}
+
+/* ---------- центр (rank) ---------- */
+.card__face .center-rank__rank,
+.card__face .center-rank__suit {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.card__face .center-rank__rank-img {
+  width: 100%; height: 100%;
+  background-color: var(--rank-color, #111);
+  -webkit-mask-image:    var(--src);
+  -webkit-mask-size:     contain;
+  -webkit-mask-position: center;
+  -webkit-mask-repeat:   no-repeat;
+  mask-image:    var(--src);
+  mask-size:     contain;
+  mask-position: center;
+  mask-repeat:   no-repeat;
+}
+.card__face .center-rank__suit-img {
+  width: 100%; height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* ---------- дебаг-сетка ---------- */
+.card__face .grid-overlay {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  display: none;
+}
+.card__face .card--show-grid .grid-overlay { display: block; }
+.card__face .grid-overlay__v,
+.card__face .grid-overlay__h { position: absolute; }
+.card__face .grid-overlay__v { top: 0; bottom: 0; width: 0; border-left: 1px dashed rgba(255,80,80,.9); }
+.card__face .grid-overlay__h { left: 0; right: 0; height: 0; border-top: 1px dashed rgba(255,80,80,.9); }
+.card__face .grid-overlay__frame { position: absolute; inset: 0; border: 1px solid rgba(0,255,255,.9); }
+.card__face .grid-overlay__cx,
+.card__face .grid-overlay__cy { position: absolute; background: #ff0; }
+.card__face .grid-overlay__cx { top: 0; bottom: 0; width: 1px; }
+.card__face .grid-overlay__cy { left: 0; right: 0; height: 1px; }
+
+/* ---------- масти J/Q/K поверх углов ---------- */
+.card__face .card__court-pips {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  z-index: 4;
+}

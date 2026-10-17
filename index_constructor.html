@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Card Constructor</title>
+<style>
+  :root {
+    /* единственный параметр масштаба: 219 = 1:1 */
+    --card-w: 219px;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+
+  body {
+    background: #1b6b3a;
+    color: #f2f2f2;
+    font: 14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  .stage {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+  }
+
+  /* ================= CARD =================
+     --u: 1 unit = 1 design-px при --card-w = 219px
+     все размеры внутри карты считаются от --u,
+     поэтому карта масштабируется без правок кода   */
+  .card {
+    --u: calc(var(--card-w) / 219);
+    position: relative;
+    width:  calc(219 * var(--u));
+    height: calc(340 * var(--u));
+    flex: 0 0 auto;
+    user-select: none;
+    -webkit-user-drag: none;
+    overflow: visible;
+  }
+
+  .card__shadow,
+  .card__body {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    pointer-events: none;
+  }
+  .card__shadow { z-index: 0; }
+  .card__body   { z-index: 1; }
+
+  /* ---------- внутренняя сетка 89 x 203 (центр = центр карты) ---------- */
+  .card__grid {
+    position: absolute;
+    left: 50%; top: 50%;
+    width:  calc(89  * var(--u));
+    height: calc(203 * var(--u));
+    transform: translate(-50%, -50%);
+    z-index: 2;
+  }
+  /* когда сетка включена — поднимаем весь слой над углами */
+  .card--show-grid .card__grid { z-index: 100; }
+
+  /* ---------- масть-пипс ---------- */
+  .pip {
+    position: absolute;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .pip__img {
+    width: 100%; height: 100%;
+    object-fit: contain;
+    display: block; pointer-events: none;
+  }
+
+  /* ---------- портреты J/Q/K ---------- */
+  .face {
+    position: absolute;
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none;
+  }
+  .face--bottom { transform: rotate(180deg); }
+  .face__img {
+    width: 100%; height: 100%;
+    object-fit: contain; display: block;
+  }
+
+  /* ---------- угловые группы ---------- */
+  .card__corner-layer {
+    position: absolute; inset: 0;
+    pointer-events: none; z-index: 3;
+  }
+  .card__corner-layer--rb { transform: rotate(180deg); }
+
+  /* ---------- угловая группа: ранг + масть ----------
+     Оба элемента позиционируются абсолютно от угла карты.
+     Для RB-угла тот же слой, но .card__corner-layer--rb его
+     разворачивает на 180°, поэтому координаты те же.       */
+
+  .corner {
+    position: absolute;
+    inset: 0;                       /* растягиваем на всю карту */
+    pointer-events: none;
+  }
+
+  /* ранг: top-left углом в точку (10, 11) от угла карты */
+  /* ранг рисуется через маску: PNG = форма,
+     цвет = --rank-color (по умолчанию чёрный)                   */
+
+  .corner__rank-img {
+    position: absolute;
+    left:   calc(10 * var(--u));
+    top:    calc(11 * var(--u));
+    width:  calc(37 * var(--u));
+    height: calc(45 * var(--u));
+    background-color: var(--rank-color, #111);
+    -webkit-mask-image:    var(--src);
+    -webkit-mask-size:     contain;
+    -webkit-mask-position: center;
+    -webkit-mask-repeat:   no-repeat;
+    mask-image:    var(--src);
+    mask-size:     contain;
+    mask-position: center;
+    mask-repeat:   no-repeat;
+  }
+
+  /* цвет ранга по масти */
+  /* ---------- цвет ранга по масти (углы + центр) ---------- */
+  [data-suit="hearts"]  .corner__rank-img,
+  [data-suit="diamonds"] .corner__rank-img,
+  [data-suit="hearts"]  .center-rank__rank-img,
+  [data-suit="diamonds"] .center-rank__rank-img { --rank-color: #d40000; }
+
+  [data-suit="clubs"]  .corner__rank-img,
+  [data-suit="spades"] .corner__rank-img,
+  [data-suit="clubs"]  .center-rank__rank-img,
+  [data-suit="spades"] .center-rank__rank-img { --rank-color: #111; }
+
+  /* масть: центр по X совпадает с центром ранга (10 + 37/2 = 28.5),
+     центр по Y — 53 px от верха карты.
+     top = 53 − 26/2 = 40                                            */
+  .corner__suit-img {
+    position: absolute;
+    /* X: центр совпадает с центром ранга.
+       Центр ранга = 10 + 37/2 = 28.5, ширина масти 25,
+       левый край = 28.5 − 12.5 = 16                              */
+    left:   calc(16 * var(--u));
+    /* Y: верх масти начинается сразу под низом ранга + зазор 2px.
+       Низ ранга = 11 + 45 = 56, значит верх масти = 58           */
+    top:    calc(58 * var(--u));
+    width:  calc(25 * var(--u));
+    height: calc(26 * var(--u));
+    display: block;
+    object-fit: contain;
+  }
+  /* ---------- центральная группа «ранг над мастью» ---------- */
+  .center-rank__rank,
+  .center-rank__suit {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  .center-rank__rank-img {
+    width: 100%;
+    height: 100%;
+    background-color: var(--rank-color, #111);
+    -webkit-mask-image:    var(--src);
+    -webkit-mask-size:     contain;
+    -webkit-mask-position: center;
+    -webkit-mask-repeat:   no-repeat;
+    mask-image:    var(--src);
+    mask-size:     contain;
+    mask-position: center;
+    mask-repeat:   no-repeat;
+  }
+
+  .center-rank__suit-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  /* ---------- сетка (дебаг-оверлей), координаты в единицах сетки ---------- */
+  .grid-overlay {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    display: none;
+  }
+  .card--show-grid .grid-overlay { display: block; }
+
+  .grid-overlay__v,
+  .grid-overlay__h { position: absolute; }
+
+  .grid-overlay__v {
+    top: 0; bottom: 0;
+    width: 0;
+    border-left: 1px dashed rgba(255,80,80,.9);
+  }
+  .grid-overlay__h {
+    left: 0; right: 0;
+    height: 0;
+    border-top: 1px dashed rgba(255,80,80,.9);
+  }
+  /* границы самой рамки сетки — сплошной циан */
+  .grid-overlay__frame {
+    position: absolute; inset: 0;
+    border: 1px solid rgba(0,255,255,.9);
+  }
+  /* центр карты (совпадает с B3) */
+  .grid-overlay__cx,
+  .grid-overlay__cy {
+    position: absolute;
+    background: #ff0;
+  }
+  .grid-overlay__cx { top: 0; bottom: 0; width: 1px; }
+  .grid-overlay__cy { left: 0; right: 0; height: 1px; }
+
+  /* ================= PANEL ================= */
+  .panel {
+    position: relative; z-index: 1000;
+    flex: 0 0 auto;
+    display: flex; gap: 16px;
+    justify-content: center; flex-wrap: wrap;
+    align-items: flex-end;
+    padding-top: 16px;
+  }
+  .ctrl {
+    display: flex; flex-direction: column; gap: 4px;
+    font-size: 12px; opacity: .9;
+  }
+  .ctrl select {
+    font: inherit; min-width: 140px;
+    padding: 6px 10px; border-radius: 6px;
+    border: 1px solid rgba(255,255,255,.25);
+    background: rgba(0,0,0,.25);
+    color: inherit; outline: none;
+  }
+  .ctrl select:focus { border-color: rgba(255,255,255,.6); }
+
+  /* toggle-свитч */
+  .switch {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; cursor: pointer; user-select: none;
+    padding-bottom: 8px;
+  }
+  .switch input { position: absolute; opacity: 0; pointer-events: none; }
+  .switch__track {
+    width: 36px; height: 20px; border-radius: 10px;
+    background: rgba(0,0,0,.4);
+    border: 1px solid rgba(255,255,255,.25);
+    position: relative;
+    transition: background .15s;
+  }
+  .switch__track::after {
+    content: '';
+    position: absolute; top: 2px; left: 2px;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: #fff;
+    transition: transform .15s;
+  }
+  .switch input:checked + .switch__track {
+    background: #2ecc71;
+    border-color: #2ecc71;
+  }
+  .switch input:checked + .switch__track::after {
+    transform: translateX(16px);
+  }
+  .card__court-pips {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;      /* выше угловых групп (z-index: 3) */
+}
+</style>
+</head>
+<body>
+
+  <div class="stage">
+    <div id="cardHost"></div>
+  </div>
+
+	<div class="panel">
+	  <label class="ctrl">Масштаб
+		<select id="selScale">
+		  <option value="100">100%</option>
+		  <option value="80">80%</option>
+		  <option value="60">60%</option>
+		  <option value="40">40%</option>
+		  <option value="20">20%</option>
+		</select>
+	  </label>
+
+	  <label class="ctrl">Ранг  <select id="selRank"></select></label>
+	  <label class="ctrl">Масть <select id="selSuit"></select></label>
+	  <label class="ctrl">Стиль <select id="selStyle"></select></label>
+
+	  <label class="ctrl">Масти
+		<select id="selSuitStyle">
+		  <option value="default">default</option>
+		  <option value="paper">paper</option>
+		  <option value="barhat">barhat</option>
+		  <option value="gradient" selected>gradient</option>
+		  <option value="ruby">ruby</option>
+		  <option value="golden">golden</option>
+		</select>
+	  </label>
+
+	  <label class="switch">
+		<input type="checkbox" id="chkGrid">
+		<span class="switch__track"></span>
+		<span>Сетка</span>
+	  </label>
+	</div>
+
+  <script src="card_constructor.js" type="module"></script>
+</body>
+</html>
