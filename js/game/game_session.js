@@ -2,6 +2,7 @@ import { audio } from '../audio/audio_engine.js';
 
 import { Joker } from '../ui/joker.js';
 import { Card } from './card.js';
+import { clearCache, warmUpDeck } from './card_cache.js';
 import { Deck } from './deck.js';
 import { moveLinear, moveFlip, moveArkFlip } from '../core/interpolator.js';
 import { REAL, SUIT_VALUE, RANK_VALUE } from './constants.js';
@@ -12,7 +13,7 @@ import { ASSETS, svgInstance } from '../assets.js';
 
 import { AI } from './ai.js';
 //import { GameSettings, saveSettings } from './settings.js';
-import { GameSettings } from './settings.js';
+import { GameSettings, saveSettings } from './settings.js';
 import { uiScale } from '../ui/ui_scale.js';
 import { clearCache, warmUpDeck } from './card_cache.js';
 // в начале файла должен быть расширенный импорт:
@@ -893,7 +894,11 @@ async _animateTake(cards, defender) {
     }
 
     // --- First-run gift: декремент счётчиков ---
-    this._decayTempItems();
+    try {
+      this._decayTempItems();
+    } catch (e) {
+      console.error('[decayTempItems] failed:', e);
+    }
 
     this._showGameOver(winner);
   }
