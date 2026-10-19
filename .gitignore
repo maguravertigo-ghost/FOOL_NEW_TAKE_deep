@@ -1,0 +1,16 @@
+# logs / temp
+server.log
+port.txt
+*.log
+
+# extraction output
+project_extraction/
+
+# backups and exports
+EXPORT/
+EXPORT_OLD_WORKING_DEMO/
+EXPORT.7z
+
+# sandbox / scratch
+SAND_BOX/
+SAND_SFX/
