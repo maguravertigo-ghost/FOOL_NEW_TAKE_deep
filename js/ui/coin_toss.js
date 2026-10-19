@@ -114,6 +114,8 @@ export class CoinToss {
     }
     this._layerEl = null;
 	this._cornerSide = null;
+    this._flyState = null;
+    this._flying = false;
   }
 
   /* ============================================================
@@ -280,73 +282,94 @@ export class CoinToss {
 
   async _flyToCornerGeneric(side, el) {
     if (!el) return;
- 
+
     this._flying = true;
- 
-    // пересчитываем размер в текущем масштабе (F11 мог случиться до старта)
     this._measureCoinSize();
     el.style.width  = this._coinW + 'px';
     el.style.height = this._coinH + 'px';
 
-    const W = this.scene.width, H = this.scene.height;
+    // Параметры полёта — хранятся как поля, чтобы пересчитывать при ресайзе
+    this._flyState = {
+      el,
+      side,
+      startT: performance.now(),
+      dur: 900,
+      startFracX: this._coinX / this.scene.width,   // доля от старой сцены
+      startFracY: this._coinY / this.scene.height,
+      startX: this._coinX,
+      startY: this._coinY,
+      endX: 0,
+      endY: 0,
+    };
+    this._recalcFlyEndpoints();
+
+    return new Promise(resolve => {
+      const tick = () => {
+        if (this._cancelled || !this._flyState) {
+          this._flying = false;
+          this._flyState = null;
+          return resolve();
+        }
+        const st = this._flyState;
+        const now = performance.now();
+        const p = Math.min(1, (now - st.startT) * this._speedMult / st.dur);
+
+        const easeOut = 1 - (1 - p) * (1 - p);
+        const x = st.startX + (st.endX - st.startX) * easeOut;
+
+        const pY = Math.max(0, (p - 0.2) / 0.8);
+        const easeInY = pY * pY;
+        const y = st.startY + (st.endY - st.startY) * easeInY;
+
+        const kEnd = 0.8;
+        const k = 1 + (kEnd - 1) * easeOut;
+
+        st.el.style.left = (x - this._coinW / 2) + 'px';
+        st.el.style.top  = (y - this._coinH / 2) + 'px';
+        st.el.style.transformOrigin = 'center center';
+        st.el.style.transform = `scale(${k})`;
+
+        this._coinX = x;
+        this._coinY = y;
+
+        if (p >= 1) {
+          this._flying = false;
+          this._flyState = null;
+          return resolve();
+        }
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+  }
+
+  /** Пересчитать start/end от текущих размеров сцены. */
+  _recalcFlyEndpoints() {
+    const st = this._flyState;
+    if (!st) return;
+
+    const W = this.scene.width;
+    const H = this.scene.height;
     const C = SceneLayout.config;
     const frameT = C.frameT * H;
     const frameR = W - C.frameR * W;
     const frameB = H - C.frameB * H;
 
-    const cw = this._coinW, ch = this._coinH;
-
-    // Финальный масштаб: монета уменьшается до 0.8 от исходного
     const kEnd  = 0.8;
-    const cwEnd = cw * kEnd;
-    const chEnd = ch * kEnd;
+    const cwEnd = this._coinW * kEnd;
+    const chEnd = this._coinH * kEnd;
 
-    let endX, endY;
-    if (side === 'cpu') {
-      endX = frameR - cwEnd / 2;
-      endY = frameT + chEnd / 2;
+    if (st.side === 'cpu') {
+      st.endX = frameR - cwEnd / 2;
+      st.endY = frameT + chEnd / 2;
     } else {
-      endX = frameR - cwEnd / 2;
-      endY = frameB - chEnd / 2;
+      st.endX = frameR - cwEnd / 2;
+      st.endY = frameB - chEnd / 2;
     }
 
-    const startX = this._coinX, startY = this._coinY;
-    const dur = 900;
-    const t0 = performance.now();
-
-    return new Promise(resolve => {
-      const tick = () => {
-        if (this._cancelled) return resolve();
-        const now = performance.now();
-        const p = Math.min(1, (now - t0) * this._speedMult / dur);
-
-        // X: ease-out
-        const easeOut = 1 - (1 - p) * (1 - p);
-        const x = startX + (endX - startX) * easeOut;
-
-        // Y: с задержкой, ease-in
-        const pY = Math.max(0, (p - 0.2) / 0.8);
-        const easeInY = pY * pY;
-        const y = startY + (endY - startY) * easeInY;
-
-        // Масштаб: 1.0 → 0.8 синхронно с easing X
-        const k = 1 + (kEnd - 1) * easeOut;
-
-        el.style.left = (x - cw / 2) + 'px';
-        el.style.top  = (y - ch / 2) + 'px';
-        el.style.transformOrigin = 'center center';
-        el.style.transform = `scale(${k})`;
-
-        this._coinX = x;
-        this._coinY = y;
-
-        if (p >= 1) return resolve();
-        requestAnimationFrame(tick);
-      };
-      requestAnimationFrame(tick);
-    }).then(() => {
-		this._flying = false;
-	});
+    // Старт — пропорционально от новой сцены (если был в центре — останется в центре)
+    st.startX = st.startFracX * W;
+    st.startY = st.startFracY * H;
   }
 
   async _fadeStripOut(duration) {
@@ -381,8 +404,16 @@ export class CoinToss {
   }
 
   _onSceneResize() {
-    // не дёргаем во время полёта — траектория уже строится от старых координат
-    if (this._flying) return;
+    // Во время полёта — пересчитываем параметры траектории и размер монеты
+    if (this._flying) {
+      this._measureCoinSize();
+      if (this._flyState) {
+        this._flyState.el.style.width  = this._coinW + 'px';
+        this._flyState.el.style.height = this._coinH + 'px';
+        this._recalcFlyEndpoints();
+      }
+      return;
+    }
 
     const el = this._coinEl || this._tokenEl;
     if (!el) return;
@@ -394,7 +425,6 @@ export class CoinToss {
     if (this._cornerSide) {
       this._positionInCorner(this._cornerSide);
     } else if (this._layerEl) {
-      // в центре — просто центрируем заново
       const W = this.scene.width, H = this.scene.height;
       this._coinX = W / 2;
       this._coinY = H / 2;

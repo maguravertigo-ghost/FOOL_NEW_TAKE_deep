@@ -1,0 +1,15 @@
+=== css/reset.css ===
+Size   : 423 B
+Modify : 2026-10-01 22:36:09
+=====================
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; }
+body { background: #000; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+img { display: block; }
+body, body * {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+input, textarea { -webkit-user-select: text; user-select: text; }

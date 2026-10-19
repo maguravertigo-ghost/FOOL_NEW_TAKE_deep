@@ -11,11 +11,16 @@ import { Marker } from '../core/marker.js';
 import { ASSETS, svgInstance } from '../assets.js';
 
 import { AI } from './ai.js';
+//import { GameSettings, saveSettings } from './settings.js';
 import { GameSettings } from './settings.js';
+import { uiScale } from '../ui/ui_scale.js';
+import { clearCache, warmUpDeck } from './card_cache.js';
 // в начале файла должен быть расширенный импорт:
-import { Progress, saveProgress, addStylePoints, creditQuest,
-         setFoolToken, clearFoolToken } from './progress.js';
+  import { Progress, saveProgress, addStylePoints, creditQuest,
+           setFoolToken, clearFoolToken, tickTempItems } from './progress.js';
 import { recordOutcome } from './progress.js';
+
+import { showMessage } from '../ui/message_overlay.js';
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const Z_HAND_BASE  = 100;
@@ -62,7 +67,7 @@ export class GameSession {
 	this.mode = this.translateMode ? 'perevodnoy' : 'podkidnoy';
 	
 	    // AI
-    this.ai = new AI(this, { level: 2 });
+    this.ai = new AI(this, { level: GameSettings.aiLevel || 2 });
 
     // колода — по настройкам
 	const deckSize = GameSettings.deckSize || 36;
@@ -100,6 +105,9 @@ export class GameSession {
 	this._gameOverPending = false;
 	this._victoryPending = false;
 	this._victoryResolve = null;
+	
+	this._finishedViaPogony = false;
+	this._finishedHandCount = 0;
   }
 
   /* ================================================================
@@ -123,6 +131,7 @@ export class GameSession {
     this._setupSlotUIs();
     this._setupActionButton();
     this._setupAIMessage();
+	this._setupDeckCounter();
     this._updateHUD();
     this._updateButton();
     this._updateAIMessage();
@@ -146,6 +155,8 @@ export class GameSession {
     if (this.actionBtn && this.actionBtn.parentNode) this.actionBtn.parentNode.removeChild(this.actionBtn);
     if (this.aiMessageEl && this.aiMessageEl.parentNode) this.aiMessageEl.parentNode.removeChild(this.aiMessageEl);
     if (this.trumpSuitEl && this.trumpSuitEl.parentNode) this.trumpSuitEl.parentNode.removeChild(this.trumpSuitEl);
+	if (this.deckCounterEl && this.deckCounterEl.parentNode) this.deckCounterEl.parentNode.removeChild(this.deckCounterEl);
+	this.deckCounterEl = null;
     const go = document.getElementById('game-over');
     if (go) go.remove();
     // таймеры и анимации
@@ -220,6 +231,7 @@ export class GameSession {
     });
 	if (this.stack.length > 0) this._ensureDeckShadow();
 	this._positionDeckShadow();
+	this._updateDeckCounter?.();
   }
 
 _ensureDeckShadow() {
@@ -230,6 +242,58 @@ _ensureDeckShadow() {
   this.deckShadow = el;
   this._positionDeckShadow();
 }
+
+  _setupDeckCounter() {
+    if (this.deckCounterEl) return;
+    const el = document.createElement('div');
+    el.className = 'deck-counter';
+    this.gameLayer.appendChild(el);
+    this.deckCounterEl = el;
+    this._updateDeckCounter();
+  }
+
+  _updateDeckCounter() {
+    if (!this.deckCounterEl) return;
+
+    if (!GameSettings.showDeckCounter) {
+      this.deckCounterEl.style.display = 'none';
+      return;
+    }
+
+    const remaining = this._totalRemaining();
+
+    if (remaining <= 0) {
+      this.deckCounterEl.style.display = 'none';
+      return;
+    }
+
+    this.deckCounterEl.style.display = 'flex';
+    this.deckCounterEl.textContent = String(remaining);
+
+    const deckM = this.markers.tryGet('deck');
+    if (!deckM) return;
+
+    if (uiScale.isMobile) {
+      // Мобилка: счётчик прижат к левому краю, под колодой/козырем
+      const trumpM = this.markers.tryGet('trump') || deckM;
+      const p = this.scene.resolve(trumpM);
+
+      // Козырь повёрнут на 90°, визуальная высота = REAL.w
+      const bottomY = p.y + REAL.w / 2;
+      const padX = Math.round(16 * uiScale.scale);
+      const padY = Math.round(10 * uiScale.scale);
+
+      this.deckCounterEl.classList.add('deck-counter--mobile');
+      this.deckCounterEl.style.left = padX + 'px';
+      this.deckCounterEl.style.top  = (bottomY + padY) + 'px';
+    } else {
+      // Десктоп: по центру верхней карты колоды
+      const p = this.scene.resolve(deckM);
+      this.deckCounterEl.classList.remove('deck-counter--mobile');
+      this.deckCounterEl.style.left = p.x + 'px';
+      this.deckCounterEl.style.top  = p.y + 'px';
+    }
+  }
 
 _positionDeckShadow() {
   if (!this.deckShadow) return;
@@ -298,6 +362,7 @@ _removeDeckShadow() {
       this.trumpTaken = true;
       card.marker = null;
       this._showTrumpSuitIcon();
+      this._updateDeckCounter?.();
       return card;
     }
 
@@ -355,7 +420,7 @@ _removeDeckShadow() {
     }
 
     this.app.accordionPlayer.setCards(pCards);
-    this.app.accordionCpu.setCards(cCards.sort(cmpCard));
+    this.app.accordionCpu.setCards(cCards);
   }
 
   async _dealOne(data, targetMarker, direction, zIndex) {
@@ -497,6 +562,9 @@ _removeDeckShadow() {
     r.table = [];
     r.anyBeaten = false;
 	this._playerLastPlays = [];   // цепочка ходов считается только внутри раунда
+
+	this._finishedViaPogony = false;
+	this._finishedHandCount = 0;
 
     console.log(`[round ${r.n}] start  attack=${r.attack}  firstMove=${r.firstMove}`);
     this._updateHUD();
@@ -736,6 +804,57 @@ async _animateTake(cards, defender) {
     return null;
   }
 
+  _decayTempItems() {
+    const expired = tickTempItems();
+    if (!expired.length) return;
+
+    let changed = false;
+
+    for (const e of expired) {
+      if (e.cat === 'shirt' && GameSettings.shirtStyle === e.index) {
+        GameSettings.shirtStyle = 0;
+        Card.defaultShirtUrl = ASSETS.shirts[0];
+        changed = true;
+      }
+      if (e.cat === 'table' && GameSettings.tableStyle === e.index) {
+        GameSettings.tableStyle = 0;
+        const bg = document.getElementById('table-bg');
+        if (bg) bg.style.backgroundImage = `url("${ASSETS.tables[0]}")`;
+        changed = true;
+      }
+      if (e.cat === 'decor' && GameSettings.decorStyle === e.index) {
+        GameSettings.decorStyle = -1;
+        const decor = document.getElementById('decor-layer');
+        if (decor) decor.style.backgroundImage = '';
+        changed = true;
+      }
+      if (e.cat === 'design') {
+        const designIds = ['grid', 'center', 'rank', 'rank-no-corners'];
+        const cur = designIds.indexOf(GameSettings.cardStyle);
+        if (cur === e.index) {
+          GameSettings.cardStyle = 'grid';
+          Card.defaultCardStyle = 'grid';
+          changed = true;
+        }
+      }
+      if (e.cat === 'suits') {
+        const suitIds = ['default', 'paper', 'barhat', 'gradient', 'ruby', 'golden'];
+        const cur = suitIds.indexOf(GameSettings.suitStyle);
+        if (cur === e.index) {
+          GameSettings.suitStyle = 'gradient';
+          Card.defaultSuitStyle = 'gradient';
+          changed = true;
+        }
+      }
+    }
+
+    if (changed) {
+      saveSettings();
+      clearCache();
+      warmUpDeck(GameSettings.cardStyle, GameSettings.suitStyle);
+    }
+  }
+
   /**
    * Остановка матча. Карты остаются на столе, на кнопке игрока —
    * финальная метка + круговой прогресс. По клику или по таймауту —
@@ -772,6 +891,9 @@ async _animateTake(cards, defender) {
     } else {
       await this._waitPlayerClick();
     }
+
+    // --- First-run gift: декремент счётчиков ---
+    this._decayTempItems();
 
     this._showGameOver(winner);
   }
@@ -871,25 +993,17 @@ _showGameOver(winner, opts = {}) {
   if (winner === 'cpu')    { audio.playSfx('lose'); }
   if (winner === 'draw')   { audio.playSfx('draw'); }
 
-  let epaulettes = 0;
-  if (winner === 'player' && this._playerLastPlays.length > 0) {
-    const last = this._playerLastPlays[this._playerLastPlays.length - 1];
-    if (last.type === 'atk') {
-      const rank = last.card.data.rank;
-      let n = 0;
-      for (let i = this._playerLastPlays.length - 1; i >= 0; i--) {
-        const p = this._playerLastPlays[i];
-        if (p.type !== 'atk') break;
-        if (p.card.data.rank !== rank) break;
-        n++;
-      }
-      if (n === 1) epaulettes = 1;
-      else if (n === 2) epaulettes = 2;
-      else if (n >= 3) epaulettes = 3;
-      if (epaulettes > 0) points += 250;
-    }
-  }
-  if (opts.epaulettesOverride !== undefined) epaulettes = opts.epaulettesOverride;
+	  // Погоны — только явное действие через кнопку ПОГОНЫ! (или dev-override).
+	  let epaulettes = 0;
+	  if (opts.epaulettesOverride !== undefined) {
+		epaulettes = opts.epaulettesOverride;
+	  } else if (winner === 'player' && this._finishedViaPogony) {
+		const n = this._finishedHandCount || 0;
+		if (n === 1) epaulettes = 1;
+		else if (n === 2) epaulettes = 2;
+		else if (n >= 3) epaulettes = 3;
+	  }
+	  if (epaulettes > 0) points += 250;
 
     let questRank = null;
     if (winner === 'player') {
@@ -899,7 +1013,7 @@ _showGameOver(winner, opts = {}) {
         counts[rk] = (counts[rk] || 0) + 1;
       }
       for (const rk in counts) {
-        if (counts[rk] >= 2) {
+        if (counts[rk] >= 1) {
           creditQuest(rk, counts[rk]);
           questRank = rk;
         }
@@ -920,6 +1034,7 @@ else                           this._jokerFrame('five');  // ничья
     else if (winner === 'cpu')    setFoolToken('player', this.mode);
     else if (winner === 'draw')   clearFoolToken();
     const newOwner = Progress.foolToken ? Progress.foolToken.owner : null;
+	const showFirstWinCongrats = (winner === 'player' && !Progress.firstWinShown);
 
     // ---- HTML ----
     const el = document.createElement('div');
@@ -1027,18 +1142,32 @@ else                           this._jokerFrame('five');  // ничья
 
   this._suitResizeUnsub = this.scene.onResize(() => syncSuit());
 
-	el.querySelector('[data-action="replay"]').addEventListener('click', () => {
+	el.querySelector('[data-action="replay"]').addEventListener('click', async () => {
 	  audio.playSfx('tap');
 	  if (this._goReplay) return;
 	  this._goReplay = true;
+
+	  if (showFirstWinCongrats) {
+	    Progress.firstWinShown = true;
+	    saveProgress();
+	    await this._showFirstWinCongratsDialog();
+	  }
+
 	  if (this.app && typeof this.app._playAgain === 'function') {
 		this.app._playAgain(this.mode);
 	  }
 	});
-	el.querySelector('[data-action="menu"]').addEventListener('click', () => {
+	el.querySelector('[data-action="menu"]').addEventListener('click', async () => {
 	  audio.playSfx('tap_up');
 	  if (this._goMenu) return;
 	  this._goMenu = true;
+
+	  if (showFirstWinCongrats) {
+	    Progress.firstWinShown = true;
+	    saveProgress();
+	    await this._showFirstWinCongratsDialog();
+	  }
+
 	  if (this.app && typeof this.app._exitToMenu === 'function') {
 		this.app._exitToMenu();
 	  }
@@ -1170,6 +1299,18 @@ else                           this._jokerFrame('five');  // ничья
         requestAnimationFrame(tick);
       };
       requestAnimationFrame(tick);
+    });
+  }
+  
+  _showFirstWinCongratsDialog() {
+    return new Promise(resolve => {
+      showMessage(
+        'Вы получили свои <b>первые очки стиля</b>!<br><br>' +
+        'Теперь вы можете посетить <b>Магазинчик Джокера</b> — там ещё много ' +
+        'интересного: новые рубашки, столы, декорации и оформление карт. ' +
+        'Придайте своей игре собственный неповторимый стиль!',
+        { title: 'Поздравляем!', onClose: resolve }
+      );
     });
   }
 
@@ -1662,6 +1803,10 @@ _confirmSlot(slot) {
     const cards = [...acc.cards];
     if (!cards.length) return;
 
+    // Запоминаем: это финиш через кнопку ПОГОНЫ! (иначе — просто финиш обычным ходом)
+    this._finishedViaPogony = (kind === 'pogony');
+    this._finishedHandCount = cards.length;
+
     this._busy = true;
 
     const promises = [];
@@ -1683,7 +1828,9 @@ _confirmSlot(slot) {
     await Promise.all(promises);
 
     if (side === 'player') {
-      this._playerLastPlays.push({ card: cards[cards.length - 1], type: 'atk' });
+      for (const c of cards) {
+        this._playerLastPlays.push({ card: c, type: 'atk' });
+      }
     }
 
     this._busy = false;
@@ -1741,12 +1888,14 @@ _repositionActionButton() {
   const W = r.width, H = r.height;
   const C = SceneLayout.config;
   const R = W - C.frameR * W;
+  const isMobile = uiScale.isMobile;
 
   const discard = this.markers.tryGet('discard');
   if (!discard) return;
-  const yPx = discard.y * H;   // ← координата ВНУТРИ сцены
+  const yPx = discard.y * H;
 
-  const bw = REAL.w * 2.65;
+  // На мобилке кнопка и Джокер компактнее — иначе перекрывают стол и отбой
+  const bw = REAL.w * (isMobile ? 1.8 : 2.65);
   const aiH = Math.round(bw * 264 / 642);
   const btnH = REAL.h;
 
@@ -1754,36 +1903,33 @@ _repositionActionButton() {
   const jokerCx    = W - jokerRight - bw / 2;
   const jokerLeft  = jokerCx - bw / 2;
 
-  // --- Кнопка игрока (position: fixed → координаты относительно viewport) ---
-  const btnTop = yPx + 40;
+  const btnTop = yPx + (isMobile ? 20 : 40);
   this.actionBtn.style.left   = (r.left + jokerLeft) + 'px';
   this.actionBtn.style.top    = (r.top  + btnTop)    + 'px';
   this.actionBtn.style.width  = bw + 'px';
   this.actionBtn.style.height = btnH + 'px';
 
-  // --- Облачко ---
-	const aiInset = 4;                        // ← отступ от верхнего/нижнего края
-	const aiTop = yPx - 30 - aiH + aiInset;
+  const aiInset = 4;
+  const aiTop = yPx - 30 - aiH + aiInset;
   this.aiMessageEl.style.left   = (r.left + jokerLeft) + 'px';
   this.aiMessageEl.style.top    = (r.top  + aiTop)    + 'px';
   this.aiMessageEl.style.width  = bw + 'px';
   this.aiMessageEl.style.height = (aiH - aiInset * 2) + 'px';
   this.aiMessageEl.style.lineHeight = '1.15';
   this.aiMessageEl.style.padding = '8px 12px';
-  this.aiMessageEl.style.fontSize = '16px';
+  this.aiMessageEl.style.fontSize = (isMobile ? 12 : 16) + 'px';
   this.aiMessageEl.style.display = 'flex';
   this.aiMessageEl.style.alignItems = 'center';
   this.aiMessageEl.style.justifyContent = 'center';
 
-  // --- Джокер ---
-	if (this.joker) {
-	  this.joker.setCloudRect({
-		left:   r.left + jokerLeft,
-		top:    r.top  + aiTop,
-		width:  bw,
-		height: aiH - aiInset * 2,
-	  });
-	}
+  if (this.joker) {
+    this.joker.setCloudRect({
+      left:   r.left + jokerLeft,
+      top:    r.top  + aiTop,
+      width:  bw,
+      height: aiH - aiInset * 2,
+    });
+  }
 }
 
   _updateButton() {
@@ -2013,6 +2159,7 @@ _updateHandOverlays() {
     this.trumpCard = trump;
 
     if (this.app.debug) this.app.debug.requestRender();
+	this._updateDeckCounter?.();
   }
 
   _spawnCard(data, { x = 0, y = 0, z } = {}) {

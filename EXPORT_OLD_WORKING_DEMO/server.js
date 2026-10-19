@@ -1,0 +1,146 @@
+// Минимальный статический сервер для NEW_FOOL.
+// - ищет свободный порт начиная с 8000
+// - отдаёт файлы из текущей папки
+// - корректные MIME для .svg, .js (ES-модули!), .css, .html
+// - пишет фактический порт в port.txt
+// - логирует запросы и ошибки в stdout (bat пишет это в server.log)
+
+const http = require('http');
+const fs   = require('fs');
+const path = require('path');
+const net  = require('net');
+
+const ROOT = __dirname;
+const PORT_START = 8000;
+const PORT_MAX_TRIES = 50;
+
+const MIME = {
+  '.html': 'text/html; charset=utf-8',
+  '.js':   'text/javascript; charset=utf-8',   // важно для ES-модулей
+  '.mjs':  'text/javascript; charset=utf-8',
+  '.css':  'text/css; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.svg':  'image/svg+xml',
+  '.png':  'image/png',
+  '.jpg':  'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.gif':  'image/gif',
+  '.ico':  'image/x-icon',
+  '.woff': 'font/woff',
+  '.woff2':'font/woff2',
+  '.ttf':  'font/ttf',
+  '.mp3':  'audio/mpeg',
+  '.ogg':  'audio/ogg',
+  '.wav':  'audio/wav',
+  '.txt':  'text/plain; charset=utf-8',
+  '.map':  'application/json; charset=utf-8',
+};
+
+// ---------- поиск свободного порта ----------
+function findFreePort(start, tries) {
+  return new Promise((resolve, reject) => {
+    let port = start;
+    let left = tries;
+
+    const tryPort = () => {
+      if (left-- <= 0) return reject(new Error('No free port found'));
+      const srv = net.createServer();
+      srv.unref();
+      srv.once('error', () => {
+        port++;
+        tryPort();
+      });
+      srv.once('listening', () => {
+        srv.close(() => resolve(port));
+      });
+      srv.listen(port, '127.0.0.1');
+    };
+
+    tryPort();
+  });
+}
+
+// ---------- статика ----------
+function send(res, code, body, headers = {}) {
+  res.writeHead(code, {
+    'Cache-Control': 'no-store',
+    ...headers,
+  });
+  res.end(body);
+}
+
+function serveFile(req, res, filePath) {
+  fs.stat(filePath, (err, st) => {
+    if (err || !st.isFile()) {
+      return send(res, 404, 'Not found: ' + req.url, { 'Content-Type': 'text/plain; charset=utf-8' });
+    }
+    const ext = path.extname(filePath).toLowerCase();
+    const type = MIME[ext] || 'application/octet-stream';
+    res.writeHead(200, {
+      'Content-Type': type,
+      'Content-Length': st.size,
+      'Cache-Control': 'no-store',
+    });
+    fs.createReadStream(filePath).pipe(res);
+  });
+}
+
+const server = http.createServer((req, res) => {
+  const t0 = Date.now();
+  let urlPath;
+  try {
+    urlPath = decodeURIComponent(new URL(req.url, 'http://x').pathname);
+  } catch {
+    return send(res, 400, 'Bad request', { 'Content-Type': 'text/plain; charset=utf-8' });
+  }
+
+  // защита от выхода за пределы корня
+  const safe = path
+    .normalize(urlPath)
+    .replace(/^([/\\])+/, '')
+    .replace(/^(\.\.[/\\])+/, '');
+
+  let filePath = path.join(ROOT, safe);
+  if (!filePath.startsWith(ROOT)) {
+    return send(res, 403, 'Forbidden', { 'Content-Type': 'text/plain; charset=utf-8' });
+  }
+
+  // если запросили директорию — отдаём index.html
+  fs.stat(filePath, (err, st) => {
+    if (!err && st.isDirectory()) {
+      filePath = path.join(filePath, 'index.html');
+    }
+    serveFile(req, res, filePath);
+    console.log(
+      `${new Date().toISOString()}  ${req.method} ${req.url} -> ${res.statusCode} (${Date.now() - t0}ms)`
+    );
+  });
+});
+
+// ---------- старт ----------
+(async () => {
+  try {
+    const port = await findFreePort(PORT_START, PORT_MAX_TRIES);
+
+    server.listen(port, '127.0.0.1', () => {
+      console.log(`[SERVER] ROOT = ${ROOT}`);
+      console.log(`[SERVER] listening on http://localhost:${port}/`);
+
+      // пишем порт для батника
+      fs.writeFileSync(path.join(ROOT, 'port.txt'), String(port), 'utf8');
+    });
+
+    server.on('error', (e) => {
+      console.error('[SERVER] fatal error:', e);
+      process.exit(1);
+    });
+  } catch (e) {
+    console.error('[SERVER] failed to start:', e.message);
+    process.exit(1);
+  }
+})();
+
+// graceful shutdown
+process.on('SIGINT',  () => { console.log('[SERVER] SIGINT, bye');  process.exit(0); });
+process.on('SIGTERM', () => { console.log('[SERVER] SIGTERM, bye'); process.exit(0); });

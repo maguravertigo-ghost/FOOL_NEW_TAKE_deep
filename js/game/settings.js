@@ -12,6 +12,8 @@ export const DEFAULT_SETTINGS = {
   tableStyle:    0,
   decorStyle:    -1,
   moveHints: true,   // показывать красные блоки на нелегальных картах
+  showDeckCounter: false,   // счётчик карт на колоде
+  aiLevel: 2,               // 1 = новичок, 2 = обычный, 3 = эксперт
 };
 
 function load() {

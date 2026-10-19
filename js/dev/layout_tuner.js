@@ -58,8 +58,12 @@ function saveSkip(v) {
   try { localStorage.setItem(LS_SKIP, v ? '1' : '0'); } catch {}
 }
 export function installLayoutTuner({ onChange }) {
-  const saved = loadCfg();
-  if (saved) Object.assign(SceneLayout.config, saved);
+  // Сохранённый конфиг применяем ТОЛЬКО на десктопе.
+  // На мобилке главнее пресет — иначе тюнер перебьёт адаптивную раскладку.
+  if (SceneLayout.currentPreset !== 'mobile') {
+    const saved = loadCfg();
+    if (saved) Object.assign(SceneLayout.config, saved);
+  }
 
   let dirty = false;
 

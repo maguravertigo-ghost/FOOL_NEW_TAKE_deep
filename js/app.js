@@ -3,7 +3,7 @@ import { audio } from './audio/audio_engine.js';
 import { uiScale } from './ui/ui_scale.js';
 
 import { Scene } from './core/scene.js';
-import { SceneLayout } from './game/scene_layout.js';
+import { SceneLayout, PRESETS } from './game/scene_layout.js';
 import { MarkerRegistry } from './core/marker.js';
 import { MouseCapture } from './core/mouse_capture.js';
 import { Interpolator } from './core/interpolator.js';
@@ -19,10 +19,12 @@ import { ScreenFade } from './ui/screen_fade.js';
 import { MainMenu } from './ui/main_menu.js';
 import { REAL, DEV_MODE } from './game/constants.js';
 import { warmUpDeck } from './game/card_cache.js';
-import { GameSettings } from './game/settings.js';
-import { Progress, saveProgress, addStylePoints } from './game/progress.js';
+import { GameSettings, saveSettings } from './game/settings.js';
+import { Progress, saveProgress, addStylePoints,
+           giveFirstRunGift, GIFT_ITEMS } from './game/progress.js';
 import { showMessage, showConfirm } from './ui/message_overlay.js';
 import { CoinToss } from './ui/coin_toss.js';
+import { clearCache } from './game/card_cache.js';
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
@@ -118,6 +120,8 @@ const onShow = () => {
     });
     window.addEventListener('blur',  onHide);
     window.addEventListener('focus', onShow);
+
+    this._applyScenePreset();
 
     this._setupTable();
     this._setupMarkers();
@@ -283,6 +287,21 @@ _createDevTools() {
 
   document.body.appendChild(wrap);
   this.devToolsEl = wrap;
+  
+  // в конце _createDevTools(), после this.devToolsEl = wrap;
+	document.addEventListener('keydown', (e) => {
+	  // Гравис (ё/`/~/Ё) — переключить видимость dev-панели.
+	  // Не реагируем, если фокус в input/textarea.
+	  const tag = (e.target && e.target.tagName || '').toLowerCase();
+	  if (tag === 'input' || tag === 'textarea') return;
+
+	  if (e.code === 'Backquote' || e.key === '`' || e.key === 'ё' || e.key === 'Ё') {
+		if (!this.devToolsEl) return;
+		const hidden = this.devToolsEl.style.display === 'none';
+		this.devToolsEl.style.display = hidden ? '' : 'none';
+		e.preventDefault();
+	  }
+	});
 }
 
   /* ================================================================
@@ -298,12 +317,24 @@ async _startGameFromMenu(mode) {
   try {
     await this.fade.toBlack(380);
 
+    // ---- First-run gift: пока экран чёрный, применяем стили ----
+    let giftJustGiven = false;
+    if (!Progress.giftGiven) {
+      giftJustGiven = giveFirstRunGift();
+      if (giftJustGiven) this._applyGiftStyles();
+    }
+
     this.menu.hide();
     this._cleanupGame();
     this.hud.setHidden(!this.debug?.enabled);
     if (this.settingsBtn) this.settingsBtn.style.display = 'none';
 
     await this.fade.toClear(650);
+
+    // ---- Окно "ВАМ ПОДАРОК!" (только при первом матче) ----
+    if (giftJustGiven) {
+      await this._showGiftDialog();
+    }
 
     // ---- Жеребьёвка / показ жетона ----
     this.coinToss = new CoinToss(this);
@@ -469,6 +500,40 @@ async _startGameFromMenu(mode) {
     }
   }
 
+  _applyGiftStyles() {
+    const g = GIFT_ITEMS;
+
+    // shirt
+    GameSettings.shirtStyle = g.shirt.index;
+    Card.defaultShirtUrl = ASSETS.shirts[g.shirt.index];
+
+    // table
+    GameSettings.tableStyle = g.table.index;
+    const bg = document.getElementById('table-bg');
+    if (bg) bg.style.backgroundImage = `url("${ASSETS.tables[g.table.index]}")`;
+
+    // decor
+    GameSettings.decorStyle = g.decor.index;
+    const decor = document.getElementById('decor-layer');
+    if (decor) decor.style.backgroundImage = `url("${ASSETS.decorations[g.decor.index]}")`;
+
+    // design — из индекса в строковый id
+    const designIds = ['grid', 'center', 'rank', 'rank-no-corners'];
+    GameSettings.cardStyle = designIds[g.design.index] || 'grid';
+    Card.defaultCardStyle = GameSettings.cardStyle;
+
+    // suits
+    const suitIds = ['default', 'paper', 'barhat', 'gradient', 'ruby', 'golden'];
+    GameSettings.suitStyle = suitIds[g.suits.index] || 'gradient';
+    Card.defaultSuitStyle = GameSettings.suitStyle;
+
+    saveSettings();
+
+    // пересобрать кеш карт под новые стили
+    clearCache();
+    warmUpDeck(GameSettings.cardStyle, GameSettings.suitStyle);
+  }
+
   _applySettings() {
     audio.setVolume(GameSettings.masterVolume ?? 0.8);
     audio.setSfxEnabled(GameSettings.sfxEnabled !== false);
@@ -498,17 +563,23 @@ async _startGameFromMenu(mode) {
     warmUpDeck(Card.defaultCardStyle, Card.defaultSuitStyle);
   }
 
+  _applyScenePreset() {
+    SceneLayout.setPreset(uiScale.isMobile ? 'mobile' : 'desktop');
+  }
+
   _setupMarkers() {
     if (DEV_MODE) {
       this.tuner = installLayoutTuner({ onChange: () => this._relayoutAll() });
     } else {
-      // заглушка: без тюнера всегда обычные анимации
       this.tuner = { skipAnimation: false };
     }
 
     this._relayoutAll();
     this.scene.onResize(() => this._relayoutAll());
-    uiScale.onChange(() => this._relayoutAll());
+    uiScale.onChange(() => {
+      this._applyScenePreset();
+      this._relayoutAll();
+    });
   }
 
   _setupInput() {
@@ -533,6 +604,9 @@ async _startGameFromMenu(mode) {
         c.setPixelOffset(i * C.deckStackDx * cw, i * C.deckStackDy * ch);
         c.relayout(this.scene);
       });
+      if (this.session && this.session._positionDeckShadow) {
+        this.session._positionDeckShadow();
+      }
     }
 
     if (this.accordionPlayer) this.accordionPlayer.relayout();
@@ -541,6 +615,7 @@ async _startGameFromMenu(mode) {
     if (this.session) {
       if (this.session.slotUIs) for (const s of this.session.slotUIs) s.relayout();
       this.session._repositionActionButton();
+	  this.session._updateDeckCounter?.();
       if (this.session.trumpSuitEl) {
         const trumpM = this.markers.get('trump');
         const p = this.scene.resolve(trumpM);
@@ -562,10 +637,25 @@ async _startGameFromMenu(mode) {
     if (!this.settingsBtn) return;
     const r = this.sceneEl.getBoundingClientRect();
     const W = r.width, H = r.height;
-    const C = SceneLayout.config;
-    const L = C.frameL * W;
-    const T = C.frameT * H;
-    const size = Math.max(60, Math.min(76, Math.min(W, H) * 0.055));
+    const isMobile = uiScale.isMobile;
+
+    let L, T, size;
+
+    if (isMobile) {
+      // На мобилке колода уходит за край (frameL < 0) — поэтому
+      // для кнопки паузы используем фиксированный отступ от края.
+      const pad = Math.round(10 * uiScale.scale);
+      L = pad;
+      T = pad;
+      // Размер примерно вдвое меньше десктопного
+      size = Math.max(36, Math.min(48, Math.min(W, H) * 0.09));
+    } else {
+      const C = SceneLayout.config;
+      L = C.frameL * W;
+      T = C.frameT * H;
+      size = Math.max(60, Math.min(76, Math.min(W, H) * 0.055));
+    }
+
     this.settingsBtn.style.left   = (r.left + L) + 'px';
     this.settingsBtn.style.top    = (r.top  + T) + 'px';
     this.settingsBtn.style.width  = size + 'px';
@@ -597,6 +687,35 @@ async _startGameFromMenu(mode) {
     this._positionSettingsButton();
   }
 
+  _showGiftDialog() {
+    return new Promise(resolve => {
+      const el = document.createElement('div');
+      el.className = 'msg-overlay';
+      el.style.display = 'flex';
+      el.innerHTML = `
+        <div class="msg-overlay__box msg-overlay__box--gift">
+          <div class="msg-overlay__title">ВАМ ПОДАРОК!</div>
+          <div class="gift-joker">
+            <img src="${ASSETS.jokerFaceSmiling}" alt="">
+          </div>
+          <div class="msg-overlay__body">
+            Джокер дарит Вам <b>подарочный стиль оформления игровой комнаты</b>
+            на <b>3 матча</b>.
+            <div class="gift-hint">Подробнее: ГЛАВНОЕ МЕНЮ → СТИЛЬ</div>
+          </div>
+          <button class="mm-btn mm-btn--small" data-msg-btn data-close>ОК</button>
+        </div>
+      `;
+      document.getElementById('scene').appendChild(el);
+
+      el.querySelector('[data-close]').addEventListener('click', () => {
+        audio.playSfx('tap_up');
+        el.remove();
+        resolve();
+      });
+    });
+  }
+
   /* ================================================================
    *  Аккордеоны
    * ================================================================ */
@@ -616,6 +735,7 @@ async _startGameFromMenu(mode) {
       anchorR: this.markers.get('acc_cpu_R'),
       insertAnchor: this.markers.get('ins_cpu_L'),
       baseMinDist: REAL.w * 0.9, fanDir: -1,
+      sortCards: false,
     });
   }
 }
@@ -624,4 +744,5 @@ window.addEventListener('DOMContentLoaded', () => {
   const app = new App();
   app._createSettingsButton();
   window.__app = app;
+  window.SceneLayout = SceneLayout;   // для отладки
 });

@@ -17,6 +17,8 @@ export const ASSETS = {
     decor:  `${BASE}/hud/icons/decor.svg`,
   },
 	pokerChip: `${BASE}/hud/icons/poker_chip.svg`,
+	newOneIcon: `${BASE}/hud/icons/new_one.svg`,
+	lockIcon:   `${BASE}/hud/icons/lock.svg`,
   
   logoMain: `${BASE}/hud/logo_main.png`,
   
@@ -40,6 +42,7 @@ export const ASSETS = {
 	jokerSuit:    `${BASE}/hud/joker/joker_suit.png`,
 	pogon:        `${BASE}/hud/joker/pogon.png`,
 	galstuk:      `${BASE}/hud/joker/galstuk.png`,
+	jokerFaceSmiling: `${BASE}/hud/joker/joker_face_smiling.png`,
    coinFrames: [
     `${BASE}/hud/joker/coin_0.png`,
     `${BASE}/hud/joker/coin_1.png`,

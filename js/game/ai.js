@@ -91,7 +91,12 @@ export class AI {
   _decideAttackFirst() {
     const hand = this.hand;
     if (!hand.length) return { type: 'pass' };
-
+	// Level 1 — «новичок»: без оптимизации, просто первая некозырная
+    if (this.level === 1) {
+      const nonT = hand.filter(c => !this.isTrump(c));
+      const pool = nonT.length ? nonT : hand;
+      return { type: 'attack', card: pool[0] };
+    }
     const trumps   = hand.filter(c => this.isTrump(c));
     const nonT     = hand.filter(c => !this.isTrump(c));
     const counts   = this.rankCountMap();
@@ -132,6 +137,13 @@ export class AI {
       return { type: 'pass' };
     }
     const pool = (nonT.length ? nonT : cands);
+	
+	// Level 1 — редко подкидывает, козырями не подкидывает вообще
+    if (this.level === 1) {
+      if (!nonT.length) return { type: 'pass' };
+      if (Math.random() > 0.4) return { type: 'pass' };
+      return { type: 'attack', card: nonT[0], dump: false };
+    }
 
     // Чем ближе конец — тем активнее атакуем
     const chance = this.deckLeft === 0
@@ -165,7 +177,18 @@ export class AI {
     const r = this.s.round;
     const unbeaten = r.table.filter(p => p.atk && !p.def);
     if (!unbeaten.length) return { type: 'take' };
+	
+	// Level 1 — без перевода, без плана, 25% шанс «взять» даже при возможности отбиться
+    if (this.level === 1) {
+      if (Math.random() < 0.25) return { type: 'take' };
 
+      const atk = unbeaten[0].atk;
+      const cands = this.hand.filter(c => canBeat(c, atk, this.trump));
+      if (!cands.length) return { type: 'take' };
+      const pairIdx = r.table.findIndex(p => p.atk === atk);
+      return { type: 'defense', card: cands[0], pairIdx };
+    }
+	
     // ---------- Перевод ----------
     if (this.s.translateMode && !r.anyBeaten) {
       const firstAtk = unbeaten[0].atk;
@@ -179,15 +202,33 @@ export class AI {
         // Перевод козырем — только если козырей много (>= 3) или мы в концовке.
         const trumpsInHand = this.hand.filter(c => this.isTrump(c)).length;
         let wantTranslate = false;
+        const tProb = (this.level >= 3) ? 1.0  : 0.75;
+        const trProb = (this.level >= 3) ? 0.6 : 0.35;
         if (nonT.length) {
-          wantTranslate = Math.random() < 0.75;
+          wantTranslate = Math.random() < tProb;
         } else if (trumpsInHand >= 3 || this.deckLeft === 0) {
-          wantTranslate = Math.random() < 0.35;
+          wantTranslate = Math.random() < trProb;
         }
         if (wantTranslate) {
-          const pool = nonT.length ? nonT : translators;
-          pool.sort((a, b) => this.attackValue(a) - this.attackValue(b));
-          return { type: 'translate', card: pool[0] };
+          let pool;
+          if (nonT.length) {
+            // некозырь — идеальный вариант перевода
+            pool = nonT.slice();
+          } else {
+            // только козыри: переводим ТОЛЬКО младшими (младше J)
+            const lowTrumps = translators.filter(c => this.rank(c) < 11);
+            if (!lowTrumps.length) {
+              // козырь J+ не отдаём — пусть защита/взятие решит
+              pool = [];
+            } else {
+              pool = lowTrumps;
+            }
+          }
+          if (pool.length) {
+            pool.sort((a, b) => this.attackValue(a) - this.attackValue(b));
+            return { type: 'translate', card: pool[0] };
+          }
+          // если переводить нечем подходящим — идём дальше к защите
         }
       }
     }

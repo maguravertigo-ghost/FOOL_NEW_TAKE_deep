@@ -1,0 +1,67 @@
+=== js/game/rules.js ===
+Size   : 2.3 KB
+Modify : 2026-09-27 23:12:09
+========================
+
+import { RANK_VALUE } from './constants.js';
+
+/**
+ * Может ли `card` побить `target`?
+ *  • без козыря: только та же масть, ранг старше;
+ *  • с козырем: козырь бьёт не-козырь; два козыря — по рангу;
+ *    не-козырь козырь не бьёт.
+ */
+export function canBeat(card, target, trump) {
+  if (!target) return true;
+
+  const cs = card.data.suit;
+  const ts = target.data.suit;
+  const cr = RANK_VALUE[card.data.rank];
+  const tr = RANK_VALUE[target.data.rank];
+
+  const cT = (trump && cs === trump);
+  const tT = (trump && ts === trump);
+
+  if (cT && !tT) return true;
+  if (!cT && tT) return false;
+  if (cT && tT) return cr > tr;
+  if (cs !== ts) return false;
+  return cr > tr;
+}
+
+/**
+ * Может ли defender перевести карту?
+ *  • на столе не должно быть ни одной защиты;
+ *  • ранг совпадает с атакующей;
+ *  • у оппонента (того, кто станет защитником после перевода) должно
+ *    хватить карт, чтобы отбить все неотбитые карты на столе
+ *    (после перевода неотбитых станет unbeatenCount + 1).
+ */
+export function canTranslate(defCard, atkCard, tableHasDefense, opts = {}) {
+  if (tableHasDefense) return false;
+  if (!defCard || !atkCard) return false;
+  if (defCard.data.rank !== atkCard.data.rank) return false;
+
+  const { unbeatenCount = 0, opponentHandSize = Infinity } = opts;
+  if (opponentHandSize < unbeatenCount + 1) return false;
+
+  return true;
+}
+
+/** Может ли атакующий подкинуть карту —
+ *  ранг совпадает с любым рангом на столе. */
+export function canAddToTable(card, tableRanksSet) {
+  if (!card || !tableRanksSet) return false;
+  return tableRanksSet.has(card.data.rank);
+}
+
+/** Собрать все ранги, присутствующие на столе (atk+def). */
+export function tableRanks(table) {
+  const s = new Set();
+  if (!table) return s;
+  for (const p of table) {
+    if (p.atk) s.add(p.atk.data.rank);
+    if (p.def) s.add(p.def.data.rank);
+  }
+  return s;
+}

@@ -2,12 +2,14 @@ import { audio } from '../audio/audio_engine.js';
 import { withLoading } from './loading_overlay.js';
 import { ASSETS } from '../assets.js';
 import { GameSettings, saveSettings } from '../game/settings.js';
-import {
-  Progress, saveProgress, claimQuestReward, resetQuests,
-  activeOrder, isTestModeUnlocked,
-  PRICES, isPurchased, purchaseItem,
-  claimableRanks,
-} from '../game/progress.js';
+  import {
+    Progress, saveProgress, claimQuestReward, resetQuests,
+    activeOrder, isTestModeUnlocked,
+    PRICES, isPurchased, purchaseItem,
+    claimableRanks,
+    markStyleItemSeen, isStyleItemSeen, hasUnseenStyleItems,
+    getTempMatchesLeft, isTempItem,
+  } from '../game/progress.js';
 import { showMessage, showConfirm } from './message_overlay.js';
 import { spawnCard, clearCache, warmUpDeck } from '../game/card_cache.js';
 import { Card } from '../game/card.js';
@@ -170,11 +172,13 @@ _layoutAll() {
     });
     const img = el.querySelector('img');
     if (img) {
-      img.style.padding   = `${H.s(3)}px ${H.s(11)}px`;
+      img.style.padding   = '0';
       img.style.boxSizing = 'border-box';
-      img.style.width     = '100%';
+      img.style.width     = 'auto';
       img.style.height    = '100%';
+      img.style.maxWidth  = '100%';
       img.style.objectFit = 'contain';
+      img.style.display   = 'block';
     }
   }
 
@@ -201,7 +205,7 @@ _layoutAll() {
     minWidth: '0',
     padding: `${H.s(14)}px ${H.s(18)}px`,
     boxSizing: 'border-box',
-    fontSize: H.s(16) + 'px',
+    fontSize: H.s(H.isMobile ? 22 : 16) + 'px',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
@@ -218,7 +222,7 @@ _layoutAll() {
     minWidth: '0',
     padding: `${H.s(14)}px ${H.s(18)}px`,
     boxSizing: 'border-box',
-    fontSize: H.s(16) + 'px',
+    fontSize: H.s(H.isMobile ? 22 : 16) + 'px',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'flex-end',
@@ -235,7 +239,7 @@ _layoutAll() {
       top:    hp.top  + 'px',
       width:  hp.width + 'px',
       height: hp.height + 'px',
-      fontSize: H.s(15) + 'px',
+      fontSize: H.s(H.isMobile ? 22 : 15) + 'px',
       padding: `${H.s(8)}px ${H.s(14)}px`,
       boxSizing: 'border-box',
     });
@@ -251,7 +255,7 @@ _layoutAll() {
       top:    r.top  + 'px',
       width:  r.width + 'px',
       height: r.height + 'px',
-      fontSize: H.s(17) + 'px',
+      fontSize: H.s(H.isMobile ? 26 : 17) + 'px',
       padding: `${H.s(10)}px ${H.s(14)}px`,
       boxSizing: 'border-box',
     });
@@ -266,7 +270,7 @@ _layoutAll() {
       top:    r.top  + 'px',
       width:  r.width + 'px',
       height: r.height + 'px',
-      fontSize: H.s(17) + 'px',
+      fontSize: H.s(H.isMobile ? 26 : 17) + 'px',
       padding: `${H.s(10)}px ${H.s(14)}px`,
       boxSizing: 'border-box',
     });
@@ -305,9 +309,31 @@ _refreshStats() {
   const sp = this.el.querySelector('.mm-style-points__value');
   if (sp) sp.textContent = Progress.stylePoints;
     // ---- иконка «есть непроклеймленные награды» на кнопке КВЕСТ ----
-  this._updateQuestBadge();
-  this._updateFoolTokenMarks();
-}
+    this._updateQuestBadge();
+    this._updateFoolTokenMarks();
+    this._updateStyleBadge();
+  }
+
+  _updateStyleBadge() {
+    const btn = this.el.querySelector('[data-open="style"]');
+    if (!btn) return;
+
+    const hasNew = hasUnseenStyleItems();
+    let badge = btn.querySelector('.new-badge');
+
+    if (!hasNew) {
+      if (badge) badge.remove();
+      return;
+    }
+    if (badge) return;
+
+    badge = document.createElement('img');
+    badge.className = 'new-badge';
+    badge.src = ASSETS.newOneIcon;
+    badge.alt = '';
+    badge.draggable = false;
+    btn.appendChild(badge);
+  }
 
 _updateQuestBadge() {
   const btn = this.refs.questBtn;
@@ -434,15 +460,215 @@ _updateQuestBadge() {
             <div class="mm-overlay__title">СПРАВКА</div>
             <button class="mm-btn mm-btn--small" data-close>В МЕНЮ</button>
           </div>
-          <div class="mm-overlay__body mm-overlay__body--scroll">
-            <p><b>Цель игры.</b> Сбросить все карты раньше соперника. Кто остался с картами — тот «дурак».</p>
-            <p><b>Раздача.</b> Каждому по 6 карт. Верхняя карта колоды — козырь.</p>
-            <p><b>Ход.</b> Первый игрок кладёт карту — атакует. Второй должен «отбиться» — побить карту старшей того же масти или любым козырем.</p>
-            <p><b>Козырь.</b> Козырь бьёт любую некозырную карту. Козырь бьётся только козырем старшего ранга.</p>
-            <p><b>Подкидывание.</b> После отбоя атакующий может подкинуть карты того же ранга, что уже лежат на столе.</p>
-            <p><b>Переводной режим.</b> До первого отбоя защитник может перевести карту на атакующего — положить карту того же ранга. Роли меняются.</p>
-            <p><b>Погоны.</b> Если в финале игрок выкидывает две шестёрки подряд — он «вешает погоны»: +250 очков.</p>
-            <p><b>Очки стиля.</b> 100 за победу, 250 за погоны, 250+50×N за квест.</p>
+          <div class="mm-overlay__body mm-overlay__body--scroll help-body">
+
+            <div class="help-intro">
+              <b>Fool</b> — карточная игра в дурака против Джокера.
+              Выигрывайте матчи, выполняйте квесты, зарабатывайте очки стиля
+              и открывайте новое оформление игры.
+            </div>
+
+            <div class="help-section">
+              <div class="help-section__title">Цель игры</div>
+              <div class="help-section__text">
+                Сбросить все карты раньше соперника. Кто остался с картами — тот «дурак».
+                Каждому раздаётся по 6 карт. Верхняя карта колоды — козырь.
+              </div>
+            </div>
+
+            <div class="help-section">
+              <div class="help-section__title">Ход игры</div>
+              <div class="help-section__text">
+                <b>Атака.</b> Первый игрок кладёт карту — атакует.<br>
+                <b>Защита.</b> Второй должен побить карту старшей той же масти или любым козырем.<br>
+                <b>Подкидывание.</b> После отбоя атакующий может подкинуть карты того же ранга, что уже лежат на столе.<br>
+                <b>Взятие.</b> Если отбиться нечем — защитник забирает все карты со стола.<br>
+                <b>Козырь.</b> Бьёт любую некозырную. Козырь бьётся только козырем старшего ранга.
+              </div>
+            </div>
+
+            <div class="help-section">
+              <div class="help-section__title">Режимы игры</div>
+              <div class="help-section__text">
+                <b>Подкидной.</b> Классический режим. Защитник только отбивается или берёт.<br>
+                <b>Переводной.</b> До первого отбоя защитник может перевести атаку на атакующего — положить карту того же ранга. Роли меняются.
+              </div>
+            </div>
+
+            <div class="help-section">
+              <div class="help-section__title">Жеребьёвка — монета Джокера</div>
+              <div class="help-section__row">
+                <div class="help-coins">
+                  <div class="help-coin">
+                    <img src="${ASSETS.coinFrames[0]}" alt="">
+                    <span>Джокер<br>ходит первым</span>
+                  </div>
+                  <div class="help-coin">
+                    <img src="${ASSETS.coinFrames[4]}" alt="">
+                    <span>Игрок<br>ходит первым</span>
+                  </div>
+                </div>
+                <div class="help-section__text">
+                  В начале самого первого матча (и после каждой ничьей) проводится жеребьёвка.
+                  Монета определяет, кто ходит первым и первым получает карты.
+                </div>
+              </div>
+            </div>
+
+            <div class="help-section">
+              <div class="help-section__title">Жетон дурака</div>
+              <div class="help-section__row">
+                <div class="help-section__img">
+                  <img src="${ASSETS.foolToken}" alt="">
+                </div>
+                <div class="help-section__text">
+                  Кто проиграл матч — получает <b>жетон дурака</b>.
+                  Во всех следующих матчах обладатель жетона получает карты вторым,
+                  а соперник — первым. При ничьей жетон сбрасывается,
+                  и следующий матч снова начинается с жеребьёвки.
+                  <br><br>
+                  Жетон виден на кнопке режима в главном меню
+                  (если дурак — игрок) или на джокере в окнах
+                  (если дурак — ИИ).
+                </div>
+              </div>
+            </div>
+
+            <div class="help-section">
+              <div class="help-section__title">Погоны и галстук</div>
+              <div class="help-section__row">
+                <div class="help-section__img help-section__img--row">
+                  <img src="${ASSETS.pogon}" alt="">
+                  <img src="${ASSETS.galstuk}" alt="">
+                </div>
+                <div class="help-section__text">
+                  Если вы заканчиваете матч, выкидывая подряд несколько карт одного ранга,
+                  вы «вешаете погоны» джокеру:
+                  <br><br>
+                  • 1 карта → <b>1 погон</b><br>
+                  • 2 карты → <b>2 погона</b><br>
+                  • 3+ карт → <b>2 погона + галстук</b>
+                  <br><br>
+                  За погоны начисляется <b>+250 очков стиля</b>.
+                  Событие срабатывает, если игрок сам нажимает кнопку
+                  <b>ПОГОНЫ!</b> в финальном раунде.
+                </div>
+              </div>
+            </div>
+
+            <div class="help-section">
+              <div class="help-section__title">Очки стиля</div>
+              <div class="help-section__row">
+                <div class="help-section__img">
+                  <img src="${ASSETS.jokerSetNice}" alt="">
+                </div>
+                <div class="help-section__text">
+                  Внутренняя валюта игры. Зарабатываются так:
+                  <br><br>
+                  • <b>100</b> — за победу<br>
+                  • <b>+250</b> — за погоны<br>
+                  • <b>250 + 50×N</b> — за квест (N — прогресс)
+                  <br><br>
+                  Тратятся в <b>Магазинчике Джокера</b> на оформление игры.
+                </div>
+              </div>
+            </div>
+
+            <div class="help-section">
+              <div class="help-section__title">Квест</div>
+              <div class="help-section__row">
+                <div class="help-section__img">
+                  <img src="${ASSETS.pokerChip}" alt="">
+                </div>
+                <div class="help-section__text">
+                  Квест — серия задач. Каждый квест — выкинуть определённую карту
+                  последней или в наборе. Квесты идут по порядку: следующий
+                  открывается, когда выполнен предыдущий.
+                  <br><br>
+                  Значок на кнопке <b>КВЕСТ</b> в меню означает, что есть
+                  непроклеймленные награды.
+                </div>
+              </div>
+            </div>
+
+            <div class="help-section">
+              <div class="help-section__title">Магазинчик и Стиль</div>
+              <div class="help-section__row">
+                <div class="help-section__icons">
+                  <img src="${ASSETS.shopIcons.shirt}" alt="">
+                  <img src="${ASSETS.shopIcons.design}" alt="">
+                  <img src="${ASSETS.shopIcons.suits}" alt="">
+                  <img src="${ASSETS.shopIcons.table}" alt="">
+                  <img src="${ASSETS.shopIcons.decor}" alt="">
+                </div>
+                <div class="help-section__text">
+                  В <b>Магазинчике</b> покупаются рубашки карт, оформление лиц,
+                  масти, столы и декорации. Категории подсвечиваются
+                  зелёным, если в них есть товар, который вы можете купить.
+                  <br><br>
+                  Купленные элементы открываются в разделе <b>СТИЛЬ</b> —
+                  там их можно применить к текущему матчу.
+                </div>
+              </div>
+            </div>
+
+            <div class="help-section">
+              <div class="help-section__title">Значки в меню</div>
+              <div class="help-section__row">
+                <div class="help-section__img help-section__img--row">
+                  <img src="${ASSETS.newOneIcon}" alt="">
+                  <img src="${ASSETS.pokerChip}" alt="">
+                </div>
+                <div class="help-section__text">
+                  <b>NEW</b> на плитке в СТИЛЬ — элемент куплен, но ещё
+                  не открыт. Кликните по нему — значок исчезнет. Если
+                  на кнопке СТИЛЬ в меню горит NEW, значит есть непросмотренные элементы.
+                  <br><br>
+                  <b>Фишка</b> на кнопке КВЕСТ — есть непроклеймленные награды.
+                </div>
+              </div>
+            </div>
+
+            <div class="help-section">
+              <div class="help-section__title">Настройки</div>
+              <div class="help-section__text">
+                • <b>Звуки и музыка</b> — включение/отключение.<br>
+                • <b>Карт в колоде</b> — 36 или 52 карты.<br>
+                • <b>Карты в руке</b> — веер или прямая линия.<br>
+                • <b>Подсказки хода</b> — красные метки на нелегальных картах.<br>
+                • <b>Счётчик колоды</b> — число оставшихся карт на колоде.<br>
+                • <b>Уровень AI</b> — новичок / обычный / эксперт.
+              </div>
+            </div>
+
+			<div class="help-section">
+			  <div class="help-section__title">Громкость и пауза</div>
+			  <div class="help-section__text">
+				Во время матча громкость музыки и звуков регулируется в окне
+				<b>ПАУЗА</b> — оно открывается кнопкой с шестерёнкой в левом верхнем
+				углу сцены или клавишей <b>Esc</b>. Там же — «Продолжить игру»
+				и «Выйти в главное меню».
+				<br><br>
+				В главном меню звуки и музыку можно полностью отключить
+				в <b>НАСТРОЙКАХ</b>.
+			  </div>
+			</div>
+
+			<div class="help-section">
+			  <div class="help-section__title">Управление в игре</div>
+			  <div class="help-section__text">
+				<b>Мышь / касание.</b> Клик по карте в руке — выбрать её.
+				Затем клик по подсвеченному слоту на столе — сыграть в этот слот.
+				Повторный клик по карте — снять выбор.<br>
+				<b>Кнопка игрока.</b> Справа внизу — кнопка действия.
+				<b>БЕРУ</b> — взять карты со стола, <b>ПАС</b> — завершить атаку,
+				<b>МОЙ ХОД</b> — ждём ваших действий, <b>ПОГОНЫ!</b> и <b>ВСЁ!</b> —
+				финальные комбинации.<br>
+				<b>Клавиатура (десктоп).</b> Стрелки ←/→ — переключить карту,
+				Enter — подтвердить, Backspace — снять выбор, Esc — пауза.
+			  </div>
+			</div>
+
           </div>
         </div>`;
       this._bindClose(ov);
@@ -466,7 +692,7 @@ _updateQuestBadge() {
     const el = document.createElement('div');
     el.className = 'mm-overlay';
     el.innerHTML = `
-      <div class="mm-overlay__box">
+      <div class="mm-overlay__box mm-overlay__box--settings">
         <div class="mm-overlay__title">НАСТРОЙКИ</div>
         <div class="mm-rows"></div>
         <button class="mm-btn mm-btn--small" data-close>В МЕНЮ</button>
@@ -483,6 +709,12 @@ _updateQuestBadge() {
       { label: 'веер', val: 'fan' }, { label: 'прямо', val: 'straight' }]));
 	rows.appendChild(this._makeRow('Подсказки хода', 'moveHints', [
 	  { label: 'вкл.', val: true }, { label: 'откл.', val: false }]));
+	rows.appendChild(this._makeRow('Счётчик колоды', 'showDeckCounter', [
+	  { label: 'вкл.', val: true }, { label: 'откл.', val: false }]));
+	rows.appendChild(this._makeRow('Уровень AI', 'aiLevel', [
+	  { label: 'новичок', val: 1 },
+	  { label: 'обычный', val: 2 },
+	  { label: 'эксперт', val: 3 }]));
     return el;
   }
   
@@ -529,6 +761,11 @@ _makeRow(labelText, key, options) {
         }
         if (window.__app && window.__app.accordionCpu) {
           window.__app.accordionCpu.relayout();
+        }
+      } else if (key === 'showDeckCounter') {
+        GameSettings.showDeckCounter = opt.val;
+        if (window.__app && window.__app.session) {
+          window.__app.session._updateDeckCounter?.();
         }
       }
 
@@ -580,6 +817,44 @@ _fadeMusic(on) {
     this._renderShop(ov, this._shopCategory);
     ov.style.display = 'flex';
     this._activeOverlay = ov;
+	
+	this._showShopWelcome();
+  }
+
+  _showShopWelcome() {
+    if (Progress.shopIntroSeen) return;
+
+    const el = document.createElement('div');
+    el.className = 'msg-overlay';
+    el.style.display = 'flex';
+    el.innerHTML = `
+      <div class="msg-overlay__box">
+        <div class="msg-overlay__title">Добро пожаловать!</div>
+        <div class="msg-overlay__body">
+          Добро пожаловать в <b>Магазинчик Джокера</b> — здесь есть много
+          интересного, чтобы сделать вашу игру ярче и красивее.
+          Придайте своей игре собственный неповторимый стиль!
+        </div>
+        <label class="msg-overlay__check">
+          <input type="checkbox" class="shop-intro-check">
+          <span>Больше не показывать при входе</span>
+        </label>
+        <button class="mm-btn mm-btn--small" data-msg-btn data-close>ОК</button>
+      </div>
+    `;
+    document.getElementById('scene').appendChild(el);
+
+    const checkbox = el.querySelector('.shop-intro-check');
+    const close = () => {
+      audio.playSfx('tap_up');
+      if (checkbox.checked) {
+        Progress.shopIntroSeen = true;
+        saveProgress();
+      }
+      el.remove();
+    };
+    el.querySelector('[data-close]').addEventListener('click', close);
+    el.addEventListener('click', (e) => { if (e.target === el) close(); });
   }
 
 _renderShop(root, category) {
@@ -654,25 +929,43 @@ _buildShopItems(cat) {
   wrap.appendChild(grid);
 
   for (const item of items) {
-    const bought = isPurchased(cat, item.index);
+    const permanent = (Progress.purchases[cat] || []).includes(item.index);
+    const tempLeft = permanent ? 0 : getTempMatchesLeft(cat, item.index);
+    const affordable = !permanent && item.price <= Progress.stylePoints;
+
     const tile = document.createElement('div');
-    tile.className = 'shop-item' + (bought ? ' shop-item--bought' : '');
+    tile.className = 'shop-item' + (permanent ? ' shop-item--bought' : '');
     if (cat === 'decor') tile.classList.add('shop-item--decor');
+    if (affordable) tile.classList.add('shop-item--affordable');
 
     // превью
     const prev = this._makePreview(item, cat);
     if (prev) tile.appendChild(prev);
 
-    if (bought) {
+    if (permanent) {
       const ck = document.createElement('div');
       ck.className = 'mm-tile__check';
       ck.textContent = '✓';
       tile.appendChild(ck);
     } else {
+      const lock = document.createElement('img');
+      lock.className = 'mm-tile__lock';
+      lock.src = ASSETS.lockIcon;
+      lock.alt = '';
+      lock.draggable = false;
+      tile.appendChild(lock);
+
       const pr = document.createElement('div');
       pr.className = 'shop-item__price';
       pr.textContent = item.price;
       tile.appendChild(pr);
+    }
+
+    if (tempLeft > 0) {
+      const tb = document.createElement('div');
+      tb.className = 'temp-badge';
+      tb.textContent = String(tempLeft);
+      tile.appendChild(tb);
     }
 
     tile.addEventListener('click', () => this._confirmBuy(this._overlays.shop, `${cat}:${item.index}`));
@@ -686,15 +979,15 @@ _makePreview(item, cat) {
     const wrap = document.createElement('div');
     wrap.style.cssText =
       'width:100%;height:100%;display:flex;align-items:center;' +
-      'justify-content:center;padding:6px;box-sizing:border-box;';
+      'justify-content:center;box-sizing:border-box;overflow:hidden;';
 
-    // Обёртка .card__face — активирует все CSS-правила card_constructor
     const face = document.createElement('div');
     face.className = 'card__face';
     face.style.cssText =
       'position:relative;display:flex;align-items:center;' +
-      'justify-content:center;';
-    face.style.setProperty('--card-w', '110px');   // ← размер превью
+      'justify-content:center;max-width:100%;max-height:100%;flex-shrink:0;';
+    // Делаем карту крупной, как в матче
+    face.style.setProperty('--card-w', 'calc(150px * var(--ui))');
 
     try {
       let cardStyle, suitStyle, rank, suit;
@@ -762,6 +1055,14 @@ _buildShopCategories() {
     btn.dataset.cat = cat.id;
     btn.textContent = cat.label;
 
+    // Подсветка: если в категории есть хотя бы один товар, который игрок может купить
+    const catItems = this._shopItemsFor(cat.id);
+    const canAffordAny = catItems.some(it =>
+      !(Progress.purchases[cat.id] || []).includes(it.index)
+      && it.price <= Progress.stylePoints
+    );
+    if (canAffordAny) btn.classList.add('shop-cat--affordable');
+
     const icon = document.createElement('img');
     icon.className = 'shop-cat__icon';
     icon.src = cat.icon;
@@ -771,7 +1072,7 @@ _buildShopCategories() {
 
     btn.addEventListener('click', () => {
       audio.playSfx('switch');
-	  this._shopCategory = btn.dataset.cat;
+      this._shopCategory = btn.dataset.cat;
       this._renderShop(this._overlays.shop, this._shopCategory);
     });
 
@@ -866,7 +1167,9 @@ _confirmBuy(root, key) {
   const items = this._shopItemsFor(cat);
   const item = items[index];
   if (!item) return;
-  if (isPurchased(cat, index)) return;
+
+  // Блокируем только перманентную покупку. Временный подарок можно купить.
+  if ((Progress.purchases[cat] || []).includes(index)) return;
 
   showConfirm(
     `Вы желаете приобрести:<br><b>${item.label}</b><br>за <b class="mm-stat-value--accent">${item.price}</b> очков стиля?`,
@@ -965,6 +1268,9 @@ _renderStyleTiles(root) {
     const item = items[i];
     const bought = isPurchased(cat, i);
 
+    // NEW — купленный, но не просмотренный (кроме дефолтных index 0)
+    const isNew = bought && i > 0 && !isStyleItemSeen(cat, i);
+
     const tile = document.createElement('div');
     tile.className = 'mm-tile' + (i === selected ? ' mm-tile--active' : '');
     tile.classList.toggle('mm-tile--locked', !bought);
@@ -973,11 +1279,23 @@ _renderStyleTiles(root) {
     const prev = this._makePreview(item, cat);
     if (prev) tile.appendChild(prev);
 
+    const permanent = (Progress.purchases[cat] || []).includes(i);
+    const tempLeft = permanent ? 0 : getTempMatchesLeft(cat, i);
+
     if (!bought) {
-      const lock = document.createElement('div');
+      const lock = document.createElement('img');
       lock.className = 'mm-tile__lock';
-      lock.textContent = '🔒';
+      lock.src = ASSETS.lockIcon;
+      lock.alt = '';
+      lock.draggable = false;
       tile.appendChild(lock);
+    } else if (isNew) {
+      const nb = document.createElement('img');
+      nb.className = 'new-indicator';
+      nb.src = ASSETS.newOneIcon;
+      nb.alt = '';
+      nb.draggable = false;
+      tile.appendChild(nb);
     } else if (i === selected) {
       const ck = document.createElement('div');
       ck.className = 'mm-tile__check';
@@ -985,15 +1303,30 @@ _renderStyleTiles(root) {
       tile.appendChild(ck);
     }
 
+    if (tempLeft > 0) {
+      const tb = document.createElement('div');
+      tb.className = 'temp-badge';
+      tb.textContent = String(tempLeft);
+      tile.appendChild(tb);
+    }
+
     tile.addEventListener('click', () => {
       if (!isPurchased(cat, i)) {
-        showMessage('Этот элемент ещё не куплен. Загляните в магазинчик.', { title: 'Заблокировано' });
+        showMessage(
+          'Выигрывайте очки стиля в матчах и выполняйте квесты — тогда сможете приобрести этот элемент в магазинчике Джокера.',
+          { title: 'Заблокировано' }
+        );
         return;
       }
-	  audio.playSfx('switch');
+      audio.playSfx('switch');
+
+      // помечаем как просмотренный (только купленный)
+      markStyleItemSeen(cat, i);
+
       this._selectedStyle[cat] = i;
       this._applyStyleItem(cat, item);
       this._renderStyleTiles(root);
+      this._updateStyleBadge();
     });
 
     tiles.appendChild(tile);
@@ -1313,12 +1646,12 @@ _buildPreviewField(container) {
 
     for (const r of order) {
       const q = Progress.quests[r];
-      const done = q.progress >= 2;
+      const done = q.progress >= 1;
       const claimed = done && q.claimed >= q.progress;
       const prevOK = (() => {
         const idx = order.indexOf(r);
         if (idx <= 0) return true;
-        return order.slice(0, idx).every(p => Progress.quests[p].progress >= 2);
+        return order.slice(0, idx).every(p => Progress.quests[p].progress >= 1);
       })();
 
       const row = document.createElement('div');

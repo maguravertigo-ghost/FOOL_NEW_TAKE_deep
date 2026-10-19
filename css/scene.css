@@ -287,14 +287,14 @@ body {
 
 .btn-ring__track {
   fill: none;
-  stroke: rgba(0,0,0,0.35);
-  stroke-width: 3.5;
+  stroke: rgba(0,0,0,0.30);
+  stroke-width: 8.75;
 }
 
 .btn-ring__fill {
   fill: none;
-  stroke: #ffd54f;
-  stroke-width: 3.5;
+  stroke: rgba(255, 255, 255, 0.75);
+  stroke-width: 8.75;
   stroke-linecap: round;
 }
 
@@ -951,7 +951,7 @@ body {
 
 .mm-tiles {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(calc(150px * var(--ui)), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(calc(160px * var(--ui)), 1fr));
   grid-auto-rows: min-content;
   column-gap: calc(14px * var(--ui));
   row-gap: calc(22px * var(--ui));
@@ -986,7 +986,12 @@ body {
   pointer-events: none;
 }
 .mm-tile:hover { background: rgba(255,255,255,0.10); }
-.mm-tile--locked { cursor: not-allowed; opacity: 0.5; font-size: calc(40px * var(--ui)); color: #666; }
+.mm-tile--locked { cursor: not-allowed; color: #666; }
+.mm-tile--locked .card__face,
+.mm-tile--locked > img:not(.mm-tile__lock) {
+  opacity: 0.25;
+  filter: grayscale(0.7);
+}
 .mm-tile--active { border-color: #4caf50; }
 .mm-tile__check {
   position: absolute;
@@ -1002,14 +1007,18 @@ body {
   font-weight: 700;
   box-shadow: 0 calc(2px * var(--ui)) calc(6px * var(--ui)) rgba(0,0,0,0.4);
 }
-.mm-tile__lock {
+.mm-tile img.mm-tile__lock {
   position: absolute;
-  top: 50%; left: 50%;
+  top: 50%; left: 50%; right: auto; bottom: auto;
   transform: translate(-50%, -50%);
-  font-size: calc(32px * var(--ui));
-  opacity: 0.85;
+  width: calc(48px * var(--ui));
+  height: calc(48px * var(--ui));
+  object-fit: contain;
+  opacity: 1;
   pointer-events: none;
-  filter: drop-shadow(0 calc(2px * var(--ui)) calc(4px * var(--ui)) rgba(0,0,0,0.7));
+  filter: drop-shadow(0 0 calc(6px * var(--ui)) rgba(0,0,0,0.9))
+          drop-shadow(0 0 calc(2px * var(--ui)) rgba(255,255,255,0.4));
+  z-index: 4;
 }
 .mm-tile--decor { background: #e8e8e8; }
 .mm-tile--decor img { object-fit: cover; padding: 0; }
@@ -1050,9 +1059,23 @@ body {
   background: rgba(255,255,255,0.03);
   border-radius: calc(6px * var(--ui));
 }
-.mm-quest-row--done { background: rgba(76,175,80,0.12); }
-.mm-quest-row--claimed { opacity: 0.65; }
-.mm-quest-row--locked { opacity: 0.55; }
+.mm-quest-row--done {
+  background: rgba(76,175,80,0.22);
+  border-left: calc(3px * var(--ui)) solid #4caf50;
+}
+.mm-quest-row--claimed {
+  opacity: 0.55;
+  background: rgba(255,255,255,0.02);
+}
+.mm-quest-row--locked {
+  opacity: 0.40;
+  background: transparent;
+}
+.mm-quest-row--done .mm-quest-status {
+  color: #ffd54f;
+  font-weight: 800;
+  text-shadow: 0 0 calc(4px * var(--ui)) rgba(255, 213, 79, 0.5);
+}
 .mm-quest-row--locked .mm-quest-label { color: #888; }
 .mm-quest-label  { flex: 1; color: #eee; font-size: calc(17px * var(--ui)); font-weight: 600; }
 .mm-quest-status { color: #999; font-size: calc(16px * var(--ui)); }
@@ -1222,7 +1245,7 @@ body {
 
 .shop-items {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(calc(120px * var(--ui)), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(calc(160px * var(--ui)), 1fr));
   grid-auto-rows: min-content;
   column-gap: calc(14px * var(--ui));
   row-gap: calc(22px * var(--ui));
@@ -1372,9 +1395,9 @@ body {
 }
 .mm-corner--quest .poker-chip {
   position: absolute;
-  top: 4%;
-  right: 4%;
-  height: 70%;
+  top: 15%;
+  right: 2%;
+  height: 55%;
   aspect-ratio: 1 / 1;
   width: auto;
   background-color: #ff9800;
@@ -1600,4 +1623,413 @@ body {
   50% {
     filter: brightness(1.8) drop-shadow(0 0 calc(10px * var(--ui)) rgba(255,255,255,0.95));
   }
+}
+
+/* ---------- Чек-бокс в msg-overlay (welcome-магазин) ---------- */
+.msg-overlay__check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(10px * var(--ui));
+  font-size: calc(13px * var(--ui));
+  color: #999;
+  cursor: pointer;
+  user-select: none;
+  margin-top: calc(-4px * var(--ui));
+}
+.msg-overlay__check input[type="checkbox"] {
+  width: calc(18px * var(--ui));
+  height: calc(18px * var(--ui));
+  cursor: pointer;
+  accent-color: #4caf50;
+}
+.msg-overlay__check:hover { color: #bbb; }
+
+/* ---------- Значок «есть новый элемент» на кнопке СТИЛЬ ---------- */
+.new-badge {
+  position: absolute;
+  top: 10%;
+  right: 2%;
+  height: 55%;
+  width: auto;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.55));
+}
+
+/* ---------- NEW-индикатор на плитке STYLE ---------- */
+.mm-tile img.new-indicator {
+  position: absolute;
+  top: auto;
+  left: calc(6px * var(--ui));
+  right: auto;
+  bottom: calc(6px * var(--ui));
+  width: calc(36px * var(--ui));
+  height: calc(36px * var(--ui));
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+  z-index: 3;
+}
+/* ---------- Подсветка доступных товаров в магазине ---------- */
+.shop-cat--affordable {
+  background: linear-gradient(180deg, #2e7d32 0%, #1b5e20 100%);
+  border-color: #4caf50;
+  box-shadow: 0 0 calc(14px * var(--ui)) rgba(76,175,80,0.45);
+}
+.shop-cat--affordable:hover {
+  background: linear-gradient(180deg, #388e3c 0%, #215528 100%);
+  border-color: #66bb6a;
+}
+
+.shop-item--affordable {
+  border-color: #4caf50;
+  box-shadow: 0 0 calc(12px * var(--ui)) rgba(76,175,80,0.55);
+}
+.shop-item--affordable:hover {
+  border-color: #66bb6a;
+}
+
+/* ---------- Окно "ВАМ ПОДАРОК!" ---------- */
+.msg-overlay__box--gift {
+  max-width: min(92vw, calc(480px * var(--ui)));
+}
+
+.gift-joker {
+  display: flex;
+  justify-content: center;
+  margin: calc(4px * var(--ui)) 0 calc(8px * var(--ui));
+}
+.gift-joker img {
+  display: block;
+  max-width: calc(220px * var(--ui));
+  max-height: calc(220px * var(--ui));
+  object-fit: contain;
+  filter: drop-shadow(0 calc(6px * var(--ui)) calc(14px * var(--ui)) rgba(0,0,0,0.6));
+}
+
+.gift-hint {
+  margin-top: calc(10px * var(--ui));
+  font-size: calc(13px * var(--ui));
+  color: #999;
+  font-style: italic;
+}
+
+/* ---------- Бейдж "осталось N матчей" ---------- */
+.temp-badge {
+  position: absolute;
+  top: calc(4px * var(--ui));
+  right: calc(4px * var(--ui));
+  min-width: calc(22px * var(--ui));
+  height: calc(22px * var(--ui));
+  padding: 0 calc(6px * var(--ui));
+  border-radius: calc(11px * var(--ui));
+  background: #ff9800;
+  color: #fff;
+  font: 700 calc(12px * var(--ui))/1 system-ui, sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 calc(2px * var(--ui)) calc(4px * var(--ui)) rgba(0,0,0,0.5);
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* ---------- Счётчик карт на колоде ---------- */
+.deck-counter {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: calc(48px * var(--ui));
+  height: calc(48px * var(--ui));
+  border-radius: 50%;
+  background: rgba(20,20,20,0.88);
+  border: calc(2px * var(--ui)) solid rgba(255,255,255,0.4);
+  color: #fff;
+  font: 700 calc(22px * var(--ui))/1 system-ui, sans-serif;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 60;
+  box-shadow: 0 calc(2px * var(--ui)) calc(8px * var(--ui)) rgba(0,0,0,0.55);
+}
+.deck-counter--mobile {
+  transform: none !important;
+  width: calc(44px * var(--ui));
+  height: calc(44px * var(--ui));
+  font-size: calc(20px * var(--ui));
+}
+
+/* ==================================================================
+   СПРАВКА — секции "картинка + текст"
+   ================================================================== */
+
+/* Отделяем header от body в полноэкранном окне */
+.mm-overlay__box--full .mm-overlay__header {
+  padding-bottom: calc(12px * var(--ui));
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+  flex: 0 0 auto;
+}
+
+.help-body {
+  padding-top: calc(4px * var(--ui));
+  padding-right: calc(16px * var(--ui));
+}
+
+.help-intro {
+  color: #bbb;
+  font-size: calc(15px * var(--ui));
+  line-height: 1.6;
+  padding: calc(10px * var(--ui)) 0 calc(14px * var(--ui));
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: calc(4px * var(--ui));
+}
+.help-intro b { color: #9f9; }
+
+.help-section {
+  padding: calc(14px * var(--ui)) 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.help-section:last-child { border-bottom: none; }
+
+.help-section__title {
+  font-size: calc(18px * var(--ui));
+  font-weight: 700;
+  letter-spacing: calc(1px * var(--ui));
+  color: #9f9;
+  margin-bottom: calc(10px * var(--ui));
+}
+
+.help-section__row {
+  display: flex;
+  align-items: flex-start;
+  gap: calc(20px * var(--ui));
+}
+
+.help-section__img {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(6px * var(--ui));
+  min-width: calc(110px * var(--ui));
+}
+.help-section__img--row {
+  flex-direction: row;
+}
+.help-section__img img {
+  display: block;
+  max-width: calc(110px * var(--ui));
+  max-height: calc(110px * var(--ui));
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.45));
+}
+.help-section__img--row img {
+  max-width: calc(60px * var(--ui));
+  max-height: calc(110px * var(--ui));
+}
+
+.help-section__text {
+  flex: 1 1 auto;
+  color: #ccc;
+  font-size: calc(15px * var(--ui));
+  line-height: 1.6;
+  min-width: 0;
+}
+.help-section__text b { color: #fff; }
+
+/* Монеты */
+.help-coins {
+  flex: 0 0 auto;
+  display: flex;
+  gap: calc(14px * var(--ui));
+}
+.help-coin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(4px * var(--ui));
+  text-align: center;
+  font-size: calc(11px * var(--ui));
+  color: #999;
+  line-height: 1.3;
+}
+.help-coin img {
+  display: block;
+  width: calc(90px * var(--ui));
+  height: auto;
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.55));
+}
+
+/* Иконки магазина (сетка) */
+.help-section__icons {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: calc(6px * var(--ui));
+  width: calc(120px * var(--ui));
+}
+.help-section__icons img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.45));
+}
+
+/* ==================================================================
+   МОБИЛКА — оверлеи крупнее (body.is-mobile)
+   ================================================================== */
+
+/* ---- Пауза ---- */
+body.is-mobile .pause-box {
+  min-width: calc(400px * var(--ui));
+  padding: calc(40px * var(--ui)) calc(60px * var(--ui));
+  gap: calc(16px * var(--ui));
+}
+body.is-mobile .pause-title {
+  font-size: calc(52px * var(--ui));
+  margin-bottom: calc(18px * var(--ui));
+}
+body.is-mobile .pause-title {
+  font-size: calc(52px * var(--ui));
+  margin-bottom: calc(18px * var(--ui));
+}
+body.is-mobile .pause-volume__label {
+  font-size: calc(18px * var(--ui));
+}
+
+/* ---- msg-overlay (подтверждения, справка "первые очки") ---- */
+body.is-mobile .msg-overlay__box {
+  min-width: calc(480px * var(--ui));
+  padding: calc(32px * var(--ui)) calc(40px * var(--ui));
+  gap: calc(20px * var(--ui));
+}
+body.is-mobile .msg-overlay__title {
+  font-size: calc(32px * var(--ui));
+}
+body.is-mobile .msg-overlay__body {
+  font-size: calc(22px * var(--ui));
+}
+
+/* ---- Кнопки в оверлеях (Магазин, Стиль, Квест, Справка) ---- */
+body.is-mobile .mm-btn {
+  font-size: calc(20px * var(--ui));
+  padding: calc(10px * var(--ui)) calc(16px * var(--ui));
+}
+body.is-mobile .mm-btn--small {
+  font-size: calc(20px * var(--ui));
+  padding: calc(10px * var(--ui)) calc(16px * var(--ui));
+}
+
+/* ---- Магазин: кнопки категорий ---- */
+body.is-mobile .shop-cat {
+  font-size: calc(24px * var(--ui));
+  padding: calc(14px * var(--ui)) calc(24px * var(--ui));
+  width: min(100%, calc(380px * var(--ui)));
+  margin: 0 auto;
+}
+body.is-mobile .shop-cats {
+  gap: calc(14px * var(--ui));
+  align-items: center;
+}
+body.is-mobile .shop-content {
+  padding: calc(16px * var(--ui)) calc(20px * var(--ui));
+}
+body.is-mobile .shop-title {
+  font-size: calc(28px * var(--ui));
+  margin-bottom: calc(12px * var(--ui));
+}
+
+/* ---- Стиль: кнопки-табы ---- */
+body.is-mobile .mm-tab {
+  font-size: calc(26px * var(--ui));
+  padding: calc(16px * var(--ui)) calc(22px * var(--ui));
+}
+
+/* ---- Квест: строки ---- */
+body.is-mobile .mm-quest-row { padding: calc(10px * var(--ui)) calc(14px * var(--ui)); }
+body.is-mobile .mm-quest-label { font-size: calc(22px * var(--ui)); }
+body.is-mobile .mm-quest-status { font-size: calc(20px * var(--ui)); }
+body.is-mobile .mm-quest-reward { font-size: calc(24px * var(--ui)); color: #ffd54f; }
+body.is-mobile .mm-quest-hint { font-size: calc(18px * var(--ui)); padding: calc(16px * var(--ui)); }
+
+/* ---- Справка: заголовки секций ---- */
+body.is-mobile .help-section__title { font-size: calc(24px * var(--ui)); }
+body.is-mobile .help-section__text  { font-size: calc(20px * var(--ui)); }
+body.is-mobile .help-intro          { font-size: calc(20px * var(--ui)); }
+
+body.is-mobile .mm-btn--mode {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: 0;
+}
+body.is-mobile .mm-btn--mode img {
+  display: block;
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  padding: 0;
+  margin: 0;
+}
+
+/* ---- Настройки: 2 колонки ---- */
+body.is-mobile .mm-overlay__box--settings {
+  width: min(95%, calc(1000px * var(--ui)));
+  max-width: none;
+  position: relative;
+}
+body.is-mobile .mm-overlay__box--settings .mm-rows {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: calc(40px * var(--ui));
+  row-gap: calc(6px * var(--ui));
+  margin: calc(10px * var(--ui)) 0;
+}
+body.is-mobile .mm-overlay__box--settings .mm-rows::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: calc(80px * var(--ui));
+  bottom: calc(80px * var(--ui));
+  width: 1px;
+  background: rgba(255,255,255,0.15);
+  transform: translateX(-50%);
+}
+body.is-mobile .mm-row {
+  padding: calc(8px * var(--ui)) calc(4px * var(--ui));
+}
+body.is-mobile .mm-row__label {
+  font-size: calc(18px * var(--ui));
+}
+body.is-mobile .mm-opt {
+  font-size: calc(16px * var(--ui));
+  padding: calc(6px * var(--ui)) calc(10px * var(--ui));
+}
+
+/* ---- Магазин: ценники ---- */
+body.is-mobile .shop-item__price {
+  font-size: calc(20px * var(--ui));
+  padding: calc(4px * var(--ui)) calc(12px * var(--ui));
+  border-radius: calc(8px * var(--ui));
+}
+body.is-mobile .shop-item__price b {
+  font-size: calc(24px * var(--ui));
+}
+
+body.is-mobile .pause-btn {
+  font-size: calc(22px * var(--ui));
+  padding: calc(16px * var(--ui)) calc(28px * var(--ui));
+  letter-spacing: calc(1px * var(--ui));
+}
+body.is-mobile .pause-title {
+  font-size: calc(48px * var(--ui));
+  margin-bottom: calc(16px * var(--ui));
+}
+body.is-mobile .pause-volume__label {
+  font-size: calc(18px * var(--ui));
+  letter-spacing: calc(1px * var(--ui));
 }

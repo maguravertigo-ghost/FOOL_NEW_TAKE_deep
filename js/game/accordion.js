@@ -17,14 +17,15 @@ export function compareCards(a, b) {
 }
 
 export class Accordion {
-  constructor({ scene, interp, anchorL, anchorR, insertAnchor, baseMinDist, fanDir = 1 }) {
+  constructor({ scene, interp, anchorL, anchorR, insertAnchor, baseMinDist, fanDir = 1, sortCards = true }) {
     this.scene = scene;
     this.interp = interp;
     this.anchorL = anchorL;
     this.anchorR = anchorR;
     this.insertAnchor = insertAnchor;
     this.baseMinDist = baseMinDist;
-    this.fanDir = fanDir;              // +1: player (края вниз), −1: CPU (края вверх)
+    this.fanDir = fanDir;
+    this.sortCards = sortCards;        // false — порядок карт = порядок прихода
 
     this.cards = [];
     this.slotByUid = new Map();
@@ -121,7 +122,8 @@ _computeSlots(n) {
 
     const oldSlotByUid = new Map(this.slotByUid);
 
-    const newCards = [...this.cards, card].sort(compareCards);
+    const newCards = [...this.cards, card];
+    if (this.sortCards) newCards.sort(compareCards);
     const newSlots = this._computeSlots(newCards.length);
     const newSlotByUid = new Map();
     newCards.forEach((c, i) => newSlotByUid.set(c.uid, newSlots[i]));
@@ -306,7 +308,8 @@ _computeSlots(n) {
 
     // ---- расчёт целевых слотов ----
     const oldSlots = new Map(this.slotByUid);
-    const newCards = [...this.cards, ...cards].sort(compareCards);
+    const newCards = [...this.cards, ...cards];
+    if (this.sortCards) newCards.sort(compareCards);
     const newSlots = this._computeSlots(newCards.length);
     const newSlotByUid = new Map();
     newCards.forEach((c, i) => newSlotByUid.set(c.uid, newSlots[i]));
@@ -482,7 +485,8 @@ _computeSlots(n) {
     const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
     const oldSlots = new Map(this.slotByUid);
-    const newCards = [...this.cards, ...cards].sort(compareCards);
+    const newCards = [...this.cards, ...cards];
+    if (this.sortCards) newCards.sort(compareCards);
     const newSlots = this._computeSlots(newCards.length);
     const newSlotByUid = new Map();
     newCards.forEach((c, i) => newSlotByUid.set(c.uid, newSlots[i]));

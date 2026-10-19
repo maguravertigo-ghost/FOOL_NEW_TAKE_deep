@@ -1,0 +1,66 @@
+=== js/ui/joker.js ===
+Size   : 2.1 KB
+Modify : 2026-10-05 00:56:45
+======================
+
+import { ASSETS } from '../assets.js';
+
+const JOKER_W = 642;
+const JOKER_H = 631;
+const CLOUD   = { x: 0, y: 264, w: 642, h: 264 };
+
+const EMOTIONS = {
+  neutral: 'jokerSetOk',       // дефолт — «ок»
+  ok:      'jokerSetOk',
+  nice:    'jokerSetNice',
+  five:    'jokerSetFive',
+  give_up: 'jokerSetSad',
+};
+
+export class Joker {
+  constructor() {
+    this.el = document.createElement('div');
+    this.el.className = 'joker';
+    this.el.innerHTML = `<img class="joker__img" alt="" draggable="false">`;
+    this.imgEl = this.el.querySelector('.joker__img');
+    document.body.appendChild(this.el);
+    this.setEmotion('neutral');
+  }
+
+setEmotion(name) {
+  const key = EMOTIONS[name] || EMOTIONS.neutral;
+  const src = ASSETS[key] || '';
+  console.log('[joker] setEmotion', name, '→', key, '→', src);
+  if (this.imgEl.src !== src) {
+    this.imgEl.src = src;
+  }
+}
+
+  /**
+   * Позиционирует картинку так, чтобы её облачко (CLOUD) точно легло
+   * на прямоугольник {left, top, width, height} на сцене.
+   * Масштаб единый → картинка не искажается.
+   */
+  setCloudRect({ left, top, width, height }) {
+    const k = width / CLOUD.w;           // масштаб по ширине облачка
+    const jW = JOKER_W * k;
+    const jH = JOKER_H * k;
+
+    // Центр облачка на экране
+    const cloudCy = top + height / 2;
+    // Позиция картинки, чтобы её облачко встало ровно
+    const jLeft = left - CLOUD.x * k;
+    const jTop  = cloudCy - (CLOUD.y + CLOUD.h / 2) * k;
+
+    this.el.style.left   = jLeft + 'px';
+    this.el.style.top    = jTop  + 'px';
+    this.el.style.width  = jW + 'px';
+    this.el.style.height = jH + 'px';
+    this.el.style.right  = 'auto';
+    this.el.style.bottom = 'auto';
+  }
+
+  show()    { this.el.style.display = 'block'; }
+  hide()    { this.el.style.display = 'none'; }
+  destroy() { if (this.el.parentNode) this.el.parentNode.removeChild(this.el); }
+}

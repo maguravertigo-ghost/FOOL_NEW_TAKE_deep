@@ -10,9 +10,10 @@ const REF_AR = REF_W / REF_H;
 export class UIScale {
   constructor() {
     this.scale = 1;
+    this.isMobile = false;
     this.baseCardScale = 0.515;
-    this.cardW = Math.round(220 * this.baseCardScale);   // 99
-    this.cardH = Math.round(340 * this.baseCardScale);   // 153
+    this.cardW = Math.round(220 * this.baseCardScale);
+    this.cardH = Math.round(340 * this.baseCardScale);
 
     this._handlers = new Set();
     this._pending = false;
@@ -41,6 +42,21 @@ export class UIScale {
 _recalculate() {
   const vw = Math.max(window.innerWidth, 320);
   const vh = Math.max(window.innerHeight, 240);
+
+  // Мобилка — ландшафт с короткой стороной < 500 px.
+  //   iPhone 12 landscape:  844 × 390 → min = 390 → mobile
+  //   iPhone 12 portrait:   390 × 844 → vw < vh → не mobile (аспект не тот)
+  //   Desktop 1366×768:     min = 768 → не mobile
+  const shortSide = Math.min(vw, vh);
+  const isLandscape = vw > vh;
+  this.isMobile = isLandscape && shortSide < 500;
+
+  this.isMobile = isLandscape && shortSide < 500;
+  document.body.classList.toggle('is-mobile', this.isMobile);
+
+  this.baseCardScale = this.isMobile ? 0.72 : 0.515;
+
+  this.baseCardScale = this.isMobile ? 0.72 : 0.515;
 
   let sceneW, sceneH;
   if (vw / vh > REF_AR) {

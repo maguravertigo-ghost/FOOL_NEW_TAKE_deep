@@ -29,41 +29,64 @@ export const DEFAULTS = {
   tableSlots:       6,
   translateMode: true,
 };
-/*
-export const DEFAULTS = {
-  frameL: 0.01,   // ← отличается от DEFAULTS
-  frameT: 0.015,   // ← отличается от DEFAULTS
-  frameR: 0.01,   // ← отличается от DEFAULTS
-  frameB: 0.016,   // ← отличается от DEFAULTS
-  centerLift: 0.01,
-  deckStackSize: 6,
-  deckStackDx: 0.0235,   // ← отличается от DEFAULTS
-  deckStackDy: 0.0223,   // ← отличается от DEFAULTS
-  arkOffsetH: 2.3,   // ← отличается от DEFAULTS
-  discardOffsetH: 0.25,   // ← отличается от DEFAULTS
-  discardRadius: 0.12,   // ← отличается от DEFAULTS
-  accInsetH: 1.5,   // ← отличается от DEFAULTS
-  accPlayerLift: 0.55,   // ← отличается от DEFAULTS
-  accCpuDrop: 0.3,   // ← отличается от DEFAULTS
-  accFanAngle: 8,
-  insOffsetH: 1.25,
-  insInsetW: 1,   // ← отличается от DEFAULTS
-  tableRowsH: 0.15,
-  tableMarginXH: 1.9,   // ← отличается от DEFAULTS
-  tableAtkOffsetY: -0.2,   // ← отличается от DEFAULTS
-  tableDefOffsetY: 0.2,   // ← отличается от DEFAULTS
-  tableDefOffsetX: 0.1,   // ← отличается от DEFAULTS
-  tablePairDropH: 0.3,
-  tableAtkAngle: -7,   // ← отличается от DEFAULTS
-  tableDefAngle: 11,   // ← отличается от DEFAULTS
-  tableSlots: 6,
-  translateMode: false,   // ← отличается от DEFAULTS
-};*/
+/* ==================================================================
+ *  Пресеты для разных устройств.
+ *  desktop — текущая раскладка 1366×768.
+ *  mobile  — ландшафт телефона: колода/отбой к краям, аккордеоны
+ *            уходят за границы сцены, стол крупнее.
+ * ================================================================== */
+export const PRESETS = {
+  desktop: { ...DEFAULTS },
+
+  mobile: {
+    ...DEFAULTS,
+
+    frameL: -0.08,
+    frameR: 0.01,
+    frameT: 0.01,
+    frameB: 0.01,
+    centerLift: 0.0,
+
+    deckStackSize: 5,
+    deckStackDx: 0.024,
+    deckStackDy: 0.024,
+    arkOffsetH: 0.9,
+
+    discardOffsetH: 0.08,
+    discardRadius: 0.055,
+
+    accInsetH: 0.35,
+    accPlayerLift: 0.12,      // рука игрока чуть выше (было 0.0)
+    accCpuDrop:    0.0,       // без изменений — уже впритык
+    accFanAngle: 12,
+
+    insOffsetH: 0.9,
+    insInsetW:  0.5,
+
+    // Стол — центрирован и атака/защита разнесены по вертикали
+    tableRowsH:      0.30,    // было 0.20 — выше разброс
+    tableMarginXH:   1.4,     // было 1.05 — стол уже, слоты ближе к центру
+    tableAtkOffsetY: -0.15,   // было -0.13
+    tableDefOffsetY:  0.15,   // было 0.22 — защита ниже, чтобы не наезжала на атаку
+    tableDefOffsetX:  0.11,
+    tablePairDropH:   0.25,
+    tableAtkAngle:   -7,
+    tableDefAngle:    9,
+  },
+};
 
 export class SceneLayout {
   static config = { ...DEFAULTS };
+  static currentPreset = 'desktop';
 
-  static resetConfig() { this.config = { ...DEFAULTS }; }
+  static setPreset(name) {
+    if (!PRESETS[name]) return;
+    if (this.currentPreset === name) return;
+    this.currentPreset = name;
+    this.config = { ...PRESETS[name] };
+  }
+
+  static resetConfig() { this.config = { ...PRESETS[this.currentPreset] }; }
 
   static apply(reg, scene) {
     const C = this.config;
