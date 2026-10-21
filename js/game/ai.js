@@ -196,42 +196,57 @@ export class AI {
         unbeatenCount: unbeaten.length,
         opponentHandSize: this.playerHandSize,
       }));
+
       if (translators.length) {
         const nonT = translators.filter(c => !this.isTrump(c));
-        // Перевод некозырем — почти всегда хорошая идея.
-        // Перевод козырем — только если козырей много (>= 3) или мы в концовке.
+        const trumps = translators.filter(c => this.isTrump(c));
         const trumpsInHand = this.hand.filter(c => this.isTrump(c)).length;
+        const oppLow = this.playerHandSize <= 3;    // у оппонента почти нет карт
+        const endgame = this.deckLeft === 0;        // колода пуста
+
         let wantTranslate = false;
-        const tProb = (this.level >= 3) ? 1.0  : 0.75;
-        const trProb = (this.level >= 3) ? 0.6 : 0.35;
+        let pool = [];
+
         if (nonT.length) {
-          wantTranslate = Math.random() < tProb;
-        } else if (trumpsInHand >= 3 || this.deckLeft === 0) {
-          wantTranslate = Math.random() < trProb;
-        }
-        if (wantTranslate) {
-          let pool;
-          if (nonT.length) {
-            // некозырь — идеальный вариант перевода
-            pool = nonT.slice();
-          } else {
-            // только козыри: переводим ТОЛЬКО младшими (младше J)
-            const lowTrumps = translators.filter(c => this.rank(c) < 11);
-            if (!lowTrumps.length) {
-              // козырь J+ не отдаём — пусть защита/взятие решит
-              pool = [];
-            } else {
-              pool = lowTrumps;
-            }
+          // Некозырем переводить почти всегда хорошо:
+          // сбрасываем мусор, атака переходит к оппоненту.
+          // Level 3: 85% (агрессивно, но не всегда)
+          // Level 2: 60% (осторожно)
+          const p = (this.level >= 3) ? 0.85 : 0.6;
+          wantTranslate = Math.random() < p;
+          pool = nonT;
+        } else if (trumps.length) {
+          // Только козыри. Смотрим, есть ли низкие (2–10)
+          const lowTrumps = trumps.filter(c => this.rank(c) < 11);
+
+          if (!lowTrumps.length) {
+            // Только J/Q/K/A-козыри — не переводим ни на каком уровне
+            wantTranslate = false;
+          } else if (this.level >= 3) {
+            // ЭКСПЕРТ: переводит козырем ТОЛЬКО в безопасной ситуации:
+            //   • у самого ≥ 4 козырей (не жалко одного)
+            //   • оппонент почти без карт (заставим взять)
+            //   • эндшпиль (колода пуста — любая ошибка критична)
+            // И только 30% шанс, а не 60%.
+            const safe = (trumpsInHand >= 4) || oppLow || endgame;
+            wantTranslate = safe && Math.random() < 0.3;
+            if (wantTranslate) pool = lowTrumps;
+          } else if (this.level === 2) {
+            // ОБЫЧНЫЙ: переводит козырем только в эндшпиле, 15% шанс.
+            // В середине игры — никогда (сохраняет на финал).
+            wantTranslate = endgame && Math.random() < 0.15;
+            if (wantTranslate) pool = lowTrumps;
           }
-          if (pool.length) {
-            pool.sort((a, b) => this.attackValue(a) - this.attackValue(b));
-            return { type: 'translate', card: pool[0] };
-          }
-          // если переводить нечем подходящим — идём дальше к защите
         }
+
+        if (wantTranslate && pool.length) {
+          pool.sort((a, b) => this.attackValue(a) - this.attackValue(b));
+          return { type: 'translate', card: pool[0] };
+        }
+        // если не решили переводить — идём к защите/взятию
       }
     }
+
 
     // ---------- План полной защиты ----------
     const plan = this.planDefenseAll(unbeaten);

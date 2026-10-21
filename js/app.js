@@ -151,6 +151,7 @@ class App {
     const onHide = () => {
       audio.stopAllSfx();
       audio.pauseMusic();
+      try { saveProgress(); } catch (e) { /* noop */ }   // flush в облако
       if (document.getElementById('game-over')) return;
       if (this.session && !this._paused) this._openPause();
     };

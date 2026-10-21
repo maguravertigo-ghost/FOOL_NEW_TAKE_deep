@@ -12,8 +12,8 @@ import { Marker } from '../core/marker.js';
 import { ASSETS, svgInstance } from '../assets.js';
 
 import { AI } from './ai.js';
-//import { GameSettings, saveSettings } from './settings.js';
 import { GameSettings, saveSettings } from './settings.js';
+import { ysdk } from '../sdk/yandex_sdk.js';
 import { uiScale } from '../ui/ui_scale.js';
 // в начале файла должен быть расширенный импорт:
   import { Progress, saveProgress, addStylePoints, creditQuest,
@@ -1012,6 +1012,15 @@ _showGameOver(winner, opts = {}) {
   if (document.getElementById('game-over')) return;
   if (this._gameOverShown) return;
   this._gameOverShown = true;
+  
+  try { ysdk.gameplayStop(); } catch { /* noop */ }
+
+  // Матч закончен — сообщаем платформе, что геймплей остановлен.
+  // Требование 1.19.3: GameplayAPI.stop() при выходе из активного геймплея.
+  try {
+    const { ysdk } = window.__app?.constructor ? window.__app : {};
+    if (ysdk && ysdk.gameplayStop) ysdk.gameplayStop();
+  } catch { /* noop */ }
 
   let points = 0;
   if (winner === 'player') { points = 100; audio.playSfx('win'); }
