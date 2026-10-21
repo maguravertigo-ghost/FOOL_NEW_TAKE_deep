@@ -1,3 +1,4 @@
+import { ysdk } from '../sdk/yandex_sdk.js';
 import { audio } from '../audio/audio_engine.js';
 import { withLoading } from './loading_overlay.js';
 import { ASSETS } from '../assets.js';
@@ -45,6 +46,7 @@ export class MainMenu {
 		<b class="mm-style-points__value">${Progress.stylePoints}</b>
 	  </div>
 	  <button class="mm-corner" data-open="help">КАК ИГРАТЬ</button>
+	  <button class="mm-corner mm-corner--fs" data-fs-toggle title="На весь экран">⛶</button>
 	</div>
 
 	<!-- ЦЕНТР: лого, кнопки, автор -->
@@ -111,6 +113,30 @@ export class MainMenu {
 	  })
 	);
 
+    const fsBtn = this.el.querySelector('[data-fs-toggle]');
+    if (fsBtn) {
+      const updateIcon = () => {
+        const on = document.fullscreenElement ||
+                   ysdk.getFullscreenStatus() === 'on';
+        fsBtn.textContent = on ? '⛶' : '⛶';
+        fsBtn.setAttribute('title', on ? 'Выйти из полноэкранного режима' : 'На весь экран');
+        fsBtn.dataset.state = on ? 'on' : 'off';
+      };
+      updateIcon();
+
+      fsBtn.addEventListener('click', async () => {
+        audio.playSfx('tap');
+        const on = document.fullscreenElement || ysdk.getFullscreenStatus() === 'on';
+        if (on) await ysdk.exitFullscreen();
+        else await ysdk.requestFullscreen();
+        // Обновить через тик — браузер применяет fullscreen асинхронно
+        setTimeout(updateIcon, 100);
+      });
+
+      document.addEventListener('fullscreenchange', updateIcon);
+      document.addEventListener('webkitfullscreenchange', updateIcon);
+    }
+
     this._overlays = { about: null, shop: null, settings: null, style: null, quest: null, help: null };
     this._activeOverlay = null;
     this._previewOverlay = null;
@@ -129,6 +155,7 @@ export class MainMenu {
     // после создания DOM:
     this._cacheRefs();
     this._layoutAll();
+	this._setupKeyboardNav();
   }
 _cacheRefs() {
   this.refs = {
@@ -420,6 +447,144 @@ _updateQuestBadge() {
     if (name === 'about') el = this._buildAbout();
     if (el) { this.el.appendChild(el); this._overlays[name] = el; }
     return el;
+  }
+
+  _setupKeyboardNav() {
+    this._navEl = null;
+
+    const collect = () => {
+      return [...this.el.querySelectorAll(
+        '.mm-top-right button, .mm-center button, .mm-bottom-left button, .mm-bottom-right button'
+      )].filter(el => !el.disabled && el.offsetParent !== null);
+    };
+
+    const highlight = (el) => {
+      collect().forEach(x => x.classList.toggle('kbd-focus', x === el));
+    };
+
+    // Пространственный поиск: 4 прохода по приоритету
+    //   1. overlap в направлении (в той же полосе, ближайший)
+    //   2. без overlap, но в направлении и не слишком «в сторону» (диагональ)
+    //   3. wrap с overlap — самая дальняя сзади
+    //   4. wrap без overlap — ближайшая по перпендикуляру
+    const findNext = (current, items, dx, dy) => {
+      const cr = current.getBoundingClientRect();
+      const cx = cr.left + cr.width / 2;
+      const cy = cr.top + cr.height / 2;
+
+      const MAX_PERP = Math.min(window.innerWidth, window.innerHeight) * 0.55;
+
+      let pass1 = null, pass1Proj = Infinity;
+      let pass2 = null, pass2Score = Infinity;
+      let pass3 = null, pass3Proj = -Infinity;   // самая дальняя сзади = самое отрицательное
+      let pass4 = null, pass4Perp = Infinity;
+
+      for (const el of items) {
+        if (el === current) continue;
+        const r = el.getBoundingClientRect();
+        const ex = r.left + r.width / 2;
+        const ey = r.top + r.height / 2;
+        const dxp = ex - cx;
+        const dyp = ey - cy;
+        const proj = dxp * dx + dyp * dy;
+        const perp = Math.abs(dxp * -dy + dyp * dx);
+
+        const overlap = (dx === 0)
+          ? Math.min(cr.right, r.right) - Math.max(cr.left, r.left)
+          : Math.min(cr.bottom, r.bottom) - Math.max(cr.top, r.top);
+
+        if (proj > 5) {
+          if (overlap > 0) {
+            // проход 1: в полосе
+            if (proj < pass1Proj) { pass1 = el; pass1Proj = proj; }
+          } else if (perp < MAX_PERP) {
+            // проход 2: диагональ в пределах MAX_PERP
+            const score = proj + perp * 3;
+            if (score < pass2Score) { pass2 = el; pass2Score = score; }
+          }
+        } else if (proj < -5) {
+          if (overlap > 0) {
+            // проход 3: wrap в полосе — самая дальняя
+            if (proj < pass3Proj) { pass3 = el; pass3Proj = proj; }
+          } else if (perp < pass4Perp) {
+            // проход 4: wrap вне полосы — ближайшая по перпендикуляру
+            pass4 = el; pass4Perp = perp;
+          }
+        }
+      }
+
+      return pass1 || pass2 || pass3 || pass4;
+    };
+
+    window.addEventListener('keydown', (e) => {
+      if (this.el.style.display === 'none') return;
+
+      // Оверлей открыт — блокируем, фокус не уходит под него
+      if (this._activeOverlay) {
+        if (['Enter', ' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+          e.preventDefault();
+        }
+        return;
+      }
+      if (document.querySelector('.msg-overlay')) return;
+      if (document.getElementById('game-over')) return;
+      if (this.el.style.display !== 'block') return;
+
+      const dirs = {
+        ArrowUp:    { x: 0, y: -1 },
+        ArrowDown:  { x: 0, y: 1 },
+        ArrowLeft:  { x: -1, y: 0 },
+        ArrowRight: { x: 1, y: 0 },
+      };
+
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        if (this._navEl) { audio.playSfx('tap'); this._navEl.click(); }
+        return;
+      }
+
+      const d = dirs[e.key];
+      if (!d) return;
+      e.preventDefault();
+
+      const items = collect();
+      if (!items.length) return;
+
+      // Первое нажатие — фокус на первую кнопку
+      if (!this._navEl || !items.includes(this._navEl)) {
+        this._navEl = items[0];
+        highlight(this._navEl);
+        return;
+      }
+
+      const next = findNext(this._navEl, items, d.x, d.y);
+      if (next) {
+        this._navEl = next;
+        highlight(next);
+      }
+    });
+
+    // Сброс фокуса мышью
+    this.el.addEventListener('pointerdown', () => {
+      this._navEl = null;
+      collect().forEach(el => el.classList.remove('kbd-focus'));
+    });
+
+    // Сброс фокуса при открытии / закрытии оверлея
+    const origOpen  = this._openOverlay.bind(this);
+    const origClose = this._closeOverlay.bind(this);
+    this._openOverlay = (...args) => {
+      this._navEl = null;
+      collect().forEach(el => el.classList.remove('kbd-focus'));
+      if (document.activeElement?.blur) document.activeElement.blur();
+      return origOpen(...args);
+    };
+    this._closeOverlay = (...args) => {
+      this._navEl = null;
+      collect().forEach(el => el.classList.remove('kbd-focus'));
+      if (document.activeElement?.blur) document.activeElement.blur();
+      return origClose(...args);
+    };
   }
 
   /* ---------------- ABOUT (с joker_lies) ---------------- */
@@ -1399,10 +1564,12 @@ async _openPreview() {
     this._buildPreviewField(this._previewOverlay);
   }, { text: 'Собираем макет…', minMs: 2000 });
 
-  // клик по любому месту — закрыть
+  // защита от закрытия оверлея во время загрузки (Esc, клик по фону и т.п.)
+  if (!this._previewOverlay) return;
+
 	this._previewOverlay.addEventListener('click', () => {
 	  audio.playSfx('tap_up');
-	  this._previewOverlay.remove();
+	  if (this._previewOverlay) this._previewOverlay.remove();
 	  this._previewOverlay = null;
 	}, { once: true });
 }

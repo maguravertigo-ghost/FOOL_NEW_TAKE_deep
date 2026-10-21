@@ -63,10 +63,51 @@ class App {
 
     this.capture.onKey((k) => {
       if (!this._sessionReady || !this.session) return;
+      if (this._paused) return;
       if (k === 'ArrowLeft')  this.session.selectPrevCard?.();
       if (k === 'ArrowRight') this.session.selectNextCard?.();
-      if (k === 'Enter')      this.session.confirmSelection?.();
+      if (k === 'Enter')      this.session.handleEnter?.();
       if (k === 'Backspace')  this.session.cancelSelection?.();
+    });
+
+    // Escape: закрыть оверлей / выйти в меню / пауза. Требование 1.6.3.3 (Back на ТВ).
+    window.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      if (e.repeat) return;
+      const tag = (e.target?.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'textarea') return;
+
+      // 1. Модалки showMessage (без выбора) — закрываем по Esc
+      const msgs = document.querySelectorAll('.msg-overlay');
+      for (const m of msgs) {
+        if (!m.querySelector('.msg-overlay__actions')) {
+          const btn = m.querySelector('[data-close]');
+          if (btn) { btn.click(); e.preventDefault(); return; }
+        }
+      }
+
+      // 2. Оверлей меню
+      if (this.menu && this.menu._activeOverlay) {
+        audio.playSfx('tap_up');
+        this.menu._closeOverlay();
+        e.preventDefault();
+        return;
+      }
+
+      // 3. Окно результатов — эквивалент кнопки «В меню»
+      if (document.getElementById('game-over')) {
+        const btnMenu = document.querySelector('#game-over [data-action="menu"]');
+        if (btnMenu) btnMenu.click();
+        e.preventDefault();
+        return;
+      }
+
+      // 4. Пауза / продолжить в матче
+      if (this.session && this._sessionReady) {
+        if (this._paused) this._closePause();
+        else this._openPause();
+        e.preventDefault();
+      }
     });
 
     // HUD показываем только в дебаге
@@ -98,6 +139,7 @@ class App {
     // Платформа сообщает: пора на паузу / можно продолжить
     ysdk.onPause(() => {
       if (this._paused || !this.session) return;
+      if (document.getElementById('game-over')) return;
       this._openPause();
     });
     ysdk.onResume(() => {
@@ -106,15 +148,16 @@ class App {
     });
 
     // --- потеря/возврат фокуса — работает в любом экране ---
-const onHide = () => {
-  audio.stopAllSfx();
-  audio.pauseMusic();
-  if (this.session && !this._paused) this._openPause();
-};
-const onShow = () => {
-  audio._sfxPaused = false;   // разрешаем новые SFX
-  audio.resumeMusic();
-};
+    const onHide = () => {
+      audio.stopAllSfx();
+      audio.pauseMusic();
+      if (document.getElementById('game-over')) return;
+      if (this.session && !this._paused) this._openPause();
+    };
+    const onShow = () => {
+      audio._sfxPaused = false;
+      audio.resumeMusic();
+    };
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) onHide(); else onShow();
     });
@@ -183,6 +226,14 @@ const onShow = () => {
     // 1. SDK — до загрузки ресурсов
     await ysdk.init();
 
+    // Автоопределение языка (требование 2.14). Определяем ДО загрузки
+    // текстов, чтобы меню сразу открылось на нужном языке.
+    const lang = ysdk.getLang();
+    const deviceType = ysdk.getDeviceType();
+    console.log('[boot] lang =', lang, ' device =', deviceType);
+    const { setLang } = await import('./i18n/index.js');
+    setLang(lang);
+
     // 2. Ресурсы игры
     await preloadSvgs();
     this._applySettings();
@@ -209,7 +260,10 @@ const onShow = () => {
     // 4. Показать меню
     await this.fade.toClear(700);
 
-    // 5. Сообщить платформе, что игра готова
+    // 5. Дать браузеру отрисовать кадр, затем сообщить платформе.
+    //    Требование 1.19.2: LoadingAPI.ready() в момент, когда игрок
+    //    может приступить к игре.
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
     ysdk.gameReady();
   }
 
@@ -382,6 +436,13 @@ async _startGameFromMenu(mode) {
     const m = mode || this._lastMode || 'perevodnoy';
     const go = document.getElementById('game-over');
     if (go) go.remove();
+
+    // На случай, если пауза осталась от предыдущего матча (потеря фокуса)
+    if (this._paused) {
+      this._paused = false;
+      this.pauseOverlay.hide();
+    }
+
     await this.maybeShowAd();
     return this._startGameFromMenu(m);
   }
@@ -431,6 +492,10 @@ async _startGameFromMenu(mode) {
     this.interp.resume();
     this.interp.cancelAll();
     this._paused = false;
+
+    // На случай, если пауза была открыта (потеря фокуса, реклама, exit)
+    // и её ещё не успели закрыть — скрываем принудительно.
+    if (this.pauseOverlay && this.pauseOverlay.hide) this.pauseOverlay.hide();
 	
 	if (this.coinToss) {
       this.coinToss.destroy();

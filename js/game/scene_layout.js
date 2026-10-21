@@ -56,9 +56,10 @@ export const PRESETS = {
     discardRadius: 0.055,
 
     accInsetH: 0.35,
-    accPlayerLift: 0.12,      // рука игрока чуть выше (было 0.0)
-    accCpuDrop:    0.0,       // без изменений — уже впритык
-    accFanAngle: 12,
+    accPlayerLift: 0.12,
+    accCpuDrop:    0.0,
+    accFanAngle: 6,            // было 12 — меньше вертикальный «разлёт»
+    accMinDistMul: 0.85,       // карты перекрываются на 23.5% вместо 10%
 
     insOffsetH: 0.9,
     insInsetW:  0.5,

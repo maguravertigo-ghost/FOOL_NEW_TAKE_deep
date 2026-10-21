@@ -1,6 +1,16 @@
 const BASE = 'assets';
 
 export const ASSETS = {
+  logos: {
+    ru: `${BASE}/hud/logo_main_ru.png`,
+    en: `${BASE}/hud/logo_main_en.png`,
+    tr: `${BASE}/hud/logo_main_tr.png`,
+  },
+  btnPodkidnoy: {
+    ru: `${BASE}/hud/buttons/straight_bttn_ru.png`,
+    en: `${BASE}/hud/buttons/straight_bttn_en.png`,
+    tr: `${BASE}/hud/buttons/straight_bttn_tr.png`,
+  },
   table:  `${BASE}/table_texture/default_table.svg`,
   shirt:  `${BASE}/card_shirt/default/card_shirt.svg`,
   body:   `${BASE}/card_body/body/default/card_body.svg`,

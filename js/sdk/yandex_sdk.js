@@ -213,6 +213,101 @@ export class YandexSDK {
   }
 
   /* ============================================================
+   *  Язык и устройство
+   * ============================================================ */
+
+  /** ISO 639-1 из SDK, например 'ru', 'en', 'tr'. Фолбэк — 'ru'. */
+  getLang() {
+    try {
+      const lang = this.sdk?.environment?.i18n?.lang;
+      if (typeof lang === 'string' && lang.length >= 2) {
+        return lang.slice(0, 2).toLowerCase();
+      }
+    } catch { /* noop */ }
+    return this._fallbackLang || 'ru';
+  }
+
+  /** Тип устройства: 'desktop' | 'mobile' | 'tablet' | 'tv'. */
+  getDeviceType() {
+    try {
+      const t = this.sdk?.deviceInfo?.type;
+      if (typeof t === 'string') return t;
+    } catch { /* noop */ }
+    return this._deviceType || 'desktop';
+  }
+
+  isTV()     { return this.getDeviceType() === 'tv'; }
+  isMobile() { return this.getDeviceType() === 'mobile'; }
+  isDesktop(){ return this.getDeviceType() === 'desktop'; }
+
+  /* ============================================================
+   *  Fullscreen
+   * ============================================================ */
+
+  async requestFullscreen() {
+    // 1. Пробуем нативный браузерный API (работает везде, включая localhost)
+    try {
+      const el = document.documentElement;
+      const fn = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+      if (fn && !document.fullscreenElement) {
+        await fn.call(el);
+        console.log('[fs] native requestFullscreen OK');
+        return true;
+      }
+    } catch (e) {
+      console.warn('[fs] native requestFullscreen failed:', e);
+    }
+
+    // 2. SDK Яндекс Игр (актуально на платформе)
+    try {
+      if (this.sdk?.screen?.fullscreen?.request) {
+        await this.sdk.screen.fullscreen.request();
+        console.log('[fs] SDK requestFullscreen OK');
+        return true;
+      }
+    } catch (e) {
+      console.warn('[fs] SDK requestFullscreen failed:', e);
+    }
+    return false;
+  }
+
+  async exitFullscreen() {
+    // 1. Нативный выход
+    try {
+      if (document.fullscreenElement) {
+        const fn = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+        if (fn) {
+          await fn.call(document);
+          console.log('[fs] native exitFullscreen OK');
+          return true;
+        }
+      }
+    } catch (e) {
+      console.warn('[fs] native exitFullscreen failed:', e);
+    }
+
+    // 2. SDK
+    try {
+      if (this.sdk?.screen?.fullscreen?.exit) {
+        await this.sdk.screen.fullscreen.exit();
+        console.log('[fs] SDK exitFullscreen OK');
+        return true;
+      }
+    } catch (e) {
+      console.warn('[fs] SDK exitFullscreen failed:', e);
+    }
+    return false;
+  }
+
+  getFullscreenStatus() {
+    // Нативный статус приоритетнее — работает везде
+    if (document.fullscreenElement) return 'on';
+    try {
+      return this.sdk?.screen?.fullscreen?.status || 'off';
+    } catch { return 'off'; }
+  }
+
+  /* ============================================================
    *  Устройство и язык
    * ============================================================ */
 

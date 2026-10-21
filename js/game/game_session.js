@@ -15,7 +15,6 @@ import { AI } from './ai.js';
 //import { GameSettings, saveSettings } from './settings.js';
 import { GameSettings, saveSettings } from './settings.js';
 import { uiScale } from '../ui/ui_scale.js';
-import { clearCache, warmUpDeck } from './card_cache.js';
 // в начале файла должен быть расширенный импорт:
   import { Progress, saveProgress, addStylePoints, creditQuest,
            setFoolToken, clearFoolToken, tickTempItems } from './progress.js';
@@ -106,6 +105,8 @@ export class GameSession {
 	this._gameOverPending = false;
 	this._victoryPending = false;
 	this._victoryResolve = null;
+	this._kbdFocusOnButton = false;
+	this._usingKeyboard = false;
 	
 	this._finishedViaPogony = false;
 	this._finishedHandCount = 0;
@@ -169,6 +170,14 @@ export class GameSession {
     if (this._victoryResolve) { this._victoryResolve(); this._victoryResolve = null; }
     this._victoryPending = false;
 	this._gameOverPending = false;
+	
+	if (this._gameOverKeyHandler) {
+      window.removeEventListener('keydown', this._gameOverKeyHandler);
+      this._gameOverKeyHandler = null;
+    }
+    this._gameOverButtons = [];
+    this._gameOverNavIdx = -1;
+	
     if (this._timer) { clearTimeout(this._timer); this._timer = null; }
 
 	if (this._suitResizeUnsub) { this._suitResizeUnsub(); this._suitResizeUnsub = null; }
@@ -261,9 +270,13 @@ _ensureDeckShadow() {
       return;
     }
 
-    const remaining = this._totalRemaining();
+    // Все карты, которые ещё не в руках:
+    //   колода + стек + козырь (если он ещё не забран)
+    const remaining = this._totalRemaining() + (this.trumpTaken ? 0 : 1);
 
-    if (remaining <= 0) {
+    // Когда остался только козырь (remaining === 1) — скрываем,
+    // его и так видно на столе.
+    if (remaining <= 1) {
       this.deckCounterEl.style.display = 'none';
       return;
     }
@@ -275,11 +288,9 @@ _ensureDeckShadow() {
     if (!deckM) return;
 
     if (uiScale.isMobile) {
-      // Мобилка: счётчик прижат к левому краю, под колодой/козырем
       const trumpM = this.markers.tryGet('trump') || deckM;
       const p = this.scene.resolve(trumpM);
 
-      // Козырь повёрнут на 90°, визуальная высота = REAL.w
       const bottomY = p.y + REAL.w / 2;
       const padX = Math.round(16 * uiScale.scale);
       const padY = Math.round(10 * uiScale.scale);
@@ -288,7 +299,6 @@ _ensureDeckShadow() {
       this.deckCounterEl.style.left = padX + 'px';
       this.deckCounterEl.style.top  = (bottomY + padY) + 'px';
     } else {
-      // Десктоп: по центру верхней карты колоды
       const p = this.scene.resolve(deckM);
       this.deckCounterEl.classList.remove('deck-counter--mobile');
       this.deckCounterEl.style.left = p.x + 'px';
@@ -541,7 +551,8 @@ _removeDeckShadow() {
 
 	card.marker = trumpM;
 	card.setAngle(90);
-	audio.playSfx('card_hit');               // ← приземление под колодой
+	audio.playSfx('card_hit');
+	this._updateDeckCounter?.();
   }
 
   async _flipPlayerCards() {
@@ -563,6 +574,7 @@ _removeDeckShadow() {
     r.table = [];
     r.anyBeaten = false;
 	this._playerLastPlays = [];   // цепочка ходов считается только внутри раунда
+	this._clearKbdFocus?.();
 
 	this._finishedViaPogony = false;
 	this._finishedHandCount = 0;
@@ -747,7 +759,11 @@ async _animateTake(cards, defender) {
 
   async _refillHands() {
     const r = this.round;
-    const order = [r.firstMove, (r.firstMove === 'player') ? 'cpu' : 'player'];
+    // Добор по правилам начинается с АТАКУЮЩЕГО в прошедшем раунде,
+    // затем — защитник. Не с firstMove (кто ходит следующим).
+    // r.attack ещё не перезаписан (это произойдёт в _startRound),
+    // поэтому здесь r.attack = атакующий прошедшего раунда.
+    const order = [r.attack, (r.attack === 'player') ? 'cpu' : 'player'];
 
     for (const who of order) {
       const acc = who === 'player' ? this.app.accordionPlayer : this.app.accordionCpu;
@@ -878,14 +894,18 @@ async _animateTake(cards, defender) {
       else if (winner === 'cpu')    label = finishLabel || 'ПРОИГРАЛ';
       else                          label = 'НИЧЬЯ';
 
-      btn.textContent = label;
-      btn.disabled = false;
-      btn.dataset.state = 'active';
-    }
+    btn.textContent = label;
+    btn.disabled = false;
+    btn.dataset.state = 'active';
+  }
 
-    this._updateHUD();
+  this._updateHUD();
 
-    // Прогресс-кольцо — только на победе игрока.
+  // Автофокус на финальную кнопку — игроку с клавиатурой/ТВ
+  // не нужно нажимать стрелку, чтобы увидеть жёлтую обводку.
+  this._focusActionButton();
+
+  // Прогресс-кольцо — только на победе игрока.
     // Поражение и ничья: игрок сам жмёт кнопку, чтобы увидеть результаты.
     if (winner === 'player') {
       await this._waitFinishProgress();
@@ -1057,7 +1077,7 @@ else                           this._jokerFrame('five');  // ничья
     const quest = questRank ? `<div class="game-over__quest">Квест «${questRank}» выполнен — не забудьте забрать награду</div>` : '';
     const pts   = `<div class="game-over__points">Получено очков стиля: <b>${points}</b></div>`;
 
-
+    const adBtn = `<button class="pause-btn pause-btn--ad" data-action="ad">📺 +500 очков за рекламу</button>`;
 
   let jokerHTML = '';
 
@@ -1107,16 +1127,72 @@ else                           this._jokerFrame('five');  // ничья
     <div class="game-over__content">
       <div class="game-over__title">${title}</div>
       <div class="game-over__sub">${sub}</div>
-      ${epi}
-      ${pts}
-      ${quest}
-      <button class="pause-btn" data-action="replay">СЫГРАТЬ ЕЩЁ РАЗ</button>
-      <button class="pause-btn pause-btn--danger" data-action="menu">ВЫЙТИ В МЕНЮ</button>
+        ${epi}
+        ${pts}
+        ${quest}
+        ${adBtn}
+        <button class="pause-btn" data-action="replay">СЫГРАТЬ ЕЩЁ РАЗ</button>
+        <button class="pause-btn pause-btn--danger" data-action="menu">ВЫЙТИ В МЕНЮ</button>
     </div>
   </div>`;
 
   el.style.display = 'flex';
   document.getElementById('scene').appendChild(el);
+
+  // ---- Клавиатурная / ТВ навигация в окне результатов ----
+  // Порядок: реклама → ещё раз → в меню.
+  this._gameOverButtons = [
+    el.querySelector('[data-action="ad"]'),
+    el.querySelector('[data-action="replay"]'),
+    el.querySelector('[data-action="menu"]'),
+  ].filter(Boolean);
+  this._gameOverNavIdx = -1;
+
+  const goHighlight = (idx) => {
+    this._gameOverButtons.forEach((b, i) =>
+      b.classList.toggle('kbd-focus', i === idx)
+    );
+  };
+
+  this._gameOverKeyHandler = (e) => {
+    if (e.repeat) return;
+    if (!document.getElementById('game-over')) {
+      // окно закрыто — снимаем обработчик
+      window.removeEventListener('keydown', this._gameOverKeyHandler);
+      this._gameOverKeyHandler = null;
+      return;
+    }
+    if (!['ArrowUp', 'ArrowDown', 'Enter', ' '].includes(e.key)) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    const n = this._gameOverButtons.length;
+    if (!n) return;
+
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      const dir = e.key === 'ArrowDown' ? 1 : -1;
+      if (this._gameOverNavIdx < 0) {
+        this._gameOverNavIdx = dir > 0 ? 0 : n - 1;
+      } else {
+        this._gameOverNavIdx = (this._gameOverNavIdx + dir + n) % n;
+      }
+      goHighlight(this._gameOverNavIdx);
+    } else if (this._gameOverNavIdx >= 0) {
+      const btn = this._gameOverButtons[this._gameOverNavIdx];
+      if (btn && !btn.disabled) {
+        audio.playSfx('button_click');
+        btn.click();
+      }
+    }
+  };
+  window.addEventListener('keydown', this._gameOverKeyHandler);
+
+  // Автофокус на первую кнопку (реклама / ещё раз / в меню)
+  setTimeout(() => {
+    if (!document.getElementById('game-over')) return;
+    this._gameOverNavIdx = 0;
+    goHighlight(0);
+  }, 100);
 
   // Синхронизируем размер квадрата джокера с высотой правого блока.
   // CSS aspect-ratio не вычисляет width из растянутого height в flex —
@@ -1147,6 +1223,19 @@ else                           this._jokerFrame('five');  // ничья
 
   this._suitResizeUnsub = this.scene.onResize(() => syncSuit());
 
+	el.querySelector('[data-action="ad"]').addEventListener('click', async () => {
+	  audio.playSfx('tap');
+	  const { ysdk } = await import('../sdk/yandex_sdk.js');
+	  ysdk.showRewarded({
+	    onReward: () => {
+	      addStylePoints(500);
+	      showMessage('+500 очков стиля!', { title: 'Награда' });
+	      const b = el.querySelector('[data-action="ad"]');
+	      if (b) { b.disabled = true; b.textContent = '✓ Получено'; }
+	    },
+	  });
+	});
+
 	el.querySelector('[data-action="replay"]').addEventListener('click', async () => {
 	  audio.playSfx('tap');
 	  if (this._goReplay) return;
@@ -1176,6 +1265,36 @@ else                           this._jokerFrame('five');  // ничья
 	  if (this.app && typeof this.app._exitToMenu === 'function') {
 		this.app._exitToMenu();
 	  }
+	});
+
+	el.querySelector('[data-action="ad"]').addEventListener('click', async () => {
+	  audio.playSfx('tap');
+	  const btn = el.querySelector('[data-action="ad"]');
+	  if (btn.disabled) return;
+	  btn.disabled = true;
+	  btn.textContent = '⏳ Загружаем рекламу…';
+
+	  const { ysdk } = await import('../sdk/yandex_sdk.js');
+	  ysdk.showRewarded({
+	    onReward: () => {
+	      addStylePoints(500);
+	      showMessage('+500 очков стиля!', { title: 'Награда' });
+	      btn.textContent = '✓ +500 получено';
+	      btn.classList.add('pause-btn--ad-done');
+	    },
+	    onClose: () => {
+	      // Если награда не пришла (пользователь закрыл до просмотра)
+	      if (btn.textContent.includes('Загружаем')) {
+	        btn.disabled = false;
+	        btn.textContent = '📺 +500 очков за рекламу';
+	      }
+	    },
+	    onError: () => {
+	      btn.disabled = false;
+	      btn.textContent = '📺 +500 очков за рекламу';
+	      showMessage('Реклама недоступна. Попробуйте позже.', { title: 'Реклама' });
+	    },
+	  });
 	});
 
     console.log('[game over]', winner, { points, epaulettes, questRank });
@@ -1368,10 +1487,18 @@ else                           this._jokerFrame('five');  // ничья
       return;
     }
 
+    // ---- Стол заполнен (6 карт) ----
     if (idx + 1 >= 6) {
-      this._updateHUD();
-      this._endRound('discard');
-      return;
+      if (dumpMode) {
+        // Dump-фаза: защитник УЖЕ решил брать. Больше подкидывать нельзя —
+        // карты уходят к защитнику (take), НЕ в отбой.
+        this._updateHUD();
+        this._endRound('take');
+        return;
+      }
+      // Обычная атака: стол заполнен, но защитник ещё не отбил последнюю карту.
+      // Передаём ему ход на отбой — если не отобьётся, заберёт всё (take).
+      // Стандартная логика ниже выставит D_ACT и вызовет _scheduleCpu().
     }
 
     if (dumpMode) {
@@ -1424,6 +1551,16 @@ else                           this._jokerFrame('five');  // ничья
 
     // Остались ещё неотбитые карты?
     const stillUnbeaten = r.table.some(p => p.atk && !p.def);
+	
+	// Если защитник отбился и у него 0 карт — атакующий больше
+// подкинуть не сможет. Автоматически завершаем раунд отбоем.
+if (!stillUnbeaten && this._defenderHandSize() === 0) {
+  this._updateHUD();
+  this._updateButton();
+  this._updateAIMessage();
+  this._endRound('discard');
+  return;
+}
 
 	if (stillUnbeaten) {
 	  r.phase = 'D_ACT';
@@ -1575,6 +1712,11 @@ switch (action.type) {
 	if (this._gameOverPending) return;
 	
     if (this._busy) return;
+
+    // Игрок переключился на мышь — снимаем клавиатурный фокус
+    this._usingKeyboard = false;
+    if (this._kbdFocusOnButton) this._clearKbdFocus();
+	
     const r = this.round;
     if (r.move !== 'player' || r.phase === 'END') return;
 
@@ -1605,14 +1747,149 @@ switch (action.type) {
     return best;
   }
 
-_selectCard(card) {
+  /* ================================================================
+   *  КЛАВИАТУРНАЯ НАВИГАЦИЯ (стрелки + Enter + Backspace)
+   * ================================================================ */
+
+  selectNextCard() { this._usingKeyboard = true; this._cycleHandCard(+1); }
+  selectPrevCard() { this._usingKeyboard = true; this._cycleHandCard(-1); }
+
+  _cycleHandCard(dir) {
+    if (this._gameOverPending) return;
+    if (this.round.move !== 'player' || this.round.phase === 'END') return;
+    const cards = this.app.accordionPlayer.cards;
+
+    // Фокус на кнопке — стрелка ведёт обратно к картам,
+    // пропуская заблокированные.
+    if (this._kbdFocusOnButton) {
+      this._clearKbdFocus();
+      if (!cards.length) return;
+      let idx = dir > 0 ? 0 : cards.length - 1;
+      while (idx >= 0 && idx < cards.length && this.blockedCards.has(cards[idx])) {
+        idx += dir;
+      }
+      if (idx < 0 || idx >= cards.length) {
+        // Все карты заблокированы — фокус остаётся на кнопке
+        this._focusActionButton();
+        return;
+      }
+      this._selectCard(cards[idx], { kbd: true });
+      return;
+    }
+
+    if (!cards.length) return;
+
+    const currentIdx = cards.indexOf(this.selectedCard);
+    if (currentIdx < 0) {
+      // Первое нажатие в этом ходу — выбираем ближайшую НЕзаблокированную карту
+      let idx = dir > 0 ? 0 : cards.length - 1;
+      while (idx >= 0 && idx < cards.length && this.blockedCards.has(cards[idx])) {
+        idx += dir;
+      }
+      if (idx < 0 || idx >= cards.length) {
+        // Все карты заблокированы — сразу на кнопку (если активна)
+        if (this._canFocusActionButton()) this._focusActionButton();
+        return;
+      }
+      this._selectCard(cards[idx], { kbd: true });
+      return;
+    }
+
+    // Ищем следующую НЕзаблокированную карту в направлении
+    let i = currentIdx + dir;
+    while (i >= 0 && i < cards.length && this.blockedCards.has(cards[i])) {
+      i += dir;
+    }
+
+    // Вышли за границу
+    if (i < 0 || i >= cards.length) {
+      // 1. Если кнопка игрока активна — переход на неё
+      if (this._canFocusActionButton()) {
+        this._deselect();
+        this._focusActionButton();
+        return;
+      }
+      // 2. Иначе wrap по кругу внутри руки
+      //    (ищем первую легальную карту с противоположного края)
+      let j = dir > 0 ? 0 : cards.length - 1;
+      while (j >= 0 && j < cards.length && this.blockedCards.has(cards[j])) {
+        j += dir;
+      }
+      if (j < 0 || j >= cards.length) return;  // все заблокированы
+      this._deselect();
+      this._selectCard(cards[j], { kbd: true });
+      return;
+    }
+
+    this._deselect();
+    this._selectCard(cards[i], { kbd: true });
+  }
+
+  _clearKbdFocus() {
+    for (const c of this.app.accordionPlayer.cards) {
+      c.el.classList.remove('kbd-focus');
+    }
+    if (this.actionBtn) this.actionBtn.classList.remove('kbd-focus');
+    this._kbdFocusOnButton = false;
+  }
+
+  _canFocusActionButton() {
+    if (!this.actionBtn) return false;
+    if (this.actionBtn.disabled) return false;
+    // В финальном состоянии (после _finishGame) кнопка тоже должна быть
+    // достижима — игрок жмёт её, чтобы увидеть окно результатов.
+    return true;
+  }
+
+  _focusActionButton() {
+    if (!this._canFocusActionButton()) return;
+    this._clearKbdFocus();
+    this.actionBtn.classList.add('kbd-focus');
+    this._kbdFocusOnButton = true;
+  }
+
+  handleEnter() {
+	this._usingKeyboard = true;
+    // Финальное состояние (ПОБЕДА / ПРОИГРАЛ / НИЧЬЯ) — ждём клика по кнопке.
+    // Проверяем _victoryPending РАНЬШЕ _gameOverPending: _gameOverPending
+    // выставляется в true сразу в _finishGame, но это не повод блокировать Enter.
+    if (this._victoryPending) {
+      this._onActionButtonClick();
+      return;
+    }
+    if (this._gameOverPending) return;
+    if (this._kbdFocusOnButton) {
+      if (this._canFocusActionButton()) this._onActionButtonClick();
+      return;
+    }
+    if (this.selectedCard) this.confirmSelection();
+  }
+
+  confirmSelection() {
+    if (!this.selectedCard) return;
+    const slots = this.selectedSlots || [];
+    if (!slots.length) return;
+    this._confirmSlot(slots[0]);
+  }
+
+  cancelSelection() {
+    if (this.selectedCard) this._deselect();
+  }
+
+_selectCard(card, opts = {}) {
   const r = this.round;
+  if (!opts.kbd) this._clearKbdFocus();
   this.selectedCard = card;
   audio.playSfx('card_selection');
   card.setPixelOffset(0, -LIFT_PX);
   card.relayout(this.scene);
   card.setZIndex(700);
   this._clearSlotHighlights();
+
+  if (opts.kbd) {
+    this._clearKbdFocus();
+    card.el.classList.add('kbd-focus');
+  }
 
   const slots = this._getCardLegalSlots(card);
   this.selectedSlots = slots;
@@ -1677,6 +1954,7 @@ _deselect() {
   audio.playSfx('card_selection');
   this.selectedCard.setPixelOffset(0, 0);
   this.selectedCard.relayout(this.scene);
+  this.selectedCard.el.classList.remove('kbd-focus');
   this.app.accordionPlayer._applyZ();
   this.selectedCard = null;
   this.selectedSlots = null;
@@ -1696,6 +1974,8 @@ _confirmSlot(slot) {
   this.selectedCard = null;
   this.selectedSlots = null;
   this._clearSlotHighlights();
+  card.el.classList.remove('kbd-focus');
+  this._kbdFocusOnButton = false;
   card.setPixelOffset(0, 0);
   card.relayout(this.scene);
 
@@ -1967,6 +2247,11 @@ _repositionActionButton() {
 
     this.actionBtn.textContent = label;
     this.actionBtn.disabled = !enabled;
+	
+	if (this._kbdFocusOnButton && this.actionBtn.disabled) {
+      this._clearKbdFocus();
+    }
+	
     if (label === 'МОЙ ХОД') {
       this.actionBtn.dataset.state = 'info';
     } else if (enabled) {
@@ -2074,6 +2359,33 @@ _updateHandOverlays() {
     if (!legal) this.blockedCards.add(c);
     c.setOverlay(hintsOn && !legal);
   }
+
+  // Если текущая выбранная карта теперь заблокирована — снимаем фокус
+  if (this.selectedCard && this.blockedCards.has(this.selectedCard)) {
+    this._deselect();
+    this._clearKbdFocus();
+  }
+
+  // Автофокус на кнопку игрока (только в режиме клавиатуры)
+  this._maybeAutoFocusOnButton();
+}
+
+_maybeAutoFocusOnButton() {
+  if (!this._usingKeyboard) return;
+  if (this._kbdFocusOnButton) return;
+  if (this.selectedCard) return;
+
+  const r = this.round;
+  if (r.move !== 'player') return;
+  if (r.phase === 'END') return;
+
+  if (!this.actionBtn || this.actionBtn.disabled) return;
+
+  const cards = this.app.accordionPlayer.cards;
+  if (!cards.length) return;
+  if (!cards.every(c => this.blockedCards.has(c))) return;
+
+  this._focusActionButton();
 }
 
   /* ================================================================

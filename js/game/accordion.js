@@ -53,11 +53,13 @@ _computeSlots(n) {
     return [new Marker(cx / W_scene, yBasePx / H_scene, 'slot_0', 0)];
   }
 
-  // ширина руки
-  const baseSpan = this.baseMinDist * (n - 1);
-  const span = Math.min(baseSpan, W_hand);
-  const step = span / (n - 1);
-  const startX = cx - span / 2;
+	// ширина руки
+	// ширина руки — с поправкой из пресета (мобилка плотнее)
+	const mul = C.accMinDistMul ?? 1;
+	const baseSpan = this.baseMinDist * mul * (n - 1);
+	const span = Math.min(baseSpan, W_hand);
+	const step = span / (n - 1);
+	const startX = cx - span / 2;
 
   // ---- Режим «прямо» ----
   if (GameSettings.handLayout === 'straight') {

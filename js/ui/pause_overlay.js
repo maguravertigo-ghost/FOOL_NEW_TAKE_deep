@@ -56,6 +56,29 @@ slider.addEventListener('change', () => {
 updateVisual();
 this._updateSliderVisual = updateVisual;
 
+    // Клавиатурная / ТВ навигация по кнопкам паузы
+    this._navBtns = [];
+    this._navIdx = -1;
+
+    window.addEventListener('keydown', (e) => {
+      if (this.el.style.display === 'none') return;
+      if (e.repeat) return;
+      if (!['ArrowUp', 'ArrowDown', 'Enter', ' '].includes(e.key)) return;
+      e.preventDefault();
+
+      this._navBtns = [...this.el.querySelectorAll('.pause-btn')];
+      if (!this._navBtns.length) return;
+
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        const dir = e.key === 'ArrowDown' ? 1 : -1;
+        this._navIdx = (this._navIdx + dir + this._navBtns.length) % this._navBtns.length;
+        this._navBtns.forEach((b, i) => b.classList.toggle('kbd-focus', i === this._navIdx));
+      } else if (this._navIdx >= 0) {
+        audio.playSfx('button_click');
+        this._navBtns[this._navIdx].click();
+      }
+    });
+
     document.getElementById('scene').appendChild(this.el);
   }
 
@@ -66,7 +89,16 @@ show() {
     if (this._updateSliderVisual) this._updateSliderVisual();
   }
   this.el.style.display = 'flex';
+
+  // Автофокус на первую кнопку — чтобы Enter сразу сработал
+  this._navBtns = [...this.el.querySelectorAll('.pause-btn')];
+  this._navIdx = 0;
+  this._navBtns.forEach((b, i) => b.classList.toggle('kbd-focus', i === 0));
 }
-  hide() { this.el.style.display = 'none'; }
+  hide() {
+    this.el.style.display = 'none';
+    this._navIdx = -1;
+    this._navBtns.forEach(b => b.classList.remove('kbd-focus'));
+  }
   isVisible() { return this.el.style.display !== 'none'; }
 }
