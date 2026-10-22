@@ -80,14 +80,25 @@ class App {
       // 1. Модалки showMessage (без выбора) — закрываем по Esc
       const msgs = document.querySelectorAll('.msg-overlay');
       for (const m of msgs) {
-        if (!m.querySelector('.msg-overlay__actions')) {
+        const actions = m.querySelector('.msg-overlay__actions');
+        if (!actions) {
+          // showMessage — просто закрыть
           const btn = m.querySelector('[data-close]');
           if (btn) { btn.click(); e.preventDefault(); return; }
+        } else {
+          // showConfirm — нажать «Отмена»
+          const cancelBtn = m.querySelector('[data-cancel]');
+          if (cancelBtn) { cancelBtn.click(); e.preventDefault(); return; }
         }
       }
 
       // 2. Оверлей меню
       if (this.menu && this.menu._activeOverlay) {
+        // Дать оверлею шанс «сделать шаг назад» (например, магазин → категории)
+        if (typeof this.menu._onEscape === 'function' && this.menu._onEscape()) {
+          e.preventDefault();
+          return;
+        }
         audio.playSfx('tap_up');
         this.menu._closeOverlay();
         e.preventDefault();
@@ -151,7 +162,7 @@ class App {
     const onHide = () => {
       audio.stopAllSfx();
       audio.pauseMusic();
-      try { saveProgress(); } catch (e) { /* noop */ }   // flush в облако
+      try { saveProgress(); } catch { /* noop */ }
       if (document.getElementById('game-over')) return;
       if (this.session && !this._paused) this._openPause();
     };

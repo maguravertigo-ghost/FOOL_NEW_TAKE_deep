@@ -1012,7 +1012,7 @@ _showGameOver(winner, opts = {}) {
   if (document.getElementById('game-over')) return;
   if (this._gameOverShown) return;
   this._gameOverShown = true;
-  
+
   try { ysdk.gameplayStop(); } catch { /* noop */ }
 
   // Матч закончен — сообщаем платформе, что геймплей остановлен.

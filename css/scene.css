@@ -2052,7 +2052,15 @@ body.is-mobile .pause-volume__label {
   outline-offset: calc(2px * var(--ui));
   box-shadow: 0 0 calc(16px * var(--ui)) rgba(255,213,79,0.7);
 }
-
+.mm-opt.kbd-focus {
+  outline: calc(3px * var(--ui)) solid #ffd54f;
+  outline-offset: calc(2px * var(--ui));
+  box-shadow:
+    0 0 calc(16px * var(--ui)) rgba(255,213,79,0.85),
+    inset 0 0 0 calc(2px * var(--ui)) rgba(255,213,79,0.3);
+  transform: scale(1.03);
+  transition: transform 0.12s ease;
+}
 /* Карта в руке — фокус с клавиатуры */
 .card.kbd-focus {
   z-index: 900 !important;
