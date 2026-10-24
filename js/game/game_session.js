@@ -183,7 +183,7 @@ export class GameSession {
 	
     if (this._timer) { clearTimeout(this._timer); this._timer = null; }
 
-	if (this._suitResizeUnsub) { this._suitResizeUnsub(); this._suitResizeUnsub = null; }
+		// _suitResizeUnsub больше не используется (см. _showGameOver)
 
   }
 
@@ -1206,34 +1206,9 @@ else                           this._jokerFrame('five');  // ничья
     goHighlight(0);
   }, 100);
 
-  // Синхронизируем размер квадрата джокера с высотой правого блока.
-  // CSS aspect-ratio не вычисляет width из растянутого height в flex —
-  // поэтому ставим размеры из JS один раз после вставки в DOM.
-  requestAnimationFrame(() => {
-    const suit = el.querySelector('.game-over__joker--suit');
-    const content = el.querySelector('.game-over__content');
-    if (suit && content) {
-      const h = content.offsetHeight;
-      if (h > 0) {
-        suit.style.width = h + 'px';
-        suit.style.height = h + 'px';
-      }
-    }
-  });
-
-  const syncSuit = () => {
-    const suit = el.querySelector('.game-over__joker--suit');
-    const content = el.querySelector('.game-over__content');
-    if (!suit || !content) return;
-    const h = content.offsetHeight;
-    if (h > 0) {
-      suit.style.width = h + 'px';
-      suit.style.height = h + 'px';
-    }
-  };
-  requestAnimationFrame(syncSuit);
-
-  this._suitResizeUnsub = this.scene.onResize(() => syncSuit());
+  // Размеры окна результатов и джокера задаются полностью в CSS
+  // (.game-over__box: 2/3 W × 60% H; .game-over__joker--suit: aspect-ratio 1/1).
+  // JS-синхронизация больше не нужна.
 
 	el.querySelector('[data-action="ad"]').addEventListener('click', async () => {
 	  audio.playSfx('tap');

@@ -420,8 +420,11 @@ body {
   flex-direction: row;
   align-items: stretch;
   gap: 0;
-  min-width: min(90vw, calc(720px * var(--ui)));
-  max-height: min(85vh, calc(600px * var(--ui)));
+  /* Фиксированные размеры: 2/3 ширины сцены, 60% высоты */
+  width:  calc(var(--scene-w) * 2 / 3);
+  height: calc(var(--scene-h) * 0.6);
+  max-width: calc(1400px * var(--ui));
+  max-height: calc(800px * var(--ui));
   background: rgba(25,25,30,0.98);
   border: 2px solid #555;
   border-radius: calc(16px * var(--ui));
@@ -438,19 +441,20 @@ body {
   display: block;
   height: 100%;
   width: auto;
-  max-width: calc(260px * var(--ui));
-  object-fit: cover;
+  max-width: 100%;
+  object-fit: contain;
 }
 .game-over__content {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
+  align-items: center;
   justify-content: center;
-  padding: calc(30px * var(--ui)) calc(40px * var(--ui));
-  gap: calc(10px * var(--ui));
+  padding: calc(20px * var(--ui)) calc(24px * var(--ui));
+  gap: calc(8px * var(--ui));
   text-align: center;
-  min-width: calc(260px * var(--ui));
+  overflow-y: auto;
+  min-width: 0;
 }
 .game-over__title { font-size: calc(44px * var(--ui)); font-weight: 700; color: #fff; margin-bottom: calc(10px * var(--ui)); letter-spacing: calc(2px * var(--ui)); }
 .game-over__sub   { font-size: calc(18px * var(--ui)); color: #bbb; margin-bottom: calc(8px * var(--ui)); }
@@ -1588,6 +1592,7 @@ body {
   align-items: stretch;
   background: #2a2a2e;
   height: 100%;
+  /* Картинка занимает всю высоту, ширину определяет natural ratio */
 }
 .game-over__joker--suit {
   flex: 0 0 auto;
@@ -1596,8 +1601,10 @@ body {
   overflow: hidden;
   display: block;
   position: relative;
-  align-self: stretch;
-  /* width/height ставит JS после вставки в DOM */
+  height: 100%;
+  aspect-ratio: 1 / 1;
+  width: auto;
+  /* Размер определяется CSS: высота = высоте box, ширина = высоте (квадрат) */
 }
 
 .joker-suit-wrap {

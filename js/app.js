@@ -394,7 +394,17 @@ _createDevTools() {
 
     this.session._showGameOver('player', { epaulettesOverride: pogonTest });
   }));
-
+  // Тест ничьей
+  wrap.appendChild(mkBtn('НИЧЬЯ', '#0d47a1', '#42a5f5', () => {
+    if (!this.session || !this.session.ready) {
+      showMessage('Начните матч, чтобы тестировать ничью', { title: 'DEV' });
+      return;
+    }
+    const existing = document.getElementById('game-over');
+    if (existing) existing.remove();
+    this.session._gameOverShown = false;
+    this.session._showGameOver('draw');
+  }));
   document.body.appendChild(wrap);
   this.devToolsEl = wrap;
   
