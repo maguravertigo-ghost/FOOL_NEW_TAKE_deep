@@ -19,7 +19,7 @@ export function showMessage(text, { title = '', onClose } = {}) {
   getHost().appendChild(el);
 
   // Автофокус на кнопку ОК — только если предыдущее действие с клавиатуры
-  const wasKbd = window.__app?.menu?._lastInputWasKeyboard === true;
+  const wasKbd = window.__lastInputWasKeyboard === true;
   if (wasKbd) {
     requestAnimationFrame(() => {
       const okBtn = el.querySelector('[data-close]');
@@ -53,7 +53,7 @@ export function showConfirm(text, { title = '', onConfirm, onCancel } = {}) {
   getHost().appendChild(el);
 
   // Автофокус на кнопку ОК — только если предыдущее действие с клавиатуры
-  const wasKbd = window.__app?.menu?._lastInputWasKeyboard === true;
+  const wasKbd = window.__lastInputWasKeyboard === true;
   if (wasKbd) {
     requestAnimationFrame(() => {
       const okBtn = el.querySelector('[data-cancel]');

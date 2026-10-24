@@ -109,7 +109,9 @@ export class GameSession {
 	
 	this._slotFocusIdx = -1;       // -1 = фокус на карте, иначе индекс в selectedSlots
 	
-	this._usingKeyboard = false;
+	this._usingKeyboard = (window.__lastInputWasKeyboard !== false);
+	this._lastCycledCard = null;
+	this._kbdReturnCard = null;
 	
 	this._finishedViaPogony = false;
 	this._finishedHandCount = 0;
@@ -1016,14 +1018,11 @@ _showGameOver(winner, opts = {}) {
   if (this._gameOverShown) return;
   this._gameOverShown = true;
 
-  try { ysdk.gameplayStop(); } catch { /* noop */ }
+  // Снять визуальный фокус с кнопки игрока — он просвечивает под окном
+  if (this.actionBtn) this.actionBtn.classList.remove('kbd-focus');
+  this._kbdFocusOnButton = false;
 
-  // Матч закончен — сообщаем платформе, что геймплей остановлен.
-  // Требование 1.19.3: GameplayAPI.stop() при выходе из активного геймплея.
-  try {
-    const { ysdk } = window.__app?.constructor ? window.__app : {};
-    if (ysdk && ysdk.gameplayStop) ysdk.gameplayStop();
-  } catch { /* noop */ }
+  try { ysdk.gameplayStop(); } catch { /* noop */ }
 
   let points = 0;
   if (winner === 'player') { points = 100; audio.playSfx('win'); }
@@ -1169,11 +1168,13 @@ else                           this._jokerFrame('five');  // ничья
   this._gameOverKeyHandler = (e) => {
     if (e.repeat) return;
     if (!document.getElementById('game-over')) {
-      // окно закрыто — снимаем обработчик
       window.removeEventListener('keydown', this._gameOverKeyHandler);
       this._gameOverKeyHandler = null;
       return;
     }
+    // Пока открыта модалка — ключи обрабатывает она
+    if (document.querySelector('.msg-overlay')) return;
+
     if (!['ArrowUp', 'ArrowDown', 'Enter', ' '].includes(e.key)) return;
     e.preventDefault();
     e.stopPropagation();
@@ -1183,12 +1184,16 @@ else                           this._jokerFrame('five');  // ничья
 
     if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
       const dir = e.key === 'ArrowDown' ? 1 : -1;
-      if (this._gameOverNavIdx < 0) {
-        this._gameOverNavIdx = dir > 0 ? 0 : n - 1;
-      } else {
-        this._gameOverNavIdx = (this._gameOverNavIdx + dir + n) % n;
+      let idx = this._gameOverNavIdx;
+      if (idx < 0) idx = dir > 0 ? 0 : n - 1;
+      else         idx = (idx + dir + n) % n;
+      // пропускаем disabled
+      for (let i = 0; i < n; i++) {
+        if (this._gameOverButtons[idx] && !this._gameOverButtons[idx].disabled) break;
+        idx = (idx + dir + n) % n;
       }
-      goHighlight(this._gameOverNavIdx);
+      this._gameOverNavIdx = idx;
+      goHighlight(idx);
     } else if (this._gameOverNavIdx >= 0) {
       const btn = this._gameOverButtons[this._gameOverNavIdx];
       if (btn && !btn.disabled) {
@@ -1210,18 +1215,6 @@ else                           this._jokerFrame('five');  // ничья
   // (.game-over__box: 2/3 W × 60% H; .game-over__joker--suit: aspect-ratio 1/1).
   // JS-синхронизация больше не нужна.
 
-	el.querySelector('[data-action="ad"]').addEventListener('click', async () => {
-	  audio.playSfx('tap');
-	  const { ysdk } = await import('../sdk/yandex_sdk.js');
-	  ysdk.showRewarded({
-	    onReward: () => {
-	      addStylePoints(500);
-	      showMessage('+500 очков стиля!', { title: 'Награда' });
-	      const b = el.querySelector('[data-action="ad"]');
-	      if (b) { b.disabled = true; b.textContent = '✓ Получено'; }
-	    },
-	  });
-	});
 
 	el.querySelector('[data-action="replay"]').addEventListener('click', async () => {
 	  audio.playSfx('tap');
@@ -1263,12 +1256,23 @@ else                           this._jokerFrame('five');  // ничья
 
 	  const { ysdk } = await import('../sdk/yandex_sdk.js');
 	  ysdk.showRewarded({
-	    onReward: () => {
-	      addStylePoints(500);
-	      showMessage('+500 очков стиля!', { title: 'Награда' });
-	      btn.textContent = '✓ +500 получено';
-	      btn.classList.add('pause-btn--ad-done');
-	    },
+		onReward: () => {
+		  addStylePoints(500);
+		  btn.textContent = '✓ +500 получено';
+		  btn.classList.add('pause-btn--ad-done');
+
+		  // Перевести фокус на «СЫГРАТЬ ЕЩЁ РАЗ» (ad теперь disabled)
+		  const replayBtn = el.querySelector('[data-action="replay"]');
+		  const replayIdx = this._gameOverButtons.indexOf(replayBtn);
+		  if (replayIdx >= 0) {
+			this._gameOverButtons.forEach((b, i) =>
+			  b.classList.toggle('kbd-focus', i === replayIdx)
+			);
+			this._gameOverNavIdx = replayIdx;
+		  }
+
+		  showMessage('+500 очков стиля!', { title: 'Награда' });
+		},
 	    onClose: () => {
 	      // Если награда не пришла (пользователь закрыл до просмотра)
 	      if (btn.textContent.includes('Загружаем')) {
@@ -1608,9 +1612,21 @@ if (!stillUnbeaten && this._defenderHandSize() === 0) {
 	_defenderTake(side) {
 	  const r = this.round;
 	  console.log(`[${side}] take`);
-	  if (side === 'cpu') this._jokerFrame('sad');    // ← добавлено
+	  if (side === 'cpu') this._jokerFrame('sad');
+
 	  r.phase = 'A_DUMP';
 	  r.move  = r.attack;
+
+	  // Если у атакующего не осталось карт — подкидывать нечего,
+	  // ждать нажатия ПАС не нужно. Сразу завершаем раунд.
+	  const attackerAcc = (r.attack === 'player')
+	    ? this.app.accordionPlayer
+	    : this.app.accordionCpu;
+	  if (attackerAcc.cards.length === 0) {
+	    this._endRound('take');
+	    return;
+	  }
+
 	  this._updateButton();
 	  this._updateAIMessage();
 	  this._updateHandOverlays();
@@ -1742,6 +1758,11 @@ switch (action.type) {
 
   slotFocusUp() {
     this._usingKeyboard = true;
+    // Если фокус на кнопке — вернуться на карту
+    if (this._kbdFocusOnButton) {
+      this._returnFromButtonToCard();
+      return;
+    }
     if (!this.selectedCard || !this.selectedSlots || !this.selectedSlots.length) return;
     // Переход на слоты (или следующий слот)
     if (this._slotFocusIdx < 0) {
@@ -1754,14 +1775,29 @@ switch (action.type) {
 
   slotFocusDown() {
     this._usingKeyboard = true;
-    // Возврат с слота к карте
+
+    // 1. С кнопки — вернуться на карту
+    if (this._kbdFocusOnButton) {
+      this._returnFromButtonToCard();
+      return;
+    }
+
+    // 2. Со слота — вернуться на карту в руке
     if (this._slotFocusIdx >= 0) {
       this._slotFocusIdx = -1;
       this._updateSlotFocusUI();
+      return;
+    }
+
+    // 3. В руке на карте — shortcut на кнопку игрока
+    if (this._canFocusActionButton()) {
+      this._deselect();
+      this._focusActionButton();
     }
   }
 
   _cycleSlotFocus(dir) {
+    if (this._gameOverPending) return;
     if (!this.selectedCard || !this.selectedSlots || !this.selectedSlots.length) return;
     const n = this.selectedSlots.length;
 
@@ -1812,7 +1848,11 @@ switch (action.type) {
       return;
     }
 
-    if (!cards.length) return;
+    if (!cards.length) {
+      // В руке пусто — стрелка переводит фокус на кнопку
+      if (this._canFocusActionButton()) this._focusActionButton();
+      return;
+    }
 
     const currentIdx = cards.indexOf(this.selectedCard);
     if (currentIdx < 0) {
@@ -1878,9 +1918,33 @@ switch (action.type) {
 
   _focusActionButton() {
     if (!this._canFocusActionButton()) return;
+    // запомнить карту, чтобы вернуться по ↑/↓ с кнопки
+    this._kbdReturnCard = this.selectedCard || this._lastCycledCard || null;
     this._clearKbdFocus();
     this.actionBtn.classList.add('kbd-focus');
     this._kbdFocusOnButton = true;
+  }
+
+  _returnFromButtonToCard() {
+    if (!this._kbdFocusOnButton) return;
+    this._clearKbdFocus();
+
+    const cards = this.app.accordionPlayer.cards;
+    if (!cards.length) return;
+
+    // Куда вернуться: на карту, где был фокус до кнопки.
+    // Если она стала заблокирована / ушла — на первую доступную.
+    let target = this._kbdReturnCard;
+    if (!target || !cards.includes(target) || this.blockedCards.has(target)) {
+      target = null;
+      for (const c of cards) {
+        if (!this.blockedCards.has(c)) { target = c; break; }
+      }
+      if (!target) target = cards[0];
+    }
+
+    this._selectCard(target, { kbd: true, silent: true });
+    this._kbdReturnCard = null;
   }
 
   handleEnter() {
@@ -1916,7 +1980,8 @@ _selectCard(card, opts = {}) {
   const r = this.round;
   if (!opts.kbd) this._clearKbdFocus();
   this.selectedCard = card;
-  audio.playSfx('card_selection');
+  this._lastCycledCard = card;
+  if (!opts.silent) audio.playSfx('card_selection');
   card.setPixelOffset(0, -LIFT_PX);
   card.relayout(this.scene);
   card.setZIndex(700);
@@ -2414,8 +2479,34 @@ _updateHandOverlays() {
     this._clearKbdFocus();
   }
 
-  // Автофокус на кнопку игрока (только в режиме клавиатуры)
+  // Автофокус в режиме клавиатуры:
+  // сначала на первую доступную карту, иначе — на кнопку
+  this._maybeAutoFocusFirstCard();
   this._maybeAutoFocusOnButton();
+}
+
+_maybeAutoFocusFirstCard() {
+  if (!this._usingKeyboard) return;
+  if (this._kbdFocusOnButton) return;
+  if (this.selectedCard) return;
+  if (this._slotFocusIdx >= 0) return;
+
+  const r = this.round;
+  if (r.move !== 'player') return;
+  if (r.phase === 'END') return;
+
+  const cards = this.app.accordionPlayer.cards;
+  if (!cards.length) return;
+
+  // Первая доступная для хода карта — слева-направо
+  // (cards упорядочены по слотам: чем меньше index, тем левее)
+  for (const c of cards) {
+    if (!this.blockedCards.has(c)) {
+      this._selectCard(c, { kbd: true, silent: true });
+      return;
+    }
+  }
+  // Все карты заблокированы → сработает _maybeAutoFocusOnButton
 }
 
 _maybeAutoFocusOnButton() {
@@ -2430,7 +2521,11 @@ _maybeAutoFocusOnButton() {
   if (!this.actionBtn || this.actionBtn.disabled) return;
 
   const cards = this.app.accordionPlayer.cards;
-  if (!cards.length) return;
+  if (cards.length === 0) {
+    // В руке пусто — сразу фокус на кнопку (БЕРУ / ПАС / ПОГОНЫ)
+    this._focusActionButton();
+    return;
+  }
   if (!cards.every(c => this.blockedCards.has(c))) return;
 
   this._focusActionButton();

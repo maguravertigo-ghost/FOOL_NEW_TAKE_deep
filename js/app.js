@@ -30,6 +30,15 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
 class App {
   constructor() {
+    // ---- глобальный флаг: последний ввод был с клавиатуры? ----
+    // Работает для ЛЮБОГО экрана (меню, игра, модалки, оверлеи).
+    document.addEventListener('keydown', () => {
+      window.__lastInputWasKeyboard = true;
+    }, true);
+    document.addEventListener('pointerdown', () => {
+      window.__lastInputWasKeyboard = false;
+    }, true);
+
     // ---- запрет контекстного меню и выделения ----
     document.addEventListener('contextmenu', (e) => e.preventDefault());
     document.addEventListener('selectstart', (e) => e.preventDefault());
@@ -64,6 +73,9 @@ class App {
     this.capture.onKey((k) => {
       if (!this._sessionReady || !this.session) return;
       if (this._paused) return;
+      // Модальные слои поверх сцены перехватывают ввод сами
+      if (document.getElementById('game-over')) return;
+      if (document.querySelector('.msg-overlay')) return;
       if (k === 'ArrowLeft')  this.session.selectPrevCard?.();
       if (k === 'ArrowRight') this.session.selectNextCard?.();
       if (k === 'ArrowUp')    this.session.slotFocusUp?.();
@@ -217,6 +229,9 @@ class App {
 
     if (!['Enter', ' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;
     e.preventDefault();
+    // Ключ обработан модалкой — не даём другим window-обработчикам
+    // (например, _gameOverKeyHandler) среагировать на то же событие.
+    e.stopImmediatePropagation();
 
     let cur = el.querySelector('.kbd-focus');
     if (!cur || !focusable.includes(cur)) {
@@ -717,6 +732,8 @@ async _startGameFromMenu(mode) {
     this.capture.onPress((x, y) => {
       if (!this._sessionReady || !this.session) return;
       if (this._paused) return;
+      if (document.getElementById('game-over')) return;
+      if (document.querySelector('.msg-overlay')) return;
       this.session.handleClick(x, y);
     });
     this.capture.onMove(() => {});

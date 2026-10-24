@@ -2496,6 +2496,7 @@ _buildPreviewField(container) {
 
     this._lastInputWasKeyboard = true;
     e.preventDefault();
+    e.stopImmediatePropagation();
 
     let cur = el.querySelector('.kbd-focus');
     if (!cur || !focusable.includes(cur)) {
