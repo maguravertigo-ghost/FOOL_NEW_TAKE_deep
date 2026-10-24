@@ -2002,23 +2002,58 @@ body.is-mobile .shop-cats {
   gap: calc(14px * var(--ui));
   align-items: center;
 }
-/* Мобилка: джокер не помещается в узкую боковую панель — прячем картинку,
-   оставляем только баланс очков */
-body.is-mobile .shop-joker-wrap img {
-  display: none;
+/* Мобилка: магазин — вертикальная раскладка.
+   Сверху тонкая полоса с балансом, снизу — контент (категории / витрина).
+   Джокер на мобилке не помещается — прячем, чтобы не растягивать панель. */
+body.is-mobile .shop-box {
+  flex-direction: column;
 }
 body.is-mobile .shop-joker-side {
-  padding: calc(12px * var(--ui));
-  min-width: calc(150px * var(--ui));
-  max-width: calc(180px * var(--ui));
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  max-height: calc(64px * var(--ui));
+  padding: calc(8px * var(--ui)) calc(16px * var(--ui));
+  align-items: center;
+  justify-content: flex-end;
+  box-sizing: border-box;
+}
+body.is-mobile .shop-joker-wrap {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+body.is-mobile .shop-joker-wrap img {
+  display: none;
 }
 body.is-mobile .shop-balance {
   position: relative;
   left: auto;
   bottom: auto;
   transform: none;
+  display: flex;
+  align-items: baseline;
+  gap: calc(10px * var(--ui));
+  padding: calc(4px * var(--ui)) calc(12px * var(--ui));
   min-width: 0;
-  width: 100%;
+  width: auto;
+  font-size: calc(13px * var(--ui));
+  white-space: nowrap;
+  text-align: left;
+}
+body.is-mobile .shop-balance b {
+  display: inline;
+  font-size: calc(22px * var(--ui));
+  font-weight: 700;
+  color: #ff9800;
+  margin-top: 0;
+}
+body.is-mobile .shop-content {
+  min-width: 0;
+  overflow: hidden;
 }
 body.is-mobile .shop-content {
   padding: calc(16px * var(--ui)) calc(20px * var(--ui));

@@ -1394,7 +1394,7 @@ _fadeMusic(on) {
    *  МАГАЗИНЧИК
    * ================================================================ */
 
-  _openShop() {
+_openShop() {
     let ov = this._overlays.shop;
     if (!ov) {
       ov = document.createElement('div');
@@ -1402,11 +1402,19 @@ _fadeMusic(on) {
       this.el.appendChild(ov);
       this._overlays.shop = ov;
     }
-    this._renderShop(ov, this._shopCategory);
+
+    // На мобилке после поворота / первого рендера --scene-w и --ui могут
+    // быть не финальными. Показываем оверлей, даём браузеру кадр,
+    // потом принудительно пересчитываем и рендерим контент.
     ov.style.display = 'flex';
     this._activeOverlay = ov;
-    // Фокус выставит _renderShop — в rAF после построения контента
-    this._showShopWelcome();
+
+    requestAnimationFrame(() => {
+      this.hud.update();
+      this._layoutAll();
+      this._renderShop(ov, this._shopCategory);
+      this._showShopWelcome();
+    });
   }
 
   _showShopWelcome() {

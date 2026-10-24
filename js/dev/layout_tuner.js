@@ -51,8 +51,10 @@ function saveCfg(cfg) {
 function loadSkip() {
   try {
     const v = localStorage.getItem(LS_SKIP);
-    return v === null ? true : v === '1';   // по умолчанию — пропускать
-  } catch { return true; }
+    // По умолчанию — анимация ВКЛЮЧЕНА. Skip — только если явно
+    // включили в тюнере (или это было сохранено ранее с '1').
+    return v === '1';
+  } catch { return false; }
 }
 function saveSkip(v) {
   try { localStorage.setItem(LS_SKIP, v ? '1' : '0'); } catch {}
