@@ -18,11 +18,14 @@ export function showMessage(text, { title = '', onClose } = {}) {
     </div>`;
   getHost().appendChild(el);
 
-  // Автофокус на кнопку ОК
-  requestAnimationFrame(() => {
-    const okBtn = el.querySelector('[data-close]');
-    if (okBtn) okBtn.classList.add('kbd-focus');
-  });
+  // Автофокус на кнопку ОК — только если предыдущее действие с клавиатуры
+  const wasKbd = window.__app?.menu?._lastInputWasKeyboard === true;
+  if (wasKbd) {
+    requestAnimationFrame(() => {
+      const okBtn = el.querySelector('[data-close]');
+      if (okBtn) okBtn.classList.add('kbd-focus');
+    });
+  }
 
   const close = () => {
     audio.playSfx('tap_up');
@@ -49,11 +52,14 @@ export function showConfirm(text, { title = '', onConfirm, onCancel } = {}) {
     </div>`;
   getHost().appendChild(el);
 
-  // Автофокус на «Отмена» (безопасный вариант по умолчанию)
-  requestAnimationFrame(() => {
-    const cancelBtn = el.querySelector('[data-cancel]');
-    if (cancelBtn) cancelBtn.classList.add('kbd-focus');
-  });
+  // Автофокус на кнопку ОК — только если предыдущее действие с клавиатуры
+  const wasKbd = window.__app?.menu?._lastInputWasKeyboard === true;
+  if (wasKbd) {
+    requestAnimationFrame(() => {
+      const okBtn = el.querySelector('[data-cancel]');
+      if (okBtn) okBtn.classList.add('kbd-focus');
+    });
+  }
 
   const close = () => el.remove();
   el.querySelector('[data-ok]').addEventListener('click', () => {

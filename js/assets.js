@@ -18,6 +18,7 @@ export const ASSETS = {
   overlay: `${BASE}/card_overlay/deprecated_to_click.svg`,
 
   settingsIcon: `${BASE}/hud/settings_icon.svg`,
+  fullscreenIcon: `${BASE}/hud/icons/fullscreen.svg`,
   
   shopIcons: {
     shirt:  `${BASE}/hud/icons/shirts.svg`,

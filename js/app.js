@@ -193,8 +193,50 @@ class App {
     document.addEventListener('keydown', kickoff, true);
     document.addEventListener('touchstart', kickoff, true);
 
+    // Глобальная навигация в модалках (.msg-overlay), когда меню скрыто.
+    // В открытом меню эту роль выполняет MainMenu._navigateMsg.
+    window.addEventListener('keydown', (e) => {
+      if (this.menu && this.menu.el.style.display !== 'none') return;
+      if (document.querySelector('.loading-overlay')) return;
+      const el = document.querySelector('.msg-overlay');
+      if (!el) return;
+      this._navigateMsgGlobal(e, el);
+    });
+
     this._boot();
     this._createDevTools();
+  }
+
+  _navigateMsgGlobal(e, el) {
+    const focusable = [];
+    el.querySelectorAll('input[type="checkbox"]').forEach(cb => focusable.push(cb));
+    el.querySelectorAll('button').forEach(b => focusable.push(b));
+    if (!focusable.length) return;
+
+    if (!['Enter', ' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+    e.preventDefault();
+
+    let cur = el.querySelector('.kbd-focus');
+    if (!cur || !focusable.includes(cur)) {
+      focusable[0].classList.add('kbd-focus');
+      cur = focusable[0];
+    }
+
+    if (e.key === 'Enter' || e.key === ' ') {
+      audio.playSfx('tap');
+      if (cur.tagName === 'INPUT' && cur.type === 'checkbox') {
+        cur.checked = !cur.checked;
+      } else {
+        cur.click();
+      }
+      return;
+    }
+
+    const dir = (e.key === 'ArrowDown' || e.key === 'ArrowRight') ? 1 : -1;
+    const curIdx = focusable.indexOf(cur);
+    const nextIdx = (curIdx + dir + focusable.length) % focusable.length;
+    focusable.forEach(x => x.classList.remove('kbd-focus'));
+    focusable[nextIdx].classList.add('kbd-focus');
   }
 
   /* ================================================================
@@ -784,6 +826,15 @@ async _startGameFromMenu(mode) {
         </div>
       `;
       document.getElementById('scene').appendChild(el);
+
+      // Автофокус на OK — если предыдущее действие было с клавиатуры/ТВ
+      const wasKbd = this.menu && this.menu._lastInputWasKeyboard === true;
+      if (wasKbd) {
+        requestAnimationFrame(() => {
+          const okBtn = el.querySelector('[data-close]');
+          if (okBtn) okBtn.classList.add('kbd-focus');
+        });
+      }
 
       el.querySelector('[data-close]').addEventListener('click', () => {
         audio.playSfx('tap_up');

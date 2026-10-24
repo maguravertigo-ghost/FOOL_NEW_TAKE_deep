@@ -46,7 +46,7 @@ export class MainMenu {
 		<b class="mm-style-points__value">${Progress.stylePoints}</b>
 	  </div>
 	  <button class="mm-corner" data-open="help">КАК ИГРАТЬ</button>
-	  <button class="mm-corner mm-corner--fs" data-fs-toggle title="На весь экран">⛶</button>
+	  <button class="mm-corner mm-corner--fs" data-fs-toggle title="На весь экран"></button>
 	</div>
 
 	<!-- ЦЕНТР: лого, кнопки, автор -->
@@ -115,10 +115,25 @@ export class MainMenu {
 
     const fsBtn = this.el.querySelector('[data-fs-toggle]');
     if (fsBtn) {
+      // Иконка (SVG), вписываем 64%×64% — как кнопка паузы в матче
+      const fsImg = document.createElement('img');
+      fsImg.src = ASSETS.fullscreenIcon;
+      fsImg.alt = '';
+      fsImg.draggable = false;
+      fsImg.style.cssText =
+        'display:block;width:64%;height:64%;object-fit:contain;pointer-events:none;';
+      fsImg.onerror = () => {
+        // Фолбэк — если иконка не загрузилась
+        fsImg.remove();
+        fsBtn.textContent = '⛶';
+        fsBtn.style.fontSize = 'calc(22px * var(--ui))';
+      };
+      fsBtn.appendChild(fsImg);
+
       const updateIcon = () => {
         const on = document.fullscreenElement ||
                    ysdk.getFullscreenStatus() === 'on';
-        fsBtn.textContent = on ? '⛶' : '⛶';
+        // textContent НЕ трогаем — иконка уже в кнопке
         fsBtn.setAttribute('title', on ? 'Выйти из полноэкранного режима' : 'На весь экран');
         fsBtn.dataset.state = on ? 'on' : 'off';
       };
@@ -129,7 +144,6 @@ export class MainMenu {
         const on = document.fullscreenElement || ysdk.getFullscreenStatus() === 'on';
         if (on) await ysdk.exitFullscreen();
         else await ysdk.requestFullscreen();
-        // Обновить через тик — браузер применяет fullscreen асинхронно
         setTimeout(updateIcon, 100);
       });
 
@@ -170,6 +184,7 @@ _cacheRefs() {
     sideL:    this.el.querySelectorAll('.mm-bottom-left .mm-corner'),
     sideR:    this.el.querySelectorAll('.mm-bottom-right .mm-corner'),
 	questBtn: this.el.querySelector('[data-open="quest"]'),
+	fsBtn: this.el.querySelector('[data-fs-toggle]'),
   };
 }
 _layoutAll() {
@@ -268,6 +283,22 @@ _layoutAll() {
       height: hp.height + 'px',
       fontSize: H.s(H.isMobile ? 22 : 15) + 'px',
       padding: `${H.s(8)}px ${H.s(14)}px`,
+      boxSizing: 'border-box',
+    });
+  }
+
+  // --- Кнопка "На весь экран" — под блоком статистики, слева ---
+  if (this.refs.fsBtn) {
+    const st = H.rectStats();
+    const fsz = H.s(H.isMobile ? 64 : 56);
+    const gap = H.s(10);
+    Object.assign(this.refs.fsBtn.style, {
+      position: 'absolute',
+      left:  st.left + 'px',
+      top:   (st.top + st.height + gap) + 'px',
+      width:  fsz + 'px',
+      height: fsz + 'px',
+      padding: '0',
       boxSizing: 'border-box',
     });
   }
@@ -467,6 +498,8 @@ _updateQuestBadge() {
     // Сброс внутренних навигаторов оверлеев
     this._settingsNav = null;
     this._questNav = null;
+    this._styleNav = null;
+    this._shopPendingFocus = null;
   }
   _getSimpleOverlay(name) {
     if (this._overlays[name]) return this._overlays[name];
@@ -578,11 +611,36 @@ _updateQuestBadge() {
         return;
       }
 
+      // === Предпросмотр стиля ===
+      // Enter/Space — закрыть. Esc обрабатывается в app.js через _onEscape.
+      if (this._previewOverlay) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          // пока висит лоадер — игнорируем
+          if (document.querySelector('.loading-overlay')) return;
+          this._lastInputWasKeyboard = true;
+          audio.playSfx('tap_up');
+          this._previewOverlay.remove();
+          this._previewOverlay = null;
+        }
+        return;
+      }
+
       // === Оверлей открыт — обрабатываем навигацию в нём ===
       if (this._activeOverlay) {
         // Магазин — категории или витрина
         if (this._activeOverlay.querySelector('.shop-box')) {
           this._navigateShop(e);
+          return;
+        }
+		// Справка — прокрутка контента + кнопки ↑/↓/В МЕНЮ
+        if (this._activeOverlay.querySelector('.help-body')) {
+          this._navigateHelp(e);
+          return;
+        }
+		// Стиль — табы + плитки + кнопки
+        if (this._activeOverlay.querySelector('.mm-tabs')) {
+          this._navigateStyle(e);
           return;
         }
         // Настройки — сетка «строки + опции»
@@ -727,7 +785,11 @@ _updateQuestBadge() {
         <div class="mm-overlay__box mm-overlay__box--full">
           <div class="mm-overlay__header">
             <div class="mm-overlay__title">СПРАВКА</div>
-            <button class="mm-btn mm-btn--small" data-close>В МЕНЮ</button>
+            <div class="help-nav">
+              <button class="mm-btn mm-btn--small help-nav__btn" data-help-up title="Прокрутить вверх">↑</button>
+              <button class="mm-btn mm-btn--small help-nav__btn" data-help-down title="Прокрутить вниз">↓</button>
+              <button class="mm-btn mm-btn--small" data-close>В МЕНЮ</button>
+            </div>
           </div>
           <div class="mm-overlay__body mm-overlay__body--scroll help-body">
 
@@ -966,12 +1028,211 @@ _updateQuestBadge() {
           </div>
         </div>`;
       this._bindClose(ov);
+
+      // Кнопки прокрутки контента
+      const helpBody = ov.querySelector('.help-body');
+      const upBtn = ov.querySelector('[data-help-up]');
+      const downBtn = ov.querySelector('[data-help-down]');
+      if (upBtn) {
+        upBtn.addEventListener('click', () => {
+          audio.playSfx('tap_up');
+          if (helpBody) helpBody.scrollBy({ top: -400, behavior: 'smooth' });
+        });
+      }
+      if (downBtn) {
+        downBtn.addEventListener('click', () => {
+          audio.playSfx('tap_up');
+          if (helpBody) helpBody.scrollBy({ top: +400, behavior: 'smooth' });
+        });
+      }
+
       this.el.appendChild(ov);
       this._overlays.help = ov;
     }
     ov.style.display = 'flex';
     this._activeOverlay = ov;
     requestAnimationFrame(() => this._autoFocusOverlay(ov, '[data-close]'));
+  }
+
+  _navigateHelp(e) {
+    const ov = this._activeOverlay;
+    if (!ov) return;
+
+    this._lastInputWasKeyboard = true;
+    e.preventDefault();
+
+    // ↑/↓ — прокрутка контента (без перемещения фокуса)
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      const body = ov.querySelector('.help-body');
+      if (body) {
+        const dy = e.key === 'ArrowUp' ? -400 : +400;
+        body.scrollBy({ top: dy, behavior: 'smooth' });
+      }
+      return;
+    }
+
+    // ←/→ — переключение между кнопками ↑ / ↓ / В МЕНЮ
+    const upBtn    = ov.querySelector('[data-help-up]');
+    const downBtn  = ov.querySelector('[data-help-down]');
+    const closeBtn = ov.querySelector('[data-close]');
+    const list = [upBtn, downBtn, closeBtn].filter(Boolean);
+    if (!list.length) return;
+
+    let cur = ov.querySelector('.kbd-focus');
+    if (!cur || !list.includes(cur)) {
+      ov.querySelectorAll('.kbd-focus').forEach(x => x.classList.remove('kbd-focus'));
+      if (closeBtn) closeBtn.classList.add('kbd-focus');
+      cur = closeBtn;
+    }
+
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      const dir = e.key === 'ArrowRight' ? 1 : -1;
+      const curIdx = list.indexOf(cur);
+      const nextIdx = (curIdx + dir + list.length) % list.length;
+      ov.querySelectorAll('.kbd-focus').forEach(x => x.classList.remove('kbd-focus'));
+      list[nextIdx].classList.add('kbd-focus');
+      return;
+    }
+
+    if (e.key === 'Enter' || e.key === ' ') {
+      audio.playSfx('tap');
+      cur.click();
+      return;
+    }
+  }
+
+  _focusStyleDefault() {
+    const ov = this._activeOverlay;
+    if (!ov) return;
+    ov.querySelectorAll('.kbd-focus').forEach(x => x.classList.remove('kbd-focus'));
+    // Активный таб — точка входа
+    const activeTab = ov.querySelector('.mm-tab--active') || ov.querySelector('.mm-tab');
+    if (activeTab) activeTab.classList.add('kbd-focus');
+  }
+
+  _navigateStyle(e) {
+    const ov = this._activeOverlay;
+    if (!ov) return;
+
+    this._lastInputWasKeyboard = true;
+    e.preventDefault();
+
+    if (!this._styleNav) this._styleNav = { level: 'tabs', tabIdx: 0, tileIdx: 0, footerIdx: 0 };
+    const nav = this._styleNav;
+
+    const tabs = [...ov.querySelectorAll('.mm-tab')];
+    const tiles = [...ov.querySelectorAll('.mm-tile')];
+    const footer = [...ov.querySelectorAll('.mm-overlay__footer .mm-btn')];
+
+    const focusEl = (el) => {
+      ov.querySelectorAll('.kbd-focus').forEach(x => x.classList.remove('kbd-focus'));
+      if (el) {
+        el.classList.add('kbd-focus');
+        el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      }
+    };
+
+    // Enter / Space
+    if (e.key === 'Enter' || e.key === ' ') {
+      const cur = ov.querySelector('.kbd-focus');
+      if (cur) { audio.playSfx('tap'); cur.click(); }
+      return;
+    }
+
+    // === Уровень ТАБЫ ===
+    if (nav.level === 'tabs') {
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        const dir = e.key === 'ArrowRight' ? 1 : -1;
+        const cur = ov.querySelector('.kbd-focus');
+        const curIdx = Math.max(0, tabs.indexOf(cur));
+        const nextIdx = (curIdx + dir + tabs.length) % tabs.length;
+        nav.tabIdx = nextIdx;
+        focusEl(tabs[nextIdx]);
+      } else if (e.key === 'ArrowDown') {
+        if (!tiles.length) return;
+        nav.level = 'tiles';
+        nav.tileIdx = 0;
+        focusEl(tiles[0]);
+      }
+      return;
+    }
+
+    // === Уровень ПЛИТКИ ===
+    if (nav.level === 'tiles') {
+      if (!tiles.length) return;
+
+      // Реальное число столбцов — по первой строке
+      const topRow = tiles.filter(t => Math.abs(
+        t.getBoundingClientRect().top - tiles[0].getBoundingClientRect().top
+      ) < 5);
+      const cols = Math.max(1, topRow.length);
+
+      const curRow = Math.floor(nav.tileIdx / cols);
+      const curCol = nav.tileIdx % cols;
+      const totalRows = Math.ceil(tiles.length / cols);
+      const lastRowCols = tiles.length - (totalRows - 1) * cols;
+
+      let nextIdx = nav.tileIdx;
+
+      if (e.key === 'ArrowLeft') {
+        const nc = (curCol - 1 + cols) % cols;
+        let nr = curRow;
+        if (nr === totalRows - 1 && nc >= lastRowCols && nr > 0) nr = nr - 1;
+        nextIdx = nr * cols + nc;
+      } else if (e.key === 'ArrowRight') {
+        const nc = (curCol + 1) % cols;
+        let nr = curRow;
+        if (nr === totalRows - 1 && nc >= lastRowCols && nr > 0) nr = nr - 1;
+        nextIdx = nr * cols + nc;
+      } else if (e.key === 'ArrowUp') {
+        if (curRow === 0) {
+          nav.level = 'tabs';
+          const activeTab = ov.querySelector('.mm-tab--active') || tabs[0];
+          focusEl(activeTab);
+          return;
+        }
+        nextIdx = (curRow - 1) * cols + curCol;
+        if (nextIdx >= tiles.length) nextIdx = tiles.length - 1;
+      } else if (e.key === 'ArrowDown') {
+        if (curRow === totalRows - 1) {
+          if (footer.length) {
+            nav.level = 'footer';
+            nav.footerIdx = 0;
+            focusEl(footer[0]);
+          }
+          return;
+        }
+        nextIdx = (curRow + 1) * cols + curCol;
+        if (nextIdx >= tiles.length) nextIdx = tiles.length - 1;
+      }
+
+      if (nextIdx !== nav.tileIdx && nextIdx >= 0 && nextIdx < tiles.length) {
+        nav.tileIdx = nextIdx;
+        focusEl(tiles[nextIdx]);
+      }
+      return;
+    }
+
+    // === Уровень FOOTER ===
+    if (nav.level === 'footer') {
+      if (!footer.length) return;
+
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        const dir = e.key === 'ArrowRight' ? 1 : -1;
+        nav.footerIdx = (nav.footerIdx + dir + footer.length) % footer.length;
+        focusEl(footer[nav.footerIdx]);
+      } else if (e.key === 'ArrowUp') {
+        if (!tiles.length) return;
+        nav.level = 'tiles';
+        nav.tileIdx = tiles.length - 1;
+        focusEl(tiles[nav.tileIdx]);
+      } else if (e.key === 'ArrowDown') {
+        nav.level = 'tabs';
+        const activeTab = ov.querySelector('.mm-tab--active') || tabs[0];
+        focusEl(activeTab);
+      }
+      return;
+    }
   }
 
   /* ---------------- SETTINGS ---------------- */
@@ -1223,6 +1484,22 @@ _renderShop(root, category) {
       category ? this._buildShopItems(category) : this._buildShopCategories()
     );
     inner.style.opacity = '1';
+
+    // Приоритет 1: вернуть фокус на плитку после покупки
+    if (this._shopPendingFocus) {
+      const { cat: fcat, index: fidx } = this._shopPendingFocus;
+      this._shopPendingFocus = null;
+      if (fcat === category) {
+        const tiles = [...inner.querySelectorAll('.shop-item')];
+        const target = tiles[fidx];
+        if (target) {
+          root.querySelectorAll('.kbd-focus').forEach(x => x.classList.remove('kbd-focus'));
+          target.classList.add('kbd-focus');
+          target.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+          return;
+        }
+      }
+    }
 
     // Автофокус — если поверх не висит msg-overlay (welcome, confirm)
     if (!document.querySelector('.msg-overlay')) {
@@ -1488,6 +1765,9 @@ _confirmBuy(root, key) {
   // Блокируем только перманентную покупку. Временный подарок можно купить.
   if ((Progress.purchases[cat] || []).includes(index)) return;
 
+  // Запоминаем плитку, чтобы восстановить фокус после закрытия диалога
+  this._shopPendingFocus = { cat, index };
+
   showConfirm(
     `Вы желаете приобрести:<br><b>${item.label}</b><br>за <b class="mm-stat-value--accent">${item.price}</b> очков стиля?`,
     {
@@ -1495,15 +1775,30 @@ _confirmBuy(root, key) {
       onConfirm: () => {
         const res = purchaseItem(cat, index, item.price);
         if (!res.ok) {
-		  audio.playSfx('tap_up');	
+          audio.playSfx('tap_up');
           showMessage(res.reason === 'no_money' ? 'Недостаточно очков стиля.' : 'Уже куплено.');
+          this._shopPendingFocus = null;
           return;
         }
-		if (res.ok) audio.playSfx('buy');
-        // автоматически применяем купленное
+        audio.playSfx('buy');
         this._applyStyleItem(cat, item);
         this._refreshStats();
+        // _shopPendingFocus уже установлен — _renderShop вернёт фокус на плитку
         this._renderShop(root, this._shopCategory);
+      },
+      onCancel: () => {
+        // Вернуть фокус на ту же плитку (без пересоздания контента)
+        const pf = this._shopPendingFocus;
+        this._shopPendingFocus = null;
+        if (!pf) return;
+        if (pf.cat !== this._shopCategory) return;
+        const tiles = [...root.querySelectorAll('.shop-item')];
+        const target = tiles[pf.index];
+        if (target) {
+          root.querySelectorAll('.kbd-focus').forEach(x => x.classList.remove('kbd-focus'));
+          target.classList.add('kbd-focus');
+          target.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        }
       },
     }
   );
@@ -1535,7 +1830,8 @@ _openStyle() {
   this._renderStyleTiles(ov);
   ov.style.display = 'flex';
   this._activeOverlay = ov;
-  requestAnimationFrame(() => this._autoFocusOverlay(ov, '[data-close]'));
+  this._styleNav = { level: 'tabs', tabIdx: 0, tileIdx: 0, footerIdx: 0 };
+  requestAnimationFrame(() => this._focusStyleDefault());
 }
   _buildStyle() {
     const el = document.createElement('div');
@@ -1648,6 +1944,19 @@ _renderStyleTiles(root) {
     });
 
     tiles.appendChild(tile);
+  }
+
+  // Сохраняем фокус на плитке, если был на плитке (при клике/Enter/применении)
+  if (this._styleNav && this._styleNav.level === 'tiles') {
+    const ov = this._activeOverlay;
+    if (ov) {
+      const target = tiles.children[Math.min(this._styleNav.tileIdx, tiles.children.length - 1)];
+      if (target) {
+        ov.querySelectorAll('.kbd-focus').forEach(x => x.classList.remove('kbd-focus'));
+        target.classList.add('kbd-focus');
+        target.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      }
+    }
   }
 }
 
@@ -1965,9 +2274,19 @@ _buildPreviewField(container) {
 
   /** Обработать Escape. Возвращает true, если событие «поглощено» (не закрывать оверлей). */
   _onEscape() {
+    // 1. Предпросмотр стиля — закрыть его, оставить окно Стиля
+    if (this._previewOverlay) {
+      // Пока лоадер — игнорируем Esc (иначе останется висящий лоадер)
+      if (document.querySelector('.loading-overlay')) return true;
+      audio.playSfx('tap_up');
+      this._previewOverlay.remove();
+      this._previewOverlay = null;
+      return true;
+    }
+
     if (!this._activeOverlay) return false;
 
-    // Магазин: если мы в категории — «Назад» вместо закрытия
+    // 2. Магазин: если мы в категории — «Назад» вместо закрытия
     if (this._activeOverlay.querySelector('.shop-box') && this._shopCategory) {
       audio.playSfx('tap_up');
       const root = this._overlays.shop;

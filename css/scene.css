@@ -1760,6 +1760,19 @@ body {
   font-size: calc(20px * var(--ui));
 }
 
+/* ---------- Кнопки прокрутки в справке ---------- */
+.help-nav {
+  display: flex;
+  gap: calc(6px * var(--ui));
+  align-items: center;
+}
+.help-nav__btn {
+  min-width: calc(40px * var(--ui));
+  padding: calc(6px * var(--ui)) calc(10px * var(--ui)) !important;
+  font-size: calc(20px * var(--ui)) !important;
+  line-height: 1;
+}	
+
 /* ==================================================================
    СПРАВКА — секции "картинка + текст"
    ================================================================== */
@@ -2034,11 +2047,27 @@ body.is-mobile .pause-volume__label {
   letter-spacing: calc(1px * var(--ui));
 }
 
+/* ---------- Кнопка "На весь экран" ---------- */
 .mm-corner--fs {
-  font-size: calc(22px * var(--ui)) !important;
-  padding: calc(6px * var(--ui)) calc(12px * var(--ui)) !important;
-  min-width: calc(44px * var(--ui));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  font-size: 0;
   line-height: 1;
+  overflow: hidden;
+}
+.mm-corner--fs > img {
+  display: block;
+  width: 64%;
+  height: 64%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  /* Лёгкая тень, чтобы белая иконка не сливалась */
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6));
 }
 .mm-corner--fs[data-state="on"] {
   background: rgba(76,175,80,0.5);
