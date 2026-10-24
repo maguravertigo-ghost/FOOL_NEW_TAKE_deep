@@ -139,22 +139,43 @@ export class MainMenu {
       };
       updateIcon();
 
-      fsBtn.addEventListener('click', async () => {
-        audio.playSfx('tap');
-        const on = document.fullscreenElement || ysdk.getFullscreenStatus() === 'on';
-        if (on) {
-          await ysdk.exitFullscreen();
+// iOS Safari не поддерживает полноэкранный режим для веб-страниц.
+// Прячем кнопку на iOS — она бессмысленна.
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+              (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+if (isIOS) {
+  fsBtn.style.display = 'none';
+} else {
+  fsBtn.addEventListener('click', async () => {
+    audio.playSfx('tap');
+    const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+
+    try {
+      if (isFs) {
+        const exitFn = document.exitFullscreen || document.webkitExitFullscreen;
+        if (exitFn) await exitFn.call(document);
+      } else {
+        const el = document.documentElement;
+        const reqFn = el.requestFullscreen || el.webkitRequestFullscreen;
+        if (reqFn) {
+          await reqFn.call(el);
         } else {
-          const res = await ysdk.requestFullscreen();
-          if (res === 'denied') {
-            showMessage(
-              'Браузер не разрешил полноэкранный режим. Нажмите <b>F11</b> или используйте меню браузера.',
-              { title: 'Полный экран' }
-            );
-          }
+          // Фолбэк через SDK (если нативный API недоступен)
+          await ysdk.requestFullscreen();
         }
-        setTimeout(updateIcon, 100);
-      });
+      }
+    } catch (e) {
+      console.warn('[fs] toggle error:', e);
+      showMessage(
+        'Браузер не разрешил переключить полноэкранный режим. ' +
+        'Нажмите <b>F11</b> или используйте меню браузера.',
+        { title: 'Полный экран' }
+      );
+    }
+    setTimeout(updateIcon, 150);
+  });
+}
 
       document.addEventListener('fullscreenchange', updateIcon);
       document.addEventListener('webkitfullscreenchange', updateIcon);

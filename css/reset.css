@@ -7,4 +7,16 @@ body, body * {
   -moz-user-select: none;
   user-select: none;
 }
+*, *::before, *::after {
+  -webkit-tap-highlight-color: transparent;
+}
+button, [role="button"], input, select, textarea {
+  outline: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+input[type="text"], input[type="email"], input[type="password"], textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
 input, textarea { -webkit-user-select: text; user-select: text; }

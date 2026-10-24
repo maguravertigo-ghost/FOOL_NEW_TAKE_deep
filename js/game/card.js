@@ -80,8 +80,10 @@ export class Card {
 
 bindScale() {
   if (this._unsubScale) return;
-  this._lastW = 0;
-  this._lastH = 0;
+  // Инициализируем текущим размером, чтобы первый вызов applyScale
+  // (из uiScale.onChange) не вызывал _rebuildFace — карта только что создана.
+  this._lastW = REAL.w;
+  this._lastH = REAL.h;
   this._unsubScale = uiScale.onChange(() => this.applyScale());
 }
 

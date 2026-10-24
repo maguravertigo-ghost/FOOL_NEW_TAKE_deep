@@ -109,7 +109,9 @@ export class GameSession {
 	
 	this._slotFocusIdx = -1;       // -1 = фокус на карте, иначе индекс в selectedSlots
 	
-	this._usingKeyboard = (window.__lastInputWasKeyboard !== false);
+	// На тач-устройстве клавиатурный режим по умолчанию выключен,
+	// даже если пользователь ещё ничего не нажимал.
+	this._usingKeyboard = !uiScale.isMobile && (window.__lastInputWasKeyboard !== false);
 	this._lastCycledCard = null;
 	this._kbdReturnCard = null;
 	
