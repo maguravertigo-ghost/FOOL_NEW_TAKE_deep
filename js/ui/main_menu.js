@@ -312,9 +312,12 @@ _layoutAll() {
       top:    hp.top  + 'px',
       width:  hp.width + 'px',
       height: hp.height + 'px',
-      fontSize: H.s(H.isMobile ? 22 : 15) + 'px',
+      fontSize: H.s(H.isMobile ? 18 : 15) + 'px',
       padding: `${H.s(8)}px ${H.s(14)}px`,
       boxSizing: 'border-box',
+      whiteSpace: 'nowrap',
+      overflow: 'visible',
+      letterSpacing: H.s(1) + 'px',
     });
   }
 
@@ -1325,6 +1328,12 @@ _makeRow(labelText, key, options) {
     b.addEventListener('click', async () => {
       audio.playSfx('switch');
 
+      // Сначала оптимистично обновляем UI — визуальный отклик мгновенный,
+      // даже если дальше будет await (fadeMusic) или перерисовка.
+      GameSettings[key] = opt.val;
+      this._refreshRow(row, key);
+      saveSettings();
+
       const isMusic = (key === 'musicEnabled');
       const isSfx   = (key === 'sfxEnabled');
 
@@ -1358,9 +1367,8 @@ _makeRow(labelText, key, options) {
         }
       }
 
-      GameSettings[key] = opt.val;   // для handLayout это no-op, для остальных — как было
-      saveSettings();
-      this._refreshRow(row, key);
+      // GameSettings[key] и _refreshRow уже выполнены в начале —
+      // здесь просто дублировать не надо.
     });
     opts.appendChild(b);
   }
@@ -1620,11 +1628,7 @@ _makePreview(item, cat) {
       'position:relative;display:flex;align-items:center;' +
       'justify-content:center;max-width:100%;max-height:100%;flex-shrink:0;';
     // Делаем карту крупной, как в матче
-        face.style.setProperty('--card-w',
-      uiScale.isMobile
-        ? 'calc(var(--scene-h) * 0.28)'
-        : 'calc(150px * var(--ui))'
-    );
+    face.style.setProperty('--card-w', 'calc(150px * var(--ui))');
 
     try {
       let cardStyle, suitStyle, rank, suit;

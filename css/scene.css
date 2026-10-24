@@ -1966,6 +1966,25 @@ body.is-mobile .help-nav__btn {
 }
 
 /* ==================================================================
+   СЛОТЫ на мобилке — без размытия и анимации.
+   box-shadow blur на слабом GPU артефачит и выглядит как «вторая рамка».
+   ================================================================== */
+body.is-mobile .slot-ui--active {
+  background: rgba(76, 175, 80, 0.20);
+  border-color: #4caf50;
+  box-shadow: none;
+}
+body.is-mobile .slot-ui--focus {
+  background: rgba(255, 213, 79, 0.25);
+  border-color: #ffd54f;
+  box-shadow: none;
+  animation: none;
+}
+body.is-mobile .slot-ui--focus::after {
+  display: none;
+}
+
+/* ==================================================================
    МОБИЛКА — оверлеи крупнее (body.is-mobile)
    ================================================================== */
 
@@ -1989,15 +2008,22 @@ body.is-mobile .pause-volume__label {
 
 /* ---- msg-overlay (подтверждения, справка "первые очки") ---- */
 body.is-mobile .msg-overlay__box {
-  min-width: calc(480px * var(--ui));
-  padding: calc(32px * var(--ui)) calc(40px * var(--ui));
-  gap: calc(20px * var(--ui));
+  min-width: calc(640px * var(--ui));
+  max-width: calc(90vw - calc(20px * var(--ui)));
+  padding: calc(40px * var(--ui)) calc(48px * var(--ui));
+  gap: calc(24px * var(--ui));
 }
 body.is-mobile .msg-overlay__title {
-  font-size: calc(32px * var(--ui));
+  font-size: calc(40px * var(--ui));
+  letter-spacing: calc(2px * var(--ui));
 }
 body.is-mobile .msg-overlay__body {
-  font-size: calc(22px * var(--ui));
+  font-size: calc(26px * var(--ui));
+  line-height: 1.55;
+}
+body.is-mobile .msg-overlay__actions .mm-btn {
+  font-size: calc(24px * var(--ui));
+  padding: calc(14px * var(--ui)) calc(28px * var(--ui));
 }
 
 /* ---- Кнопки в оверлеях (Магазин, Стиль, Квест, Справка) ---- */
@@ -2098,14 +2124,15 @@ body.is-mobile .mm-overlay__box--settings .mm-rows::before {
   transform: translateX(-50%);
 }
 body.is-mobile .mm-row {
-  padding: calc(8px * var(--ui)) calc(4px * var(--ui));
+  padding: calc(12px * var(--ui)) calc(6px * var(--ui));
 }
 body.is-mobile .mm-row__label {
-  font-size: calc(18px * var(--ui));
+  font-size: calc(22px * var(--ui));
 }
 body.is-mobile .mm-opt {
-  font-size: calc(16px * var(--ui));
-  padding: calc(6px * var(--ui)) calc(10px * var(--ui));
+  font-size: calc(20px * var(--ui));
+  padding: calc(12px * var(--ui)) calc(18px * var(--ui));
+  border-width: calc(1px * var(--ui));
 }
 
 /* ---- Магазин: ценники ---- */
@@ -2244,23 +2271,17 @@ body.is-mobile .pause-volume__label {
 
 /* ==================================================================
    МАГАЗИН НА МОБИЛКЕ
-   Та же концепция, что на ПК:
-     • слева — джокер 400×627 с отступом от краёв окна (margin + padding),
-       вписан по высоте;
-     • под джокером по центру — блок баланса (в 2× крупнее);
-     • справа — контент: категории ~60% ширины, плитки ≈90% от половины
-       высоты окна.
+   Джокер вписан по высоте, кнопки и плитки — крупнее, баланс не
+   наезжает на жетон, иконки на плитках — в 2× больше.
    ================================================================== */
 
-/* Окно — почти на всю сцену */
 body.is-mobile .shop-box {
   width: calc(var(--scene-w) - calc(20px * var(--ui)));
   height: calc(var(--scene-h) - calc(20px * var(--ui)));
   border-width: calc(1px * var(--ui));
 }
 
-/* Левая панель (джокер): margin 10px, padding 12px — «рамка» вокруг картинки.
-   Ширина панели = ширина картинки по пропорции 400:627 + padding с боков. */
+/* Левая панель: джокер с рамкой от краёв окна */
 body.is-mobile .shop-joker-side {
   flex: 0 0 auto;
   height: calc(var(--scene-h) - calc(20px * var(--ui)));
@@ -2291,24 +2312,24 @@ body.is-mobile .shop-joker-wrap img {
   object-position: center;
 }
 
-/* Баланс — по центру панели у нижнего края, в 2× крупнее */
+/* Баланс — 50% ширины панели (не наезжает на жетон справа) */
 body.is-mobile .shop-balance {
   position: absolute;
-  left: 50%;
+  left: calc(10px * var(--ui));
   bottom: calc(10px * var(--ui));
-  transform: translateX(-50%);
-  padding: calc(8px * var(--ui)) calc(12px * var(--ui));
+  transform: none;
+  padding: calc(6px * var(--ui)) calc(10px * var(--ui));
   min-width: 0;
-  width: calc(100% - calc(20px * var(--ui)));
+  max-width: calc(50% - calc(4px * var(--ui)));
   box-sizing: border-box;
-  font-size: calc(14px * var(--ui));
-  letter-spacing: calc(0.8px * var(--ui));
-  text-align: center;
+  font-size: calc(12px * var(--ui));
+  letter-spacing: calc(0.5px * var(--ui));
+  text-align: left;
 }
 body.is-mobile .shop-balance b {
   display: block;
-  font-size: calc(36px * var(--ui));
-  margin-top: calc(4px * var(--ui));
+  font-size: calc(26px * var(--ui));
+  margin-top: calc(2px * var(--ui));
   line-height: 1.1;
 }
 
@@ -2320,13 +2341,15 @@ body.is-mobile .shop-content {
   min-width: 0;
   overflow: hidden;
 }
+
+/* Заголовок магазина — как в окне СТИЛЬ */
 body.is-mobile .shop-title {
-  font-size: calc(22px * var(--ui));
-  letter-spacing: calc(2px * var(--ui));
+  font-size: calc(34px * var(--ui));
+  letter-spacing: calc(3px * var(--ui));
   margin-bottom: calc(8px * var(--ui));
 }
 
-/* Категории — ~60% ширины правой панели, по центру */
+/* Категории — крупнее и шире */
 body.is-mobile .shop-cats {
   gap: calc(12px * var(--ui));
   align-items: center;
@@ -2334,36 +2357,74 @@ body.is-mobile .shop-cats {
   padding: calc(4px * var(--ui)) 0;
 }
 body.is-mobile .shop-cat {
-  width: 60%;
+  width: 78%;
   max-width: none;
   margin: 0 auto;
-  padding: calc(12px * var(--ui)) calc(16px * var(--ui));
-  font-size: calc(16px * var(--ui));
+  padding: calc(16px * var(--ui)) calc(18px * var(--ui));
+  font-size: calc(20px * var(--ui));
   letter-spacing: calc(1px * var(--ui));
   box-sizing: border-box;
 }
 body.is-mobile .shop-cat__icon {
-  width: calc(24px * var(--ui));
-  height: calc(24px * var(--ui));
+  width: calc(30px * var(--ui));
+  height: calc(30px * var(--ui));
 }
 
-/* Плитки витрины — высота ≈90% от половины высоты окна.
-   Плитка 2:3, значит высота = ширина × 1.5. Хотим высоту 0.45×scene-h →
-   ширина = 0.30×scene-h. */
+/* Плитки магазина — 80% от предыдущей высоты.
+   Раньше было 0.30 × scene-h, стало 0.24 × scene-h. */
 body.is-mobile .shop-items {
-  grid-template-columns: repeat(auto-fill, calc(var(--scene-h) * 0.30));
+  grid-template-columns: repeat(auto-fill, calc(var(--scene-h) * 0.24));
   column-gap: calc(12px * var(--ui));
   row-gap: calc(14px * var(--ui));
   justify-content: center;
   padding: calc(4px * var(--ui)) 0 calc(12px * var(--ui));
 }
+
+/* Ценники — в 2× крупнее */
 body.is-mobile .shop-item__price {
-  font-size: calc(16px * var(--ui));
-  padding: calc(3px * var(--ui)) calc(8px * var(--ui));
-  border-radius: calc(6px * var(--ui));
+  font-size: calc(24px * var(--ui));
+  padding: calc(6px * var(--ui)) calc(14px * var(--ui));
+  border-radius: calc(8px * var(--ui));
+  font-weight: 800;
+}
+
+/* Иконки на плитках (галочка / NEW / счётчик подарка) — в 2× больше.
+   Счётчик подарка (temp-badge) — под галочкой, если она есть. */
+body.is-mobile .mm-tile__check {
+  width: calc(48px * var(--ui));
+  height: calc(48px * var(--ui));
+  font-size: calc(28px * var(--ui));
+  top: calc(6px * var(--ui));
+  right: calc(6px * var(--ui));
+}
+body.is-mobile .mm-tile img.new-indicator {
+  width: calc(72px * var(--ui));
+  height: calc(72px * var(--ui));
+}
+body.is-mobile .temp-badge {
+  min-width: calc(44px * var(--ui));
+  height: calc(44px * var(--ui));
+  padding: 0 calc(12px * var(--ui));
+  border-radius: calc(22px * var(--ui));
+  font-size: calc(24px * var(--ui));
+  top: calc(6px * var(--ui));
+  right: calc(6px * var(--ui));
+}
+/* Если выше в DOM есть галочка — счётчик встаёт под неё */
+body.is-mobile .mm-tile__check ~ .temp-badge {
+  top: calc(6px + 48px + 6px);
+}
+
+/* Кнопки НАЗАД / В МЕНЮ — как табы в СТИЛЬ */
+body.is-mobile .shop-footer .mm-btn,
+body.is-mobile .mm-overlay__footer .mm-btn,
+body.is-mobile .help-nav .mm-btn--small {
+  font-size: calc(26px * var(--ui));
+  padding: calc(16px * var(--ui)) calc(22px * var(--ui));
+  letter-spacing: calc(1px * var(--ui));
 }
 
 body.is-mobile .shop-footer {
-  padding-top: calc(10px * var(--ui));
-  gap: calc(8px * var(--ui));
+  padding-top: calc(12px * var(--ui));
+  gap: calc(10px * var(--ui));
 }
