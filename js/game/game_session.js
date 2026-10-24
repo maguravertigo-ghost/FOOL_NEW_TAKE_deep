@@ -106,6 +106,9 @@ export class GameSession {
 	this._victoryPending = false;
 	this._victoryResolve = null;
 	this._kbdFocusOnButton = false;
+	
+	this._slotFocusIdx = -1;       // -1 = фокус на карте, иначе индекс в selectedSlots
+	
 	this._usingKeyboard = false;
 	
 	this._finishedViaPogony = false;
@@ -1489,25 +1492,14 @@ else                           this._jokerFrame('five');  // ничья
 	
 	if (byWho === 'player') this._playerLastPlays.push({ card, type: 'atk' });
 
-    // ---- проверка завершения ----
-    const finished = this._checkImmediateEnd();
-    if (finished) {
-      await this._finishGame(finished);
-      return;
-    }
+    // Проверка завершения здесь НЕ выполняется: защитник ещё должен
+    // отбиться или взять. Конец определяется в _playDefenseCard
+    // (когда все карты отбиты) или в _endRound (после отбоя/взятия).
 
-    // ---- Стол заполнен (6 карт) ----
     if (idx + 1 >= 6) {
-      if (dumpMode) {
-        // Dump-фаза: защитник УЖЕ решил брать. Больше подкидывать нельзя —
-        // карты уходят к защитнику (take), НЕ в отбой.
-        this._updateHUD();
-        this._endRound('take');
-        return;
-      }
-      // Обычная атака: стол заполнен, но защитник ещё не отбил последнюю карту.
-      // Передаём ему ход на отбой — если не отобьётся, заберёт всё (take).
-      // Стандартная логика ниже выставит D_ACT и вызовет _scheduleCpu().
+      this._updateHUD();
+      this._endRound('discard');
+      return;
     }
 
     if (dumpMode) {
@@ -1551,15 +1543,17 @@ else                           this._jokerFrame('five');  // ничья
 	
 	if (byWho === 'player') this._playerLastPlays.push({ card, type: 'def' });
 	
-    // ---- проверка завершения ----
-    const finished = this._checkImmediateEnd();
-    if (finished) {
-      await this._finishGame(finished);
-      return;
-    }
-
     // Остались ещё неотбитые карты?
     const stillUnbeaten = r.table.some(p => p.atk && !p.def);
+
+    // ---- проверка завершения: только когда защитник отбил ВСЁ ----
+    if (!stillUnbeaten) {
+      const finished = this._checkImmediateEnd();
+      if (finished) {
+        await this._finishGame(finished);
+        return;
+      }
+    }
 	
 	// Если защитник отбился и у него 0 карт — атакующий больше
 // подкинуть не сможет. Автоматически завершаем раунд отбоем.
@@ -1760,12 +1754,69 @@ switch (action.type) {
    *  КЛАВИАТУРНАЯ НАВИГАЦИЯ (стрелки + Enter + Backspace)
    * ================================================================ */
 
-  selectNextCard() { this._usingKeyboard = true; this._cycleHandCard(+1); }
-  selectPrevCard() { this._usingKeyboard = true; this._cycleHandCard(-1); }
+  selectNextCard() {
+    this._usingKeyboard = true;
+    if (this._slotFocusIdx >= 0) this._cycleSlotFocus(+1);
+    else this._cycleHandCard(+1);
+  }
+  selectPrevCard() {
+    this._usingKeyboard = true;
+    if (this._slotFocusIdx >= 0) this._cycleSlotFocus(-1);
+    else this._cycleHandCard(-1);
+  }
+
+  slotFocusUp() {
+    this._usingKeyboard = true;
+    if (!this.selectedCard || !this.selectedSlots || !this.selectedSlots.length) return;
+    // Переход на слоты (или следующий слот)
+    if (this._slotFocusIdx < 0) {
+      this._slotFocusIdx = 0;
+    } else {
+      this._slotFocusIdx = (this._slotFocusIdx + 1) % this.selectedSlots.length;
+    }
+    this._updateSlotFocusUI();
+  }
+
+  slotFocusDown() {
+    this._usingKeyboard = true;
+    // Возврат с слота к карте
+    if (this._slotFocusIdx >= 0) {
+      this._slotFocusIdx = -1;
+      this._updateSlotFocusUI();
+    }
+  }
+
+  _cycleSlotFocus(dir) {
+    if (!this.selectedCard || !this.selectedSlots || !this.selectedSlots.length) return;
+    const n = this.selectedSlots.length;
+
+    // Из карты — переход на первый слот (или последний, если ←)
+    if (this._slotFocusIdx < 0) {
+      this._slotFocusIdx = dir > 0 ? 0 : n - 1;
+    } else {
+      this._slotFocusIdx = (this._slotFocusIdx + dir + n) % n;
+    }
+    this._updateSlotFocusUI();
+  }
+
+  _updateSlotFocusUI() {
+    for (const s of this.slotUIs) {
+      s.el.classList.remove('slot-ui--focus');
+    }
+    if (this._slotFocusIdx >= 0 && this.selectedSlots && this.selectedCard) {
+      const slot = this.selectedSlots[this._slotFocusIdx];
+      if (slot) {
+        const ui = this.slotUIs.find(x => x.kind === slot.kind && x.index === slot.index);
+        if (ui) ui.el.classList.add('slot-ui--focus');
+      }
+    }
+  }
 
   _cycleHandCard(dir) {
     if (this._gameOverPending) return;
     if (this.round.move !== 'player' || this.round.phase === 'END') return;
+    // Фокус на слоте — стрелки ←/→ работают по слотам, не по картам
+    if (this._slotFocusIdx >= 0) return;
     const cards = this.app.accordionPlayer.cards;
 
     // Фокус на кнопке — стрелка ведёт обратно к картам,
@@ -1858,10 +1909,6 @@ switch (action.type) {
   }
 
   handleEnter() {
-	this._usingKeyboard = true;
-    // Финальное состояние (ПОБЕДА / ПРОИГРАЛ / НИЧЬЯ) — ждём клика по кнопке.
-    // Проверяем _victoryPending РАНЬШЕ _gameOverPending: _gameOverPending
-    // выставляется в true сразу в _finishGame, но это не повод блокировать Enter.
     if (this._victoryPending) {
       this._onActionButtonClick();
       return;
@@ -1869,6 +1916,11 @@ switch (action.type) {
     if (this._gameOverPending) return;
     if (this._kbdFocusOnButton) {
       if (this._canFocusActionButton()) this._onActionButtonClick();
+      return;
+    }
+    // Если фокус на слоте — играем в этот слот
+    if (this._slotFocusIdx >= 0 && this.selectedSlots && this.selectedSlots[this._slotFocusIdx]) {
+      this._confirmSlot(this.selectedSlots[this._slotFocusIdx]);
       return;
     }
     if (this.selectedCard) this.confirmSelection();
@@ -1902,6 +1954,9 @@ _selectCard(card, opts = {}) {
 
   const slots = this._getCardLegalSlots(card);
   this.selectedSlots = slots;
+  
+  this._slotFocusIdx = -1;
+  
   for (const s of slots) {
     this._showSlotUI(s.kind, s.index);
   }
@@ -1967,6 +2022,9 @@ _deselect() {
   this.app.accordionPlayer._applyZ();
   this.selectedCard = null;
   this.selectedSlots = null;
+  
+  this._slotFocusIdx = -1;
+  
   this._clearSlotHighlights();
 }
 
@@ -2039,7 +2097,13 @@ _confirmSlot(slot) {
     const s = this.slotUIs.find(x => x.kind === kind && x.index === index);
     if (s) s.show();
   }
-  _clearSlotHighlights() { for (const s of this.slotUIs) s.hide(); }
+  _clearSlotHighlights() {
+    for (const s of this.slotUIs) {
+      s.hide();
+      s.el.classList.remove('slot-ui--focus');
+    }
+    this._slotFocusIdx = -1;
+  }
 
   /**
    * Проверить, может ли `card` перевести `atk` из позиции защитника `side`.

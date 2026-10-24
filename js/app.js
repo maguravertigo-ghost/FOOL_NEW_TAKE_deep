@@ -66,6 +66,8 @@ class App {
       if (this._paused) return;
       if (k === 'ArrowLeft')  this.session.selectPrevCard?.();
       if (k === 'ArrowRight') this.session.selectNextCard?.();
+      if (k === 'ArrowUp')    this.session.slotFocusUp?.();
+      if (k === 'ArrowDown')  this.session.slotFocusDown?.();
       if (k === 'Enter')      this.session.handleEnter?.();
       if (k === 'Backspace')  this.session.cancelSelection?.();
     });

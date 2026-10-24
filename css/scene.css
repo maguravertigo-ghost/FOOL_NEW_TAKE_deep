@@ -149,6 +149,39 @@ body {
   background: rgba(76, 175, 80, 0.15);
   box-shadow: 0 0 22px rgba(76, 175, 80, 0.7);
 }
+/* Слот с клавиатурным фокусом (когда карта выбрана и можно переключать) */
+.slot-ui--focus {
+  opacity: 1;
+  border-color: #ffd54f;
+  background: rgba(255, 213, 79, 0.22);
+  box-shadow: 0 0 26px rgba(255, 213, 79, 0.9);
+  animation: slot-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes slot-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(255, 213, 79, 0.6); }
+  50%      { box-shadow: 0 0 32px rgba(255, 213, 79, 1);   }
+}
+
+/* Стрелка-указатель в правом нижнем углу активного слота */
+.slot-ui--focus::after {
+  content: '';
+  position: absolute;
+  right: calc(-10px * var(--ui));
+  bottom: calc(-10px * var(--ui));
+  width: calc(40px * var(--ui));
+  height: calc(40px * var(--ui));
+  background: url('assets/hud/icons/move_arrows.svg') center / contain no-repeat;
+  animation: arrow-pulse 1.2s ease-in-out infinite;
+  pointer-events: none;
+  filter: drop-shadow(0 0 6px rgba(255,213,79,0.9));
+}
+
+@keyframes arrow-pulse {
+  0%, 100% { opacity: 0.5; transform: translateY(0); }
+  50%      { opacity: 1;   transform: translateY(-2px); }
+}
+
 
 /* ==================================================================
    DEBUG

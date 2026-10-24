@@ -245,24 +245,25 @@ export class YandexSDK {
    * ============================================================ */
 
   async requestFullscreen() {
-    // 1. Пробуем нативный браузерный API (работает везде, включая localhost)
     try {
       const el = document.documentElement;
       const fn = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
       if (fn && !document.fullscreenElement) {
         await fn.call(el);
-        console.log('[fs] native requestFullscreen OK');
         return true;
       }
     } catch (e) {
       console.warn('[fs] native requestFullscreen failed:', e);
+      // Показать подсказку пользователю
+      if (e && e.name === 'NotAllowedError') {
+        // Это как раз «нажмите F11» случай
+        return 'denied';
+      }
     }
 
-    // 2. SDK Яндекс Игр (актуально на платформе)
     try {
       if (this.sdk?.screen?.fullscreen?.request) {
         await this.sdk.screen.fullscreen.request();
-        console.log('[fs] SDK requestFullscreen OK');
         return true;
       }
     } catch (e) {

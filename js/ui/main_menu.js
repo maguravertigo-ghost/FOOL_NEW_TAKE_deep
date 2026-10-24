@@ -142,8 +142,17 @@ export class MainMenu {
       fsBtn.addEventListener('click', async () => {
         audio.playSfx('tap');
         const on = document.fullscreenElement || ysdk.getFullscreenStatus() === 'on';
-        if (on) await ysdk.exitFullscreen();
-        else await ysdk.requestFullscreen();
+        if (on) {
+          await ysdk.exitFullscreen();
+        } else {
+          const res = await ysdk.requestFullscreen();
+          if (res === 'denied') {
+            showMessage(
+              'Браузер не разрешил полноэкранный режим. Нажмите <b>F11</b> или используйте меню браузера.',
+              { title: 'Полный экран' }
+            );
+          }
+        }
         setTimeout(updateIcon, 100);
       });
 
