@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   height="24"
+   viewBox="0 -960 960 960"
+   width="24"
+   fill="#1f1f1f"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="arrow_shape_up_stack_2_24dp_1F1F1F_FILL0_wght400_GRAD0_opsz24.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#111111"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="1"
+     inkscape:deskcolor="#d1d1d1" />
+  <rect
+     style="fill:#ffffff;fill-opacity:0;stroke-width:20;stroke-linecap:round;stroke-linejoin:round"
+     id="rect1"
+     width="960"
+     height="960"
+     x="0"
+     y="-960" />
+  <path
+     d="M 360,-40 V -160 H 160 l 320,-360 320,360 H 600 v 120 z m 80,-80 h 80 V -240 H 622 L 480,-400 338,-240 H 440 Z M 160,-360 480,-720 800,-360 H 693 L 480,-600 267,-360 Z m 0,-200 320,-360 320,360 H 693 L 480,-800 267,-560 Z m 320,320 z"
+     id="path1"
+     style="fill:#ffffff" />
+</svg>
