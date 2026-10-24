@@ -2227,12 +2227,11 @@ body.is-mobile .pause-volume__label {
 
 /* ==================================================================
    МАГАЗИН НА МОБИЛКЕ
-   Раскладка та же, что на десктопе:
-     слева — панель джокера (L-T-B), по центру джокера — баланс очков,
-     справа — панель контента (категории / витрина).
-   Ширина левой панели задана явно (flex-basis в процентах), чтобы
-   не зависеть от intrinsic size картинки — работает одинаково
-   на iOS Safari и Chrome Android.
+   Джокер 400×627 вписывается по высоте окна с отступом ~8px от краёв
+   (≈97% высоты), прижат к левому краю. Ширина панели = ширине картинки
+   по пропорции 400:627 — считается от --scene-h, поэтому картинка
+   заполняет панель без искажений. Справа — контент на всю оставшуюся
+   ширину. Кнопки категорий растянуты на всю ширину правого блока.
    ================================================================== */
 
 /* Окно — почти на всю сцену */
@@ -2242,24 +2241,29 @@ body.is-mobile .shop-box {
   border-width: calc(1px * var(--ui));
 }
 
-/* Левая панель — фиксированная доля ширины окна */
+/* Левая панель: высота = высота окна - 16px (margin 8 сверху и снизу),
+   ширина считается по пропорции картинки 400:627. */
 body.is-mobile .shop-joker-side {
-  flex: 0 0 38%;
-  min-width: calc(110px * var(--ui));
-  max-width: calc(240px * var(--ui));
+  flex: 0 0 auto;
+  height: calc(var(--scene-h) - calc(36px * var(--ui)));
+  width:  calc(
+    (var(--scene-h) - calc(36px * var(--ui))) * 400 / 627
+  );
+  margin: calc(8px * var(--ui)) 0 calc(8px * var(--ui)) calc(8px * var(--ui)));
   padding: 0;
+  background: #2a2a2e;
   position: relative;
   overflow: hidden;
-  background: #2a2a2e;
+  box-sizing: border-box;
+  border-radius: calc(6px * var(--ui));
 }
 
-/* Внутри — картинка заполняет панель по высоте, вписываясь по ширине */
+/* Картинка заполняет панель целиком (пропорции совпадают → без искажений) */
 body.is-mobile .shop-joker-wrap {
   position: absolute;
   inset: 0;
-  display: flex;
-  align-items: stretch;
-  justify-content: center;
+  display: block;
+  padding: 0;
 }
 body.is-mobile .shop-joker-wrap img {
   display: block;
@@ -2270,56 +2274,64 @@ body.is-mobile .shop-joker-wrap img {
   object-position: center;
 }
 
-/* Баланс — по центру левой панели, прижат к низу, чуть выше края */
+/* Баланс — по центру левой панели, прижат к низу */
 body.is-mobile .shop-balance {
   position: absolute;
   left: 50%;
-  bottom: calc(6px * var(--ui));
+  bottom: calc(10px * var(--ui));
   transform: translateX(-50%);
   padding: calc(6px * var(--ui)) calc(10px * var(--ui));
-  min-width: calc(110px * var(--ui));
-  font-size: calc(11px * var(--ui));
+  min-width: 0;
+  width: calc(100% - calc(16px * var(--ui)));
+  box-sizing: border-box;
+  font-size: calc(10px * var(--ui));
   letter-spacing: calc(0.5px * var(--ui));
+  text-align: center;
 }
 body.is-mobile .shop-balance b {
   display: block;
-  font-size: calc(20px * var(--ui));
+  font-size: calc(18px * var(--ui));
   margin-top: calc(2px * var(--ui));
+  line-height: 1.1;
 }
 
-/* Правая панель — компактнее */
+/* Правая панель — вся оставшаяся ширина */
 body.is-mobile .shop-content {
-  padding: calc(12px * var(--ui)) calc(14px * var(--ui));
-  gap: calc(10px * var(--ui));
+  flex: 1 1 auto;
+  padding: calc(12px * var(--ui)) calc(16px * var(--ui));
+  gap: calc(12px * var(--ui));
   min-width: 0;
   overflow: hidden;
 }
+
 body.is-mobile .shop-title {
-  font-size: calc(20px * var(--ui));
+  font-size: calc(22px * var(--ui));
   letter-spacing: calc(2px * var(--ui));
-  margin-bottom: calc(6px * var(--ui));
+  margin-bottom: calc(8px * var(--ui));
 }
 
-/* Категории — на всю ширину правой панели, вертикальный столбик */
+/* Категории — на всю ширину правой панели */
 body.is-mobile .shop-cats {
-  gap: calc(10px * var(--ui));
+  gap: calc(12px * var(--ui));
   align-items: stretch;
   justify-content: flex-start;
   padding: calc(4px * var(--ui)) 0;
 }
 body.is-mobile .shop-cat {
   width: 100%;
-  padding: calc(10px * var(--ui)) calc(14px * var(--ui));
-  font-size: calc(15px * var(--ui));
-  letter-spacing: calc(1px * var(--ui));
+  max-width: none;
   margin: 0;
+  padding: calc(12px * var(--ui)) calc(16px * var(--ui));
+  font-size: calc(16px * var(--ui));
+  letter-spacing: calc(1px * var(--ui));
+  box-sizing: border-box;
 }
 body.is-mobile .shop-cat__icon {
   width: calc(22px * var(--ui));
   height: calc(22px * var(--ui));
 }
 
-/* Витрина — сетка компактнее */
+/* Витрина — компактная сетка */
 body.is-mobile .shop-items {
   grid-template-columns: repeat(auto-fill, minmax(calc(90px * var(--ui)), 1fr));
   column-gap: calc(8px * var(--ui));
@@ -2331,7 +2343,6 @@ body.is-mobile .shop-item__price {
   border-radius: calc(6px * var(--ui));
 }
 
-/* Футер (НАЗАД / В МЕНЮ) */
 body.is-mobile .shop-footer {
   padding-top: calc(8px * var(--ui));
   gap: calc(8px * var(--ui));
