@@ -16,6 +16,7 @@ import { spawnCard, clearCache, warmUpDeck } from '../game/card_cache.js';
 import { Card } from '../game/card.js';
 
 import { HudLayout } from './hud_layout.js';
+import { uiScale } from './ui_scale.js';
 import { bus } from '../core/event_bus.js';
 import { attachTokenMark } from './fool_token_mark.js';
 
@@ -1619,7 +1620,11 @@ _makePreview(item, cat) {
       'position:relative;display:flex;align-items:center;' +
       'justify-content:center;max-width:100%;max-height:100%;flex-shrink:0;';
     // Делаем карту крупной, как в матче
-    face.style.setProperty('--card-w', 'calc(150px * var(--ui))');
+        face.style.setProperty('--card-w',
+      uiScale.isMobile
+        ? 'calc(var(--scene-h) * 0.28)'
+        : 'calc(150px * var(--ui))'
+    );
 
     try {
       let cardStyle, suitStyle, rank, suit;

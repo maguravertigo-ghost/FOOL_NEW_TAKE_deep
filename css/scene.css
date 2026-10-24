@@ -99,6 +99,23 @@ body.is-mobile .card {
   filter: drop-shadow(1px 2px 3px rgba(0,0,0,0.4));
   filter: none !important;
 }
+/* ==================================================================
+   ПОДСКАЗКА ХОДА на мобилке — форсируем CSS-оверлей,
+   не полагаемся на SVG (может не отрисоваться на маленьком размере).
+   ================================================================== */
+body.is-mobile .card__overlay {
+  background: rgba(211, 47, 47, 0.45);
+  border: calc(3px * var(--ui)) solid rgba(211, 47, 47, 0.95);
+  border-radius: calc(10px * var(--ui));
+  box-sizing: border-box;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+body.is-mobile .card__overlay svg {
+  display: none !important;
+}
 body.is-mobile .card--stack-sub {
   filter: none;
 }
@@ -2227,11 +2244,12 @@ body.is-mobile .pause-volume__label {
 
 /* ==================================================================
    МАГАЗИН НА МОБИЛКЕ
-   Джокер 400×627 вписывается по высоте окна с отступом ~8px от краёв
-   (≈97% высоты), прижат к левому краю. Ширина панели = ширине картинки
-   по пропорции 400:627 — считается от --scene-h, поэтому картинка
-   заполняет панель без искажений. Справа — контент на всю оставшуюся
-   ширину. Кнопки категорий растянуты на всю ширину правого блока.
+   Та же концепция, что на ПК:
+     • слева — джокер 400×627 с отступом от краёв окна (margin + padding),
+       вписан по высоте;
+     • под джокером по центру — блок баланса (в 2× крупнее);
+     • справа — контент: категории ~60% ширины, плитки ≈90% от половины
+       высоты окна.
    ================================================================== */
 
 /* Окно — почти на всю сцену */
@@ -2241,101 +2259,103 @@ body.is-mobile .shop-box {
   border-width: calc(1px * var(--ui));
 }
 
-/* Левая панель: высота = высота окна - 16px (margin 8 сверху и снизу),
-   ширина считается по пропорции картинки 400:627. */
+/* Левая панель (джокер): margin 10px, padding 12px — «рамка» вокруг картинки.
+   Ширина панели = ширина картинки по пропорции 400:627 + padding с боков. */
 body.is-mobile .shop-joker-side {
   flex: 0 0 auto;
-  height: calc(var(--scene-h) - calc(36px * var(--ui)));
-  width:  calc(
-    (var(--scene-h) - calc(36px * var(--ui))) * 400 / 627
+  height: calc(var(--scene-h) - calc(20px * var(--ui)));
+  width: calc(
+    (var(--scene-h) - calc(44px * var(--ui))) * 400 / 627
+    + calc(24px * var(--ui))
   );
-  margin: calc(8px * var(--ui)) 0 calc(8px * var(--ui)) calc(8px * var(--ui)));
-  padding: 0;
+  margin: calc(10px * var(--ui));
+  padding: calc(12px * var(--ui));
   background: #2a2a2e;
   position: relative;
   overflow: hidden;
   box-sizing: border-box;
-  border-radius: calc(6px * var(--ui));
+  border-radius: calc(8px * var(--ui));
 }
 
-/* Картинка заполняет панель целиком (пропорции совпадают → без искажений) */
 body.is-mobile .shop-joker-wrap {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  width: 100%;
+  height: 100%;
   display: block;
-  padding: 0;
 }
 body.is-mobile .shop-joker-wrap img {
   display: block;
   width: 100%;
   height: 100%;
-  max-width: none;
   object-fit: contain;
   object-position: center;
 }
 
-/* Баланс — по центру левой панели, прижат к низу */
+/* Баланс — по центру панели у нижнего края, в 2× крупнее */
 body.is-mobile .shop-balance {
   position: absolute;
   left: 50%;
   bottom: calc(10px * var(--ui));
   transform: translateX(-50%);
-  padding: calc(6px * var(--ui)) calc(10px * var(--ui));
+  padding: calc(8px * var(--ui)) calc(12px * var(--ui));
   min-width: 0;
-  width: calc(100% - calc(16px * var(--ui)));
+  width: calc(100% - calc(20px * var(--ui)));
   box-sizing: border-box;
-  font-size: calc(10px * var(--ui));
-  letter-spacing: calc(0.5px * var(--ui));
+  font-size: calc(14px * var(--ui));
+  letter-spacing: calc(0.8px * var(--ui));
   text-align: center;
 }
 body.is-mobile .shop-balance b {
   display: block;
-  font-size: calc(18px * var(--ui));
-  margin-top: calc(2px * var(--ui));
+  font-size: calc(36px * var(--ui));
+  margin-top: calc(4px * var(--ui));
   line-height: 1.1;
 }
 
-/* Правая панель — вся оставшаяся ширина */
+/* Правая панель */
 body.is-mobile .shop-content {
   flex: 1 1 auto;
-  padding: calc(12px * var(--ui)) calc(16px * var(--ui));
+  padding: calc(14px * var(--ui)) calc(16px * var(--ui));
   gap: calc(12px * var(--ui));
   min-width: 0;
   overflow: hidden;
 }
-
 body.is-mobile .shop-title {
   font-size: calc(22px * var(--ui));
   letter-spacing: calc(2px * var(--ui));
   margin-bottom: calc(8px * var(--ui));
 }
 
-/* Категории — на всю ширину правой панели */
+/* Категории — ~60% ширины правой панели, по центру */
 body.is-mobile .shop-cats {
   gap: calc(12px * var(--ui));
-  align-items: stretch;
+  align-items: center;
   justify-content: flex-start;
   padding: calc(4px * var(--ui)) 0;
 }
 body.is-mobile .shop-cat {
-  width: 100%;
+  width: 60%;
   max-width: none;
-  margin: 0;
+  margin: 0 auto;
   padding: calc(12px * var(--ui)) calc(16px * var(--ui));
   font-size: calc(16px * var(--ui));
   letter-spacing: calc(1px * var(--ui));
   box-sizing: border-box;
 }
 body.is-mobile .shop-cat__icon {
-  width: calc(22px * var(--ui));
-  height: calc(22px * var(--ui));
+  width: calc(24px * var(--ui));
+  height: calc(24px * var(--ui));
 }
 
-/* Витрина — компактная сетка */
+/* Плитки витрины — высота ≈90% от половины высоты окна.
+   Плитка 2:3, значит высота = ширина × 1.5. Хотим высоту 0.45×scene-h →
+   ширина = 0.30×scene-h. */
 body.is-mobile .shop-items {
-  grid-template-columns: repeat(auto-fill, minmax(calc(90px * var(--ui)), 1fr));
-  column-gap: calc(8px * var(--ui));
-  row-gap: calc(12px * var(--ui));
+  grid-template-columns: repeat(auto-fill, calc(var(--scene-h) * 0.30));
+  column-gap: calc(12px * var(--ui));
+  row-gap: calc(14px * var(--ui));
+  justify-content: center;
+  padding: calc(4px * var(--ui)) 0 calc(12px * var(--ui));
 }
 body.is-mobile .shop-item__price {
   font-size: calc(16px * var(--ui));
@@ -2344,6 +2364,6 @@ body.is-mobile .shop-item__price {
 }
 
 body.is-mobile .shop-footer {
-  padding-top: calc(8px * var(--ui));
+  padding-top: calc(10px * var(--ui));
   gap: calc(8px * var(--ui));
 }

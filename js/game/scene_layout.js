@@ -59,7 +59,7 @@ export const PRESETS = {
     accPlayerLift: 0.12,
     accCpuDrop:    0.0,
     accFanAngle: 6,            // было 12 — меньше вертикальный «разлёт»
-    accMinDistMul: 0.85,       // карты перекрываются на 23.5% вместо 10%
+    accMinDistMul: 1.0,        // базовый отступ 90% ширины карты (как на десктопе)
 
     insOffsetH: 0.9,
     insInsetW:  0.5,
