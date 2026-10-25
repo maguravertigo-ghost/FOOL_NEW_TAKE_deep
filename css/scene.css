@@ -2426,10 +2426,36 @@ body.is-mobile .shop-content-inner {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: calc(20px * var(--ui)) calc(40px * var(--ui)); /* Отступы внутри фиолетового блока */
+  padding: 0; /* Убрали паддинг отсюда, чтобы скроллбар был у края */
   box-sizing: border-box;
+  overflow-y: auto; /* Оставляем скролл только тут */
 }
 
+/* КАТЕГОРИИ (без скролла) */
+body.is-mobile .shop-cats {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(16px * var(--ui));
+  margin: auto 0; /* Центрируем по вертикали */
+  padding: calc(30px * var(--ui)) calc(40px * var(--ui)); /* Возвращаем отступы сюда */
+  box-sizing: border-box;
+  width: 100%;
+}
+
+/* ВИТРИНА (плитки) */
+body.is-mobile .shop-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, calc(180px * var(--ui)));
+  column-gap: calc(20px * var(--ui)); 
+  row-gap: calc(30px * var(--ui));    
+  align-content: start;
+  justify-content: start;
+  /* Добавляем внутренние отступы для сетки. 
+     Теперь при прокрутке плитки не будут резаться о края фиолетового блока. */
+  padding: calc(30px * var(--ui)) calc(40px * var(--ui));
+  box-sizing: border-box;
+}
 /* content_footer = #66FFFF */
 body.is-mobile .shop-footer {
   height: calc(110px * var(--ui));
