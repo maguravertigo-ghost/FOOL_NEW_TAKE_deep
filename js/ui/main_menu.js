@@ -1491,7 +1491,10 @@ _renderShop(root, category) {
           </div>
         </div>
         <div class="shop-content">
-          <div class="shop-content-inner"></div>
+			<div class="shop-content-header">
+			  <div class="shop-title">ВИТРИНА</div> <!-- или ВЫБЕРИ КАТЕГОРИЮ -->
+			</div>
+			<div class="shop-content-inner"></div>
           <div class="shop-footer">
             <button class="mm-btn mm-btn--small" data-back style="display:none;">НАЗАД</button>
             <button class="mm-btn mm-btn--small" data-close>В МЕНЮ</button>
@@ -1595,6 +1598,7 @@ _buildShopItems(cat) {
     if (permanent) {
       const ck = document.createElement('div');
       ck.className = 'mm-tile__check';
+      if (tempLeft > 0) ck.classList.add('mm-tile__check--below-badge');
       ck.textContent = '✓';
       tile.appendChild(ck);
     } else {
@@ -1961,11 +1965,9 @@ _renderStyleTiles(root) {
       lock.draggable = false;
       tile.appendChild(lock);
     } else if (i === selected) {
-      // Применённый элемент: галочка имеет приоритет над NEW.
-      // Если это ещё и временный подарок — счётчик уже создан выше
-      // (порядок DOM: temp-badge → check), CSS сдвинет галочку под счётчик.
       const ck = document.createElement('div');
       ck.className = 'mm-tile__check';
+      if (tempLeft > 0) ck.classList.add('mm-tile__check--below-badge');
       ck.textContent = '✓';
       tile.appendChild(ck);
     } else if (isNew) {

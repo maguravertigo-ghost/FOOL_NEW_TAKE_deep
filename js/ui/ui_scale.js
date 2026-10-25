@@ -49,12 +49,11 @@ _recalculate() {
   //   Desktop 1366×768:     min = 768 → не mobile
   const shortSide = Math.min(vw, vh);
   const isLandscape = vw > vh;
-  this.isMobile = isLandscape && shortSide < 500;
+  // Считаем мобильным любой тач-девайс в ландшафте, либо экран с короткой стороной < 900px
+const isTouch = window.matchMedia("(pointer: coarse)").matches;
+this.isMobile = isLandscape && (shortSide < 900 || isTouch);
 
-  this.isMobile = isLandscape && shortSide < 500;
   document.body.classList.toggle('is-mobile', this.isMobile);
-
-  this.baseCardScale = this.isMobile ? 0.72 : 0.515;
 
   this.baseCardScale = this.isMobile ? 0.72 : 0.515;
 
