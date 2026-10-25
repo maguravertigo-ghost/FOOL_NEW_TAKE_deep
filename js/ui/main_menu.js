@@ -1583,10 +1583,18 @@ _buildShopItems(cat) {
     const prev = this._makePreview(item, cat);
     if (prev) tile.appendChild(prev);
 
+    // Счётчик подарка добавляем ПЕРВЫМ — тогда в DOM он идёт до галочки.
+    // CSS-селектор `.temp-badge + .mm-tile__check` сдвинет галочку вниз.
+    if (tempLeft > 0) {
+      const tb = document.createElement('div');
+      tb.className = 'temp-badge';
+      tb.textContent = String(tempLeft);
+      tile.appendChild(tb);
+    }
+
     if (permanent) {
       const ck = document.createElement('div');
       ck.className = 'mm-tile__check';
-      if (tempLeft > 0) ck.classList.add('mm-tile__check--stacked');
       ck.textContent = '✓';
       tile.appendChild(ck);
     } else {
@@ -1601,13 +1609,6 @@ _buildShopItems(cat) {
       pr.className = 'shop-item__price';
       pr.textContent = item.price;
       tile.appendChild(pr);
-    }
-
-    if (tempLeft > 0) {
-      const tb = document.createElement('div');
-      tb.className = 'temp-badge';
-      tb.textContent = String(tempLeft);
-      tile.appendChild(tb);
     }
 
     tile.addEventListener('click', () => this._confirmBuy(this._overlays.shop, `${cat}:${item.index}`));
@@ -1944,6 +1945,14 @@ _renderStyleTiles(root) {
     const permanent = (Progress.purchases[cat] || []).includes(i);
     const tempLeft = permanent ? 0 : getTempMatchesLeft(cat, i);
 
+    // Счётчик подарка — ПЕРВЫМ в DOM, чтобы галочка (если есть) встала под ним
+    if (tempLeft > 0) {
+      const tb = document.createElement('div');
+      tb.className = 'temp-badge';
+      tb.textContent = String(tempLeft);
+      tile.appendChild(tb);
+    }
+
     if (!bought) {
       const lock = document.createElement('img');
       lock.className = 'mm-tile__lock';
@@ -1951,6 +1960,14 @@ _renderStyleTiles(root) {
       lock.alt = '';
       lock.draggable = false;
       tile.appendChild(lock);
+    } else if (i === selected) {
+      // Применённый элемент: галочка имеет приоритет над NEW.
+      // Если это ещё и временный подарок — счётчик уже создан выше
+      // (порядок DOM: temp-badge → check), CSS сдвинет галочку под счётчик.
+      const ck = document.createElement('div');
+      ck.className = 'mm-tile__check';
+      ck.textContent = '✓';
+      tile.appendChild(ck);
     } else if (isNew) {
       const nb = document.createElement('img');
       nb.className = 'new-indicator';
@@ -1958,20 +1975,6 @@ _renderStyleTiles(root) {
       nb.alt = '';
       nb.draggable = false;
       tile.appendChild(nb);
-    } else if (i === selected) {
-      const ck = document.createElement('div');
-      ck.className = 'mm-tile__check';
-      // Если в этом же углу будет счётчик подарка — сдвигаем галочку вниз
-      if (tempLeft > 0) ck.classList.add('mm-tile__check--stacked');
-      ck.textContent = '✓';
-      tile.appendChild(ck);
-    }
-
-    if (tempLeft > 0) {
-      const tb = document.createElement('div');
-      tb.className = 'temp-badge';
-      tb.textContent = String(tempLeft);
-      tile.appendChild(tb);
     }
 
     tile.addEventListener('click', () => {

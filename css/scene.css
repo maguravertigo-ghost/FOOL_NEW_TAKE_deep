@@ -2415,9 +2415,36 @@ body.is-mobile .shop-item__price {
   font-weight: 800;
 }
 
-/* Иконки на плитках — в 2× больше.
-   Галочка и счётчик подарка делят правый верхний угол: счётчик сверху,
-   галочка — под ним (вертикальный стек), если оба присутствуют. */
+/* Кнопки НАЗАД / В МЕНЮ — как табы в СТИЛЬ */
+body.is-mobile .shop-footer .mm-btn,
+body.is-mobile .mm-overlay__footer .mm-btn,
+body.is-mobile .help-nav .mm-btn--small {
+  font-size: calc(26px * var(--ui));
+  padding: calc(16px * var(--ui)) calc(22px * var(--ui));
+  letter-spacing: calc(1px * var(--ui));
+}
+
+body.is-mobile .shop-footer {
+  padding-top: calc(12px * var(--ui));
+  gap: calc(10px * var(--ui));
+}
+/* ==================================================================
+   ИКОНКИ НА ПЛИТКАХ (мобилка): счётчик подарка / NEW / галочка
+   • Счётчик подарка — правый верхний угол (top: 6px)
+   • NEW-индикатор — левый нижний угол
+   • Галочка «куплено/применено» — правый верхний угол,
+     а если перед ней в DOM стоит счётчик — галочка опускается под него.
+   Порядок DOM: счётчик → галочка (см. main_menu.js).
+   ================================================================== */
+
+
+/* NEW — оставляем в левом нижнем углу */
+body.is-mobile .mm-tile img.new-indicator {
+  width: calc(72px * var(--ui));
+  height: calc(72px * var(--ui));
+}
+
+/* Галочка — правый верхний угол по умолчанию */
 body.is-mobile .mm-tile__check {
   position: absolute;
   top: calc(6px * var(--ui));
@@ -2435,40 +2462,15 @@ body.is-mobile .mm-tile__check {
   box-shadow: 0 calc(2px * var(--ui)) calc(6px * var(--ui)) rgba(0,0,0,0.4);
   z-index: 4;
 }
-/* Галочка, под которой стоит счётчик подарка — сдвиг вниз */
-body.is-mobile .mm-tile__check.mm-tile__check--stacked {
-  top: calc(6px + 44px + 6px);
-}
-body.is-mobile .mm-tile img.new-indicator {
-  width: calc(72px * var(--ui));
-  height: calc(72px * var(--ui));
-}
-/* Счётчик подарка — всегда сверху в правом верхнем углу */
-body.is-mobile .temp-badge {
-  top: calc(6px * var(--ui));
-  right: calc(6px * var(--ui));
-  min-width: calc(44px * var(--ui));
-  height: calc(44px * var(--ui));
-  padding: 0 calc(12px * var(--ui));
-  border-radius: calc(22px * var(--ui));
-  font-size: calc(24px * var(--ui));
-  z-index: 5;
-}
-/* Если выше в DOM есть галочка — счётчик встаёт под неё */
-body.is-mobile .mm-tile__check ~ .temp-badge {
-  top: calc(6px + 48px + 6px);
+
+/* Если ПЕРЕД галочкой в DOM стоит счётчик подарка — галочка опускается
+   под него (счётчик сверху, галочка под счётчиком). */
+body.is-mobile .temp-badge + .mm-tile__check {
+  top: calc(6px * var(--ui) + 44px * var(--ui) + 6px * var(--ui));
 }
 
-/* Кнопки НАЗАД / В МЕНЮ — как табы в СТИЛЬ */
-body.is-mobile .shop-footer .mm-btn,
-body.is-mobile .mm-overlay__footer .mm-btn,
-body.is-mobile .help-nav .mm-btn--small {
-  font-size: calc(26px * var(--ui));
-  padding: calc(16px * var(--ui)) calc(22px * var(--ui));
-  letter-spacing: calc(1px * var(--ui));
-}
-
-body.is-mobile .shop-footer {
-  padding-top: calc(12px * var(--ui));
-  gap: calc(10px * var(--ui));
+/* Счётчик подарка идёт ПЕРВЫМ в DOM, галочка — после него.
+   Если оба на плитке — галочка опускается под счётчик. */
+body.is-mobile .temp-badge + .mm-tile__check {
+  top: calc(6px * var(--ui) + 44px * var(--ui) + 6px * var(--ui));
 }
