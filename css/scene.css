@@ -2310,45 +2310,49 @@ body.is-mobile .shop-box {
   overflow: hidden;
 }
 
-/* ЛЕВАЯ ЧАСТЬ (Серый блок) */
+/* ==================================================================
+   ЛЕВАЯ ЧАСТЬ (joker_block = #333333)
+   ================================================================== */
 body.is-mobile .shop-joker-side {
-  flex: 0 0 calc(440px * var(--ui)); /* Ширина левой панели */
+  flex: 0 0 calc(460px * var(--ui)); /* Ширина как на референсе */
   height: 100%;
   background: #333333; /* joker_block */
   position: relative;
   box-sizing: border-box;
-  padding: calc(20px * var(--ui)); /* Вот она, рамка со всех сторон */
+  padding: calc(20px * var(--ui)); /* Серая рамка вокруг картинки */
+  display: flex;
+  flex-direction: column;
 }
 
-/* Оранжевый прямоугольник под картинку */
+/* joker_picture = #FF9900 (вписывается в серую рамку) */
 body.is-mobile .shop-joker-wrap {
   width: 100%;
   height: 100%;
-  background: #FF9900; /* joker_picture */
+  background: #FF9900;
   overflow: hidden;
   display: flex;
-  align-items: flex-end; /* Прижимаем картинку к низу */
+  align-items: flex-end; /* Прижимаем к низу */
   justify-content: center;
-  position: relative; /* Чтобы блоки поверх него позиционировались верно */
+  position: relative;
 }
 
-/* Картинка обрезается по маске, если не влезает */
+/* Картинка обрезается по маске */
 body.is-mobile .shop-joker-wrap img {
   width: 100%;
   height: 100%;
   object-fit: cover; 
-  object-position: bottom center; /* Обрезаем по центру и низу */
+  object-position: bottom center;
 }
 
-/* Блок очков стиля */
+/* style_block = #FFFF00 */
 body.is-mobile .shop-balance {
   position: absolute;
   left: 50%;
-  bottom: calc(30px * var(--ui)); /* Чуть приподнят от низа */
+  bottom: calc(30px * var(--ui)); /* Чуть приподнят от нижнего края серой рамки */
   transform: translateX(-50%);
   width: calc(240px * var(--ui));
-  height: calc(60px * var(--ui));
-  background: #FFFF00; /* style_block */
+  height: calc(70px * var(--ui));
+  background: #FFFF00;
   color: #000;
   display: flex;
   flex-direction: column;
@@ -2368,7 +2372,7 @@ body.is-mobile .shop-balance b {
   line-height: 1;
 }
 
-/* Жетон дурака (справа от очков) */
+/* Жетон (справа от очков) */
 body.is-mobile .shop-joker-side .fool-token {
   position: absolute;
   right: calc(30px * var(--ui));
@@ -2378,8 +2382,9 @@ body.is-mobile .shop-joker-side .fool-token {
   z-index: 10;
 }
 
-
-/* ПРАВАЯ ЧАСТЬ (Темно-синий блок) */
+/* ==================================================================
+   ПРАВАЯ ЧАСТЬ (content_block = #000033)
+   ================================================================== */
 body.is-mobile .shop-content {
   flex: 1 1 auto;
   height: 100%;
@@ -2387,23 +2392,24 @@ body.is-mobile .shop-content {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  box-sizing: border-box;
-  padding: calc(20px * var(--ui)); /* Отступы вокруг всей правой панели */
-  gap: calc(10px * var(--ui));      /* Расстояние между шапкой, телом и подвалом */
+  /* Убираем padding и gap, чтобы блоки прилегали к краям */
+  padding: 0;
+  gap: 0;
 }
 
-/* Шапка */
+/* content_header = #66FFFF */
 body.is-mobile .shop-content-header {
-  height: calc(80px * var(--ui));
-  background: #66FFFF; /* content_header */
+  height: calc(110px * var(--ui));
+  background: #66FFFF;
   display: flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  border-radius: calc(4px * var(--ui)); /* Легкое скругление для красоты */
 }
+
+/* header_text = #66FF00 */
 body.is-mobile .shop-title {
-  background: #66FF00; /* header_text */
+  background: #66FF00;
   color: #000;
   padding: calc(10px * var(--ui)) calc(40px * var(--ui));
   font-size: calc(26px * var(--ui));
@@ -2413,89 +2419,21 @@ body.is-mobile .shop-title {
   text-align: center;
 }
 
-/* Тело */
+/* content_body = #663366 */
 body.is-mobile .shop-content-inner {
   flex: 1 1 auto;
-  background: #663366; /* content_body */
+  background: #663366;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: calc(20px * var(--ui)) calc(40px * var(--ui));
-  box-sizing: border-box;
-  border-radius: calc(4px * var(--ui));
-}
-
-/* Подвал */
-body.is-mobile .shop-footer {
-  height: calc(80px * var(--ui));
-  background: #66FFFF; /* content_footer */
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 0 calc(40px * var(--ui));
-  gap: calc(20px * var(--ui));
-  flex: 0 0 auto;
-  border-radius: calc(4px * var(--ui));
-}
-
-
-/* ПРАВАЯ ЧАСТЬ */
-body.is-mobile .shop-content {
-  flex: 1 1 auto;
-  height: 100%;
-  background: #000033; /* content_block */
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-/* Шапка */
-body.is-mobile .shop-content-header {
-  height: calc(100px * var(--ui));
-  background: #66FFFF; /* content_header */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-}
-body.is-mobile .shop-title {
-  background: #66FF00; /* header_text */
-  color: #000;
-  padding: calc(10px * var(--ui)) calc(40px * var(--ui));
-  font-size: calc(26px * var(--ui));
-  font-weight: 800;
-  letter-spacing: calc(2px * var(--ui));
-  border-radius: calc(8px * var(--ui));
-  text-align: center;
-}
-
-/* Тело */
-body.is-mobile .shop-content-inner {
-  flex: 1 1 auto;
-  background: #663366; /* content_body */
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  padding: calc(20px * var(--ui)) calc(40px * var(--ui));
+  padding: calc(20px * var(--ui)) calc(40px * var(--ui)); /* Отступы внутри фиолетового блока */
   box-sizing: border-box;
 }
 
-/* Скроллбар (только для витрины) */
-body.is-mobile .shop-content-inner::-webkit-scrollbar {
-  width: calc(16px * var(--ui));
-}
-body.is-mobile .shop-content-inner::-webkit-scrollbar-track {
-  background: transparent;
-}
-body.is-mobile .shop-content-inner::-webkit-scrollbar-thumb {
-  background: #FF66CC; /* slider_vertical */
-  border-radius: calc(8px * var(--ui));
-}
-
-/* Подвал */
+/* content_footer = #66FFFF */
 body.is-mobile .shop-footer {
-  height: calc(100px * var(--ui));
-  background: #66FFFF; /* content_footer */
+  height: calc(110px * var(--ui));
+  background: #66FFFF;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -2503,10 +2441,12 @@ body.is-mobile .shop-footer {
   gap: calc(20px * var(--ui));
   flex: 0 0 auto;
 }
+
+/* back_button / to_menu_button = #3300FF */
 body.is-mobile .shop-footer .mm-btn {
   width: calc(180px * var(--ui));
   height: calc(60px * var(--ui));
-  background: #3300FF; /* back_button / to_menu_button */
+  background: #3300FF;
   color: #fff;
   border: none;
   border-radius: calc(8px * var(--ui));
@@ -2515,83 +2455,4 @@ body.is-mobile .shop-footer .mm-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-/* КАТЕГОРИИ (без скролла) */
-body.is-mobile .shop-cats {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: calc(16px * var(--ui));
-  margin: auto 0; /* Центрируем по вертикали */
-}
-body.is-mobile .shop-cat {
-  width: calc(440px * var(--ui));
-  height: calc(70px * var(--ui));
-  background: #CC0000; /* category_buttons */
-  color: #fff;
-  border: none;
-  border-radius: calc(8px * var(--ui));
-  font-size: calc(22px * var(--ui));
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* ВИТРИНА (плитки) */
-body.is-mobile .shop-items {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, calc(180px * var(--ui)));
-  column-gap: calc(20px * var(--ui)); /* horizontal_indent */
-  row-gap: calc(30px * var(--ui));    /* vertical_indent */
-  align-content: start;
-  justify-content: start;
-}
-
-body.is-mobile .shop-item {
-  width: calc(180px * var(--ui));
-  height: calc(270px * var(--ui));
-  background: #00CC66; /* plate_body */
-  border-radius: calc(12px * var(--ui));
-  position: relative;
-}
-
-body.is-mobile .shop-item__price {
-  position: absolute;
-  left: calc(10px * var(--ui));
-  bottom: calc(10px * var(--ui));
-  width: calc(70px * var(--ui));
-  height: calc(40px * var(--ui));
-  background: #99CC00; /* price_block */
-  color: #000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(24px * var(--ui));
-  font-weight: 800;
-  border-radius: calc(6px * var(--ui));
-}
-
-/* Иконки на плитке (галочка / счётчик) */
-body.is-mobile .temp-badge,
-body.is-mobile .mm-tile__check {
-  position: absolute;
-  top: calc(10px * var(--ui));
-  right: calc(10px * var(--ui));
-  width: calc(44px * var(--ui));
-  height: calc(44px * var(--ui));
-  background: #669900; /* check_icon_place */
-  color: #fff;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(24px * var(--ui));
-  font-weight: 700;
-  z-index: 5;
-}
-
-body.is-mobile .mm-tile__check--below-badge {
-  top: calc(10px * var(--ui) + 44px * var(--ui) + 10px * var(--ui)) !important;
 }
