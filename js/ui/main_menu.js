@@ -1478,23 +1478,23 @@ _openShop() {
 
 _renderShop(root, category) {
   // каркас строим один раз
-  if (!root.querySelector('.shop-box')) {
+if (!root.querySelector('.shop-box')) {
     root.innerHTML = `
       <div class="shop-box">
         <div class="shop-joker-side">
           <div class="shop-joker-wrap">
             <img src="${ASSETS.jokerShop}" alt="">
-            <div class="shop-balance">
-              <span>ОЧКОВ СТИЛЯ</span>
-              <b>0</b>
-            </div>
+          </div>
+          <div class="shop-balance">
+            <span>ОЧКОВ СТИЛЯ</span>
+            <b>0</b>
           </div>
         </div>
         <div class="shop-content">
-			<div class="shop-content-header">
-			  <div class="shop-title">ВИТРИНА</div> <!-- или ВЫБЕРИ КАТЕГОРИЮ -->
-			</div>
-			<div class="shop-content-inner"></div>
+          <div class="shop-content-header">
+            <div class="shop-title"></div>
+          </div>
+          <div class="shop-content-inner"></div>
           <div class="shop-footer">
             <button class="mm-btn mm-btn--small" data-back style="display:none;">НАЗАД</button>
             <button class="mm-btn mm-btn--small" data-close>В МЕНЮ</button>
@@ -1525,15 +1525,19 @@ _renderShop(root, category) {
   // содержимое — плавно
   const inner = root.querySelector('.shop-content-inner');
   const backBtn = root.querySelector('[data-back]');
+  const titleEl = root.querySelector('.shop-title');
   backBtn.style.display = category ? '' : 'none';
 
-  inner.style.opacity = '0';
-  requestAnimationFrame(() => {
-    inner.innerHTML = '';
-    inner.appendChild(
-      category ? this._buildShopItems(category) : this._buildShopCategories()
-    );
-    inner.style.opacity = '1';
+	inner.style.opacity = '0';
+	requestAnimationFrame(() => {
+		inner.innerHTML = '';
+		titleEl.textContent = category ? 'ВИТРИНА' : 'ВЫБЕРИ КАТЕГОРИЮ';
+		inner.appendChild(
+		  category ? this._buildShopItems(category) : this._buildShopCategories()
+		);
+		// Отключаем скролл для категорий, включаем для витрины
+		inner.style.overflowY = category ? 'auto' : 'hidden';
+		inner.style.opacity = '1';
 
     // Приоритет 1: вернуть фокус на плитку после покупки
     if (this._shopPendingFocus) {
@@ -1562,11 +1566,6 @@ _buildShopItems(cat) {
 
   const wrap = document.createElement('div');
   wrap.style.cssText = 'display:flex;flex-direction:column;gap:14px;flex:1 1 auto;min-height:0;';
-
-  const title = document.createElement('div');
-  title.className = 'shop-title';
-  title.textContent = 'ВИТРИНА';
-  wrap.appendChild(title);
 
   const grid = document.createElement('div');
   grid.className = 'shop-items';
@@ -1686,11 +1685,6 @@ _buildShopCategories() {
 
   const wrap = document.createElement('div');
   wrap.style.cssText = 'display:flex;flex-direction:column;gap:16px;flex:1 1 auto;';
-
-  const title = document.createElement('div');
-  title.className = 'shop-title';
-  title.textContent = 'ВЫБЕРИ КАТЕГОРИЮ';
-  wrap.appendChild(title);
 
   const grid = document.createElement('div');
   grid.className = 'shop-cats';

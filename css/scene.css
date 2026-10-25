@@ -2296,112 +2296,183 @@ body.is-mobile .pause-volume__label {
   }
 }
 /* ==================================================================
-   МАГАЗИН НА МОБИЛКЕ (по референсу 1366x768)
+   МАГАЗИН НА МОБИЛКЕ (Точная разметка по референсу)
    ================================================================== */
 
-/* stage_BOX = #FF00FF (общий фон сцены — не трогаем, он в #main-menu) */
-
-/* shop_window = #0000FF */
 body.is-mobile .shop-box {
-  width: calc(var(--scene-w) - calc(40px * var(--ui)));
-  height: calc(var(--scene-h) - calc(40px * var(--ui)));
-  margin: calc(20px * var(--ui));
+  width: calc(var(--scene-w) - calc(20px * var(--ui)));
+  height: calc(var(--scene-h) - calc(20px * var(--ui)));
+  margin: calc(10px * var(--ui));
   display: flex;
   flex-direction: row;
-  background: #0000FF; /* Для теста */
-  border: none;
   border-radius: calc(12px * var(--ui));
   box-sizing: border-box;
   overflow: hidden;
 }
 
-/* joker_block = #333333 */
+/* ЛЕВАЯ ЧАСТЬ (Серый блок) */
 body.is-mobile .shop-joker-side {
-  flex: 0 0 calc(460px * var(--ui));
+  flex: 0 0 calc(440px * var(--ui)); /* Ширина левой панели */
   height: 100%;
-  background: #333333; /* Для теста */
+  background: #333333; /* joker_block */
   position: relative;
   box-sizing: border-box;
+  padding: calc(20px * var(--ui)); /* Вот она, рамка со всех сторон */
 }
 
-/* joker_picture = #FF9900 */
+/* Оранжевый прямоугольник под картинку */
 body.is-mobile .shop-joker-wrap {
-  position: absolute;
-  inset: calc(30px * var(--ui)); /* Отступы внутри серого блока */
-  background: #FF9900; /* Для теста */
+  width: 100%;
+  height: 100%;
+  background: #FF9900; /* joker_picture */
+  overflow: hidden;
   display: flex;
-  align-items: center;
+  align-items: flex-end; /* Прижимаем картинку к низу */
   justify-content: center;
+  position: relative; /* Чтобы блоки поверх него позиционировались верно */
 }
+
+/* Картинка обрезается по маске, если не влезает */
 body.is-mobile .shop-joker-wrap img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover; 
+  object-position: bottom center; /* Обрезаем по центру и низу */
 }
 
-/* style_block = #FFFF00 (Баланс) */
+/* Блок очков стиля */
 body.is-mobile .shop-balance {
   position: absolute;
-  left: calc(30px * var(--ui));
-  bottom: calc(30px * var(--ui));
-  width: calc(280px * var(--ui));
-  height: calc(80px * var(--ui));
-  background: #FFFF00; /* Для теста */
+  left: 50%;
+  bottom: calc(30px * var(--ui)); /* Чуть приподнят от низа */
+  transform: translateX(-50%);
+  width: calc(240px * var(--ui));
+  height: calc(60px * var(--ui));
+  background: #FFFF00; /* style_block */
   color: #000;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 0 calc(16px * var(--ui));
-  box-sizing: border-box;
+  align-items: center;
   border-radius: calc(8px * var(--ui));
+  box-sizing: border-box;
+  z-index: 2;
+}
+body.is-mobile .shop-balance span {
+  font-size: calc(12px * var(--ui));
+  font-weight: 700;
+  opacity: 0.8;
 }
 body.is-mobile .shop-balance b {
-  font-size: calc(36px * var(--ui));
+  font-size: calc(28px * var(--ui));
   line-height: 1;
 }
 
-/* token_place = #FFFFFF */
-/* (жетон позиционируется абсолютно поверх всего в JS, тут только зарезервировано место) */
+/* Жетон дурака (справа от очков) */
+body.is-mobile .shop-joker-side .fool-token {
+  position: absolute;
+  right: calc(30px * var(--ui));
+  bottom: calc(30px * var(--ui));
+  height: calc(60px * var(--ui));
+  width: auto;
+  z-index: 10;
+}
 
-/* content_block = #000033 */
+
+/* ПРАВАЯ ЧАСТЬ (Темно-синий блок) */
 body.is-mobile .shop-content {
   flex: 1 1 auto;
   height: 100%;
-  background: #000033; /* Для теста */
+  background: #000033; /* content_block */
   display: flex;
   flex-direction: column;
   min-width: 0;
   box-sizing: border-box;
+  padding: calc(20px * var(--ui)); /* Отступы вокруг всей правой панели */
+  gap: calc(10px * var(--ui));      /* Расстояние между шапкой, телом и подвалом */
 }
 
-/* content_header = #66FFFF */
+/* Шапка */
+body.is-mobile .shop-content-header {
+  height: calc(80px * var(--ui));
+  background: #66FFFF; /* content_header */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border-radius: calc(4px * var(--ui)); /* Легкое скругление для красоты */
+}
+body.is-mobile .shop-title {
+  background: #66FF00; /* header_text */
+  color: #000;
+  padding: calc(10px * var(--ui)) calc(40px * var(--ui));
+  font-size: calc(26px * var(--ui));
+  font-weight: 800;
+  letter-spacing: calc(2px * var(--ui));
+  border-radius: calc(8px * var(--ui));
+  text-align: center;
+}
+
+/* Тело */
+body.is-mobile .shop-content-inner {
+  flex: 1 1 auto;
+  background: #663366; /* content_body */
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: calc(20px * var(--ui)) calc(40px * var(--ui));
+  box-sizing: border-box;
+  border-radius: calc(4px * var(--ui));
+}
+
+/* Подвал */
+body.is-mobile .shop-footer {
+  height: calc(80px * var(--ui));
+  background: #66FFFF; /* content_footer */
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 calc(40px * var(--ui));
+  gap: calc(20px * var(--ui));
+  flex: 0 0 auto;
+  border-radius: calc(4px * var(--ui));
+}
+
+
+/* ПРАВАЯ ЧАСТЬ */
+body.is-mobile .shop-content {
+  flex: 1 1 auto;
+  height: 100%;
+  background: #000033; /* content_block */
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Шапка */
 body.is-mobile .shop-content-header {
   height: calc(100px * var(--ui));
-  background: #66FFFF; /* Для теста */
+  background: #66FFFF; /* content_header */
   display: flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
 }
-
-/* header_text = #66FF00 */
 body.is-mobile .shop-title {
-  background: #66FF00; /* Для теста */
+  background: #66FF00; /* header_text */
   color: #000;
   padding: calc(10px * var(--ui)) calc(40px * var(--ui));
-  font-size: calc(28px * var(--ui));
-  font-weight: 700;
+  font-size: calc(26px * var(--ui));
+  font-weight: 800;
   letter-spacing: calc(2px * var(--ui));
-  text-align: center;
   border-radius: calc(8px * var(--ui));
+  text-align: center;
 }
 
-/* content_body = #663366 */
+/* Тело */
 body.is-mobile .shop-content-inner {
   flex: 1 1 auto;
-  background: #663366; /* Для теста */
-  overflow-y: auto;
-  overflow-x: hidden;
+  background: #663366; /* content_body */
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -2409,33 +2480,22 @@ body.is-mobile .shop-content-inner {
   box-sizing: border-box;
 }
 
-/* category_buttons = #CC0000 */
-body.is-mobile .shop-cats {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: calc(20px * var(--ui));
-  margin: auto 0; /* Центрируем по вертикали в фиолетовом блоке */
+/* Скроллбар (только для витрины) */
+body.is-mobile .shop-content-inner::-webkit-scrollbar {
+  width: calc(16px * var(--ui));
 }
-body.is-mobile .shop-cat {
-  width: calc(440px * var(--ui));
-  height: calc(75px * var(--ui));
-  background: #CC0000; /* Для теста */
-  color: #fff;
-  border: none;
+body.is-mobile .shop-content-inner::-webkit-scrollbar-track {
+  background: transparent;
+}
+body.is-mobile .shop-content-inner::-webkit-scrollbar-thumb {
+  background: #FF66CC; /* slider_vertical */
   border-radius: calc(8px * var(--ui));
-  font-size: calc(22px * var(--ui));
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
 }
 
-/* content_footer = #66FFFF */
+/* Подвал */
 body.is-mobile .shop-footer {
   height: calc(100px * var(--ui));
-  background: #66FFFF; /* Для теста */
+  background: #66FFFF; /* content_footer */
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -2443,12 +2503,10 @@ body.is-mobile .shop-footer {
   gap: calc(20px * var(--ui));
   flex: 0 0 auto;
 }
-
-/* back_button / to_menu_button = #3300FF */
 body.is-mobile .shop-footer .mm-btn {
   width: calc(180px * var(--ui));
   height: calc(60px * var(--ui));
-  background: #3300FF; /* Для теста */
+  background: #3300FF; /* back_button / to_menu_button */
   color: #fff;
   border: none;
   border-radius: calc(8px * var(--ui));
@@ -2459,46 +2517,63 @@ body.is-mobile .shop-footer .mm-btn {
   justify-content: center;
 }
 
-/* ==================================================================
-   ПЛИТКИ И СЛАЙДЕР (третья картинка)
-   ================================================================== */
+/* КАТЕГОРИИ (без скролла) */
+body.is-mobile .shop-cats {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(16px * var(--ui));
+  margin: auto 0; /* Центрируем по вертикали */
+}
+body.is-mobile .shop-cat {
+  width: calc(440px * var(--ui));
+  height: calc(70px * var(--ui));
+  background: #CC0000; /* category_buttons */
+  color: #fff;
+  border: none;
+  border-radius: calc(8px * var(--ui));
+  font-size: calc(22px * var(--ui));
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-/* plate_body = #00CC66 */
+/* ВИТРИНА (плитки) */
 body.is-mobile .shop-items {
   display: grid;
-  grid-template-columns: repeat(auto-fill, calc(200px * var(--ui)));
-  column-gap: calc(30px * var(--ui)); /* horizontal_indent = #9966FF */
-  row-gap: calc(40px * var(--ui));    /* vertical_indent = #CCCC66 */
+  grid-template-columns: repeat(auto-fill, calc(180px * var(--ui)));
+  column-gap: calc(20px * var(--ui)); /* horizontal_indent */
+  row-gap: calc(30px * var(--ui));    /* vertical_indent */
   align-content: start;
   justify-content: start;
 }
+
 body.is-mobile .shop-item {
-  width: calc(200px * var(--ui));
-  height: calc(300px * var(--ui));
-  background: #00CC66; /* Для теста */
-  border: none;
+  width: calc(180px * var(--ui));
+  height: calc(270px * var(--ui));
+  background: #00CC66; /* plate_body */
   border-radius: calc(12px * var(--ui));
   position: relative;
 }
 
-/* price_block = #99CC00 */
 body.is-mobile .shop-item__price {
   position: absolute;
   left: calc(10px * var(--ui));
   bottom: calc(10px * var(--ui));
   width: calc(70px * var(--ui));
   height: calc(40px * var(--ui));
-  background: #99CC00; /* Для теста */
+  background: #99CC00; /* price_block */
   color: #000;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: calc(24px * var(--ui));
-  font-weight: 700;
+  font-weight: 800;
   border-radius: calc(6px * var(--ui));
 }
 
-/* check_icon_place = #669900 */
+/* Иконки на плитке (галочка / счётчик) */
 body.is-mobile .temp-badge,
 body.is-mobile .mm-tile__check {
   position: absolute;
@@ -2506,7 +2581,7 @@ body.is-mobile .mm-tile__check {
   right: calc(10px * var(--ui));
   width: calc(44px * var(--ui));
   height: calc(44px * var(--ui));
-  background: #669900; /* Для теста */
+  background: #669900; /* check_icon_place */
   color: #fff;
   border-radius: 50%;
   display: flex;
@@ -2517,19 +2592,6 @@ body.is-mobile .mm-tile__check {
   z-index: 5;
 }
 
-/* Если есть галочка И счётчик, галочка встаёт под счётчиком */
 body.is-mobile .mm-tile__check--below-badge {
   top: calc(10px * var(--ui) + 44px * var(--ui) + 10px * var(--ui)) !important;
-}
-
-/* slider_vertical = #FF66CC */
-body.is-mobile .shop-content-inner::-webkit-scrollbar {
-  width: calc(16px * var(--ui));
-}
-body.is-mobile .shop-content-inner::-webkit-scrollbar-track {
-  background: transparent;
-}
-body.is-mobile .shop-content-inner::-webkit-scrollbar-thumb {
-  background: #FF66CC; /* Для теста */
-  border-radius: calc(8px * var(--ui));
 }
