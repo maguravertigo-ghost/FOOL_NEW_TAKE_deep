@@ -1586,6 +1586,7 @@ _buildShopItems(cat) {
     if (permanent) {
       const ck = document.createElement('div');
       ck.className = 'mm-tile__check';
+      if (tempLeft > 0) ck.classList.add('mm-tile__check--stacked');
       ck.textContent = '✓';
       tile.appendChild(ck);
     } else {
@@ -1960,6 +1961,8 @@ _renderStyleTiles(root) {
     } else if (i === selected) {
       const ck = document.createElement('div');
       ck.className = 'mm-tile__check';
+      // Если в этом же углу будет счётчик подарка — сдвигаем галочку вниз
+      if (tempLeft > 0) ck.classList.add('mm-tile__check--stacked');
       ck.textContent = '✓';
       tile.appendChild(ck);
     }

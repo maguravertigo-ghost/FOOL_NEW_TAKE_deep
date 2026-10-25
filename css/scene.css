@@ -2101,15 +2101,18 @@ body.is-mobile .mm-about-joker {
 body.is-mobile .mm-overlay__box--about .mm-overlay__body {
   font-size: calc(20px * var(--ui));
 }
+/* Окно настроек на мобилке — почти на всю сцену.
+   Столбцы шире, чтобы левый блок не наезжал на центральный разделитель. */
 body.is-mobile .mm-overlay__box--settings {
-  width: min(95%, calc(1000px * var(--ui)));
+  width: calc(100% - calc(16px * var(--ui)));
   max-width: none;
   position: relative;
+  padding: calc(20px * var(--ui)) calc(24px * var(--ui));
 }
 body.is-mobile .mm-overlay__box--settings .mm-rows {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  column-gap: calc(40px * var(--ui));
+  column-gap: calc(20px * var(--ui));
   row-gap: calc(6px * var(--ui));
   margin: calc(10px * var(--ui)) 0;
 }
@@ -2123,16 +2126,40 @@ body.is-mobile .mm-overlay__box--settings .mm-rows::before {
   background: rgba(255,255,255,0.15);
   transform: translateX(-50%);
 }
-body.is-mobile .mm-row {
-  padding: calc(12px * var(--ui)) calc(6px * var(--ui));
+
+/* Строка настроек: если не влезает — опции переносятся на следующую строку */
+body.is-mobile .mm-overlay__box--settings .mm-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: calc(10px * var(--ui)) calc(4px * var(--ui));
+  gap: calc(6px * var(--ui));
+  min-width: 0;
 }
-body.is-mobile .mm-row__label {
-  font-size: calc(22px * var(--ui));
+body.is-mobile .mm-overlay__box--settings .mm-row__label {
+  font-size: calc(18px * var(--ui));
+  min-width: 0;
+  line-height: 1.2;
+  flex: 0 0 auto;
 }
-body.is-mobile .mm-opt {
-  font-size: calc(20px * var(--ui));
-  padding: calc(12px * var(--ui)) calc(18px * var(--ui));
-  border-width: calc(1px * var(--ui));
+body.is-mobile .mm-overlay__box--settings .mm-row__options {
+  flex: 0 0 auto;
+  margin-left: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(4px * var(--ui));
+  justify-content: flex-end;
+}
+body.is-mobile .mm-overlay__box--settings .mm-opt {
+  font-size: calc(16px * var(--ui));
+  padding: calc(10px * var(--ui)) calc(12px * var(--ui));
+}
+
+/* Кнопка «В МЕНЮ» в настройках — крупнее */
+body.is-mobile .mm-overlay__box--settings [data-close] {
+  font-size: calc(24px * var(--ui));
+  padding: calc(14px * var(--ui)) calc(28px * var(--ui));
+  letter-spacing: calc(1px * var(--ui));
 }
 
 /* ---- Магазин: ценники ---- */
@@ -2388,27 +2415,44 @@ body.is-mobile .shop-item__price {
   font-weight: 800;
 }
 
-/* Иконки на плитках (галочка / NEW / счётчик подарка) — в 2× больше.
-   Счётчик подарка (temp-badge) — под галочкой, если она есть. */
+/* Иконки на плитках — в 2× больше.
+   Галочка и счётчик подарка делят правый верхний угол: счётчик сверху,
+   галочка — под ним (вертикальный стек), если оба присутствуют. */
 body.is-mobile .mm-tile__check {
+  position: absolute;
+  top: calc(6px * var(--ui));
+  right: calc(6px * var(--ui));
   width: calc(48px * var(--ui));
   height: calc(48px * var(--ui));
   font-size: calc(28px * var(--ui));
-  top: calc(6px * var(--ui));
-  right: calc(6px * var(--ui));
+  border-radius: 50%;
+  background: #4caf50;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  box-shadow: 0 calc(2px * var(--ui)) calc(6px * var(--ui)) rgba(0,0,0,0.4);
+  z-index: 4;
+}
+/* Галочка, под которой стоит счётчик подарка — сдвиг вниз */
+body.is-mobile .mm-tile__check.mm-tile__check--stacked {
+  top: calc(6px + 44px + 6px);
 }
 body.is-mobile .mm-tile img.new-indicator {
   width: calc(72px * var(--ui));
   height: calc(72px * var(--ui));
 }
+/* Счётчик подарка — всегда сверху в правом верхнем углу */
 body.is-mobile .temp-badge {
+  top: calc(6px * var(--ui));
+  right: calc(6px * var(--ui));
   min-width: calc(44px * var(--ui));
   height: calc(44px * var(--ui));
   padding: 0 calc(12px * var(--ui));
   border-radius: calc(22px * var(--ui));
   font-size: calc(24px * var(--ui));
-  top: calc(6px * var(--ui));
-  right: calc(6px * var(--ui));
+  z-index: 5;
 }
 /* Если выше в DOM есть галочка — счётчик встаёт под неё */
 body.is-mobile .mm-tile__check ~ .temp-badge {
