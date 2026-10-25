@@ -203,9 +203,17 @@ export class YandexSDK {
    *  События pause/resume
    * ============================================================ */
 
-  onPause(fn)  { this._callbacks.pause.push(fn); }
-  onResume(fn) { this._callbacks.resume.push(fn); }
-
+//  onPause(fn)  { this._callbacks.pause.push(fn); }
+//  onResume(fn) { this._callbacks.resume.push(fn); }
+  /** Подписка на события SDK (game_api_pause, game_api_resume) */
+  on(event, fn) {
+    if (!this.sdk) return;
+    try {
+      this.sdk.on(event, fn);
+    } catch (e) {
+      console.warn('[sdk] on error:', e);
+    }
+  }
   _emit(evt) {
     for (const fn of this._callbacks[evt]) {
       try { fn(); } catch (e) { console.warn('[sdk] callback error:', e); }

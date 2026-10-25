@@ -84,10 +84,14 @@ class App {
       if (k === 'Backspace')  this.session.cancelSelection?.();
     });
 
-    // Escape: закрыть оверлей / выйти в меню / пауза. Требование 1.6.3.3 (Back на ТВ).
+    // Escape / BrowserBack / Backspace: закрыть оверлей / пауза. Требование 1.6.3.3
     window.addEventListener('keydown', (e) => {
-      if (e.key !== 'Escape') return;
+      if (e.key !== 'Escape' && e.key !== 'BrowserBack' && e.key !== 'Backspace') return;
       if (e.repeat) return;
+      
+      // Backspace в матче при выбранной карте должен снимать выбор, а не ставить на паузу
+      if (e.key === 'Backspace' && this.session && this.session.selectedCard) return;
+      
       const tag = (e.target?.tagName || '').toLowerCase();
       if (tag === 'input' || tag === 'textarea') return;
 
@@ -162,12 +166,12 @@ class App {
     });
 
     // Платформа сообщает: пора на паузу / можно продолжить
-    ysdk.onPause(() => {
+    ysdk.on('game_api_pause', () => {
       if (this._paused || !this.session) return;
       if (document.getElementById('game-over')) return;
       this._openPause();
     });
-    ysdk.onResume(() => {
+    ysdk.on('game_api_resume', () => {
       if (!this._paused) return;
       this._closePause();
     });
@@ -265,6 +269,7 @@ class App {
     audio.pauseMusic();
     if (this.interp) this.interp.pause();
     if (this.session) this.session.onPause?.();
+    ysdk.gameplayStop(); // Требование 1.19.3
   }
 
   resumeFromAd() {
@@ -272,6 +277,7 @@ class App {
     audio.resumeAllSfx();
     audio.resumeMusic();
     if (this.session) this.session.onResume?.();
+    ysdk.gameplayStart(); // Требование 1.19.3
   }
 
   async maybeShowAd() {
