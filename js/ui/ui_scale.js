@@ -51,7 +51,9 @@ _recalculate() {
   const isLandscape = vw > vh;
   // Считаем мобильным любой тач-девайс в ландшафте, либо экран с короткой стороной < 900px
 const isTouch = window.matchMedia("(pointer: coarse)").matches;
-this.isMobile = isLandscape && (shortSide < 900 || isTouch);
+// Возвращаем нормальный порог для телефонов. 
+// Планшеты (isTouch) тоже остаются мобильными.
+this.isMobile = isLandscape && (shortSide < 500 || isTouch);
 
   document.body.classList.toggle('is-mobile', this.isMobile);
 
