@@ -2582,7 +2582,12 @@ body.is-mobile .game-over__title { font-size: calc(64px * var(--ui)); }
 body.is-mobile .game-over__sub { font-size: calc(28px * var(--ui)); }
 body.is-mobile .game-over__points { font-size: calc(24px * var(--ui)); }
 body.is-mobile .game-over__epi { font-size: calc(26px * var(--ui)); }
-body.is-mobile .game-over__quest { font-size: calc(22px * var(--ui)); }
+body.is-mobile .game-over__quest { 
+  font-size: calc(22px * var(--ui)); 
+  line-height: 1.3; 
+  color: #4fc3f7;
+  font-weight: 600;
+}
 body.is-mobile .joker-suit-wrap {
   position: absolute;
   inset: 0;

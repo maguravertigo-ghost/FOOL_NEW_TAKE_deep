@@ -93,16 +93,10 @@ export function activeOrder() {
   return isTestModeUnlocked() ? ORDER_52 : ORDER_36;
 }
 
-/** Может ли текущий игровой ранг идти в зачёт квеста? */
+/** Может ли текущий игровой ранг идти в зачёт квеста?
+ *  Нелинейный режим: любой ранг из активного списка засчитывается независимо от прогресса других. */
 function canCredit(rank) {
-  const order = activeOrder();
-  const idx = order.indexOf(rank);
-  if (idx < 0) return false;
-  for (let i = 0; i < idx; i++) {
-    const q = Progress.quests[order[i]];
-    if (!q || q.progress < 1) return false;
-  }
-  return true;
+  return activeOrder().includes(rank);
 }
 
 export function creditQuest(rank, count) {
@@ -110,8 +104,10 @@ export function creditQuest(rank, count) {
   if (!canCredit(rank)) return null;
   const q = Progress.quests[rank];
   if (!q) return null;
-  q.progress = Math.max(q.progress, Math.min(count, 4));
-  //ysdk.saveProgress(Progress);
+  // Прогресс = максимум из текущего и числа выброшенных карт этого ранга (от 1 до 4)
+  const newProgress = Math.min(count, 4);
+  if (newProgress <= q.progress) return null; // Прогресс не изменился — не показываем сообщение
+  q.progress = newProgress;
   saveProgress();
   return rank;
 }

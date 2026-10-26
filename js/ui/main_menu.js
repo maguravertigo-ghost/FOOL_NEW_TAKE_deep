@@ -602,6 +602,8 @@ _updateQuestBadge() {
 
     const focusCurrent = () => {
       this.el.querySelectorAll('.kbd-focus').forEach(e => e.classList.remove('kbd-focus'));
+      // На мобилке фокус ставим ТОЛЬКО после реального нажатия клавиш
+      if (uiScale.isMobile && !this._lastInputWasKeyboard) return;
       this._navEl = cellEl(this._grid[this._navPos.r]?.[this._navPos.c]);
       if (this._navEl) this._navEl.classList.add('kbd-focus');
     };
@@ -1139,7 +1141,7 @@ _updateQuestBadge() {
     const ov = this._activeOverlay;
     if (!ov) return;
     ov.querySelectorAll('.kbd-focus').forEach(x => x.classList.remove('kbd-focus'));
-    // Активный таб — точка входа
+    if (uiScale.isMobile) return;
     const activeTab = ov.querySelector('.mm-tab--active') || ov.querySelector('.mm-tab');
     if (activeTab) activeTab.classList.add('kbd-focus');
   }
@@ -2308,6 +2310,7 @@ _buildPreviewField(container) {
   _autoFocusOverlay(root, selector = '[data-close], button') {
     if (!root) return;
     this.el.querySelectorAll('.kbd-focus').forEach(e => e.classList.remove('kbd-focus'));
+    if (uiScale.isMobile) return; // На мобилке фокус не ставим — ждём реального нажатия клавиш
     const el = root.querySelector(selector);
     if (el) {
       el.classList.add('kbd-focus');
@@ -2371,6 +2374,7 @@ _buildPreviewField(container) {
     const ov = this._activeOverlay;
     if (!ov) return;
     ov.querySelectorAll('.kbd-focus').forEach(x => x.classList.remove('kbd-focus'));
+    if (uiScale.isMobile) return;
 
     let target = null;
 
