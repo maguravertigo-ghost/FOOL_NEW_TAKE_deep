@@ -134,23 +134,24 @@ export class AI {
     const cands = this.hand.filter(c => canAddToTable(c, tR));
     if (!cands.length) return { type: 'pass' };
 
-    // Козыри в A_ADD не подкидываем (сохраняем на финал),
-    // если только это не последний раунд.
     const nonT = cands.filter(c => !this.isTrump(c));
-    // Строгий запрет на подкидывание козырей в середине игры (Level 2 и 3)
-    if (this.level >= 2 && this.deckLeft > 0) {
-      if (!nonT.length) return { type: 'pass' };
-      pool = nonT;
-    } else {
-      pool = nonT.length ? nonT : cands;
-    }
-    const pool = (nonT.length ? nonT : cands);
-	
-	// Level 1 — редко подкидывает, козырями не подкидывает вообще
+
+    // Level 1 — редко подкидывает, козырями не подкидывает вообще
     if (this.level === 1) {
       if (!nonT.length) return { type: 'pass' };
       if (Math.random() > 0.4) return { type: 'pass' };
       return { type: 'attack', card: nonT[0], dump: false };
+    }
+
+    // Level 2 и 3: строгий запрет на подкидывание козырей,
+    // пока колода не пуста. Если некозырей нет — просто пасуем.
+    let pool;
+    if (this.deckLeft > 0) {
+      if (!nonT.length) return { type: 'pass' };
+      pool = nonT;
+    } else {
+      // Эндшпиль: можно и козырями добивать
+      pool = nonT.length ? nonT : cands;
     }
 
     // Чем ближе конец — тем активнее атакуем
