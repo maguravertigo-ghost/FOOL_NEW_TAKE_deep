@@ -2488,6 +2488,7 @@ _updateHandOverlays() {
 }
 
 _maybeAutoFocusFirstCard() {
+	if (uiScale.isMobile) return; // ← ДОБАВИТЬ: на мобилках не подсвечиваем карты сами
   if (!this._usingKeyboard) return;
   if (this._kbdFocusOnButton) return;
   if (this.selectedCard) return;
@@ -2512,6 +2513,7 @@ _maybeAutoFocusFirstCard() {
 }
 
 _maybeAutoFocusOnButton() {
+	if (uiScale.isMobile) return; // ← ДОБАВИТЬ
   if (!this._usingKeyboard) return;
   if (this._kbdFocusOnButton) return;
   if (this.selectedCard) return;

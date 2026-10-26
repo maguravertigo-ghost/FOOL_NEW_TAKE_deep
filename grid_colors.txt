@@ -1,0 +1,25 @@
+stage_BOX = #FF00FF//
+shop_window = #0000FF//
+joker_block = #333333//
+joker_picture = #FF9900//
+style_block = #FFFF00//
+token_place = #FFFFFF//
+content_block = #000033//
+content_body = #663366//
+category_buttons = #CC0000//
+content_header = #66FFFF//
+content_footer = #66FFFF//
+header_text = #66FF00//
+slider_vertical = #FF66CC//
+back_button = #3300FF//
+to_menu_button = #3300FF//
+plate_body = #00CC66//
+price_block = #99CC00//
+check_icon_place = #669900//
+horizontal_indent = #9966FF//
+vertical_indent = #CCCC66//
+
+
+content_body
+content_header
+content_footer

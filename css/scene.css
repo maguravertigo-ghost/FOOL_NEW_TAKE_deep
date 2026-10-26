@@ -13,6 +13,7 @@ html, body {
   margin: 0;
   overflow: hidden;
   background: #000;
+  touch-action: none; /* ← ДОБАВИТЬ */
 }
 
 body {
@@ -2572,4 +2573,18 @@ body.is-mobile .temp-badge {
 
 body.is-mobile .mm-tile__check--below-badge {
   top: calc(10px * var(--ui) + 44px * var(--ui) + 10px * var(--ui)) !important;
+}
+
+/* Увеличенный шрифт в окне результатов на мобилке */
+body.is-mobile .game-over__title { font-size: calc(64px * var(--ui)); }
+body.is-mobile .game-over__sub { font-size: calc(28px * var(--ui)); }
+body.is-mobile .game-over__points { font-size: calc(24px * var(--ui)); }
+body.is-mobile .game-over__epi { font-size: calc(26px * var(--ui)); }
+body.is-mobile .game-over__quest { font-size: calc(22px * var(--ui)); }
+
+/* Крупнее текст "Поверните устройство" */
+@media (orientation: portrait) and (pointer: coarse) {
+  body::before {
+    font-size: 32px; /* Было 22px */
+  }
 }

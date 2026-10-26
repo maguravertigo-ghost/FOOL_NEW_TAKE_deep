@@ -94,7 +94,11 @@ export class AI {
 	// Level 1 — «новичок»: без оптимизации, просто первая некозырная
     if (this.level === 1) {
       const nonT = hand.filter(c => !this.isTrump(c));
-      const pool = nonT.length ? nonT : hand;
+          // Если колода не пуста, козырями не ходим (если есть чем ходить)
+		let pool = nonT.length ? nonT : hand;
+		if (this.deckLeft > 0 && nonT.length > 0) {
+		  pool = nonT;
+		}
       return { type: 'attack', card: pool[0] };
     }
     const trumps   = hand.filter(c => this.isTrump(c));
@@ -133,8 +137,12 @@ export class AI {
     // Козыри в A_ADD не подкидываем (сохраняем на финал),
     // если только это не последний раунд.
     const nonT = cands.filter(c => !this.isTrump(c));
-    if (!nonT.length && this.deckLeft > 0) {
-      return { type: 'pass' };
+    // Строгий запрет на подкидывание козырей в середине игры (Level 2 и 3)
+    if (this.level >= 2 && this.deckLeft > 0) {
+      if (!nonT.length) return { type: 'pass' };
+      pool = nonT;
+    } else {
+      pool = nonT.length ? nonT : cands;
     }
     const pool = (nonT.length ? nonT : cands);
 	
@@ -168,7 +176,10 @@ export class AI {
     // Заливаем некозырями (младшими вперёд).
     // Козырями в дампе — только если совсем нечего, либо это добивание финала.
     const nonT = cands.filter(c => !this.isTrump(c));
-    const pool = nonT.length ? nonT : cands;
+    let pool = nonT.length ? nonT : cands;
+    if (this.level >= 2 && this.deckLeft > 0 && nonT.length > 0) {
+      pool = nonT; // Не сбрасываем козырей в дампе
+    }
     pool.sort((a, b) => this.attackValue(a) - this.attackValue(b));
     return { type: 'attack', card: pool[0], dump: true };
   }

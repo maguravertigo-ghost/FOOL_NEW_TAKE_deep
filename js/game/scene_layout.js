@@ -1,4 +1,5 @@
 import { REAL } from './constants.js';
+import { uiScale } from '../ui/ui_scale.js';
 
 export const DEFAULTS = {
   frameL: 0.0055,
@@ -135,8 +136,13 @@ export class SceneLayout {
     // ---- аккордеоны ----
     const accPlayerY = B - C.accPlayerLift * ch;
     const accCpuY    = T + C.accCpuDrop    * ch;
-    const accLX      = L + C.accInsetH * ch;
-    const accRX      = R - C.accInsetH * ch;
+    // Вычисляем отступы для рук на основе ширины карты
+    const cardW = REAL.w;
+    const leftMargin  = uiScale.isMobile ? (cardW * 1.0) : (cardW * 2.0);
+    const rightMargin = uiScale.isMobile ? (cardW * 2.0) : (cardW * 2.0);
+
+    const accLX      = leftMargin;
+    const accRX      = W - rightMargin;
 
     // ---- линии вставки ----
     const insPlayerY = accPlayerY - C.insOffsetH * ch;

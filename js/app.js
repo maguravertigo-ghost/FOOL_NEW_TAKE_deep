@@ -556,6 +556,8 @@ async _startGameFromMenu(mode) {
     audio.resumeAllSfx();
     audio.resumeMusic();
     ysdk.gameplayStop();
+	
+	await this.maybeShowAd(); // ← ДОБАВИТЬ ЭТУ СТРОКУ (показ рекламы при выходе)
 
     try {
       await this.fade.toBlack(420);
