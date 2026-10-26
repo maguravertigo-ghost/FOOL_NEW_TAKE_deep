@@ -414,6 +414,8 @@ body.is-mobile .card--stack-sub {
   align-items: center;
   justify-content: center;
   pointer-events: none;
+  z-index: 2000;
+  pointer-events: none;
   /* тёмная обводка вокруг картинки — работает с любым фоном */
   filter:
     drop-shadow( 2px  0   0 #000)
@@ -2667,10 +2669,10 @@ body.is-mobile .game-over__epi b {
   font-size: calc(30px * var(--ui)); 
 }
 body.is-mobile .game-over__points { 
-  font-size: calc(18px * var(--ui));   /* "Получено очков стиля" — меньше кнопок */
+  font-size: calc(22px * var(--ui));   /* "Получено очков стиля" — меньше кнопок */
 }
 body.is-mobile .game-over__points b { 
-  font-size: calc(24px * var(--ui)); 
+  font-size: calc(28px * var(--ui)); 
 }
 body.is-mobile .game-over__quest { 
   font-size: calc(14px * var(--ui));   /* Квест — самый мелкий */
@@ -2680,14 +2682,14 @@ body.is-mobile .game-over__quest {
 /* Кнопки */
 body.is-mobile .game-over__content .pause-btn {
   font-size: calc(22px * var(--ui));
-  padding: calc(16px * var(--ui)) calc(20px * var(--ui)); /* В 1.75 раза выше */
+  padding: calc(16px * var(--ui)) calc(20px * var(--ui)); 
   width: 95%;
   margin: 0 auto;
   flex-shrink: 0;
 }
 body.is-mobile .game-over__content .pause-btn--ad {
-  font-size: calc(16px * var(--ui));
-  padding: calc(12px * var(--ui)) calc(16px * var(--ui));
+  font-size: calc(20px * var(--ui));   /* Было 16px — увеличил текст рекламы */
+  padding: calc(14px * var(--ui)) calc(16px * var(--ui));
 }
 /* Убираем стандартный фокус браузера на кнопках в окне результатов (мобилка) */
 body.is-mobile .game-over__box button:focus {
