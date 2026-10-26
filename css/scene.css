@@ -2604,65 +2604,87 @@ body.is-mobile .joker-suit-img {
    ОКНО РЕЗУЛЬТАТОВ (Мобилка — по референсу)
    ================================================================== */
 
-/* Общая рамка окна (Зеленый прямоугольник на референсе) */
+/* Окно результатов (Желтый прямоугольник) */
 body.is-mobile .game-over__box {
-  width: calc(var(--scene-w) - calc(40px * var(--ui))); /* Отступ от краев сцены */
-  height: calc(var(--scene-h) - calc(40px * var(--ui)));
+  width: calc(var(--scene-w) * 0.75);   /* 75% ширины сцены */
+  height: calc(var(--scene-h) * 0.65);  /* 65% высоты сцены */
   max-width: none;
   max-height: none;
   display: flex;
   flex-direction: row;
   align-items: stretch;
+  /* Центрирование обеспечивает родитель #game-over */
 }
 
-/* Левый блок (Джокер) — занимает 35% ширины окна */
+/* Левый блок (Серый фон + Джокер) */
 body.is-mobile .game-over__joker {
-  flex: 0 0 35%;
+  flex: 0 0 auto; /* Ширина подстраивается под картинку */
   height: 100%;
-  background: #2a2a2e;
+  background: #2a2a2e; /* Серый фон */
+  position: relative;
   display: flex;
-  align-items: center;
-  justify-content: center;
-}
-body.is-mobile .game-over__joker img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover; /* Или contain, если не хочешь обрезки */
-  object-position: center;
+  align-items: center; /* Вертикальное центрирование */
+  justify-content: flex-start; /* Прижимаем к левому краю */
 }
 
-/* Правый блок (Текст и кнопки) — занимает оставшиеся 65% */
+/* Картинка джокера */
+body.is-mobile .game-over__joker img {
+  display: block;
+  height: 100%; /* Вписываем по высоте окна */
+  width: auto;  /* Ширина подстраивается автоматически */
+  max-width: none;
+  object-fit: contain;
+}
+
+/* Правый блок (Текст и кнопки) */
 body.is-mobile .game-over__content {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: calc(20px * var(--ui));
-  gap: calc(12px * var(--ui));
-  overflow-y: auto; /* Если текста слишком много (Погоны), появится скролл */
-}
-
-/* Настройка размеров шрифтов, чтобы "НИЧЬЯ" и "ПОГОНЫ" влезали */
-body.is-mobile .game-over__title { font-size: calc(42px * var(--ui)); margin-bottom: calc(6px * var(--ui)); }
-body.is-mobile .game-over__sub { font-size: calc(24px * var(--ui)); margin-bottom: calc(4px * var(--ui)); }
-body.is-mobile .game-over__points { font-size: calc(20px * var(--ui)); }
-body.is-mobile .game-over__points b { font-size: calc(26px * var(--ui)); }
-body.is-mobile .game-over__epi { font-size: calc(20px * var(--ui)); line-height: 1.3; }
-body.is-mobile .game-over__epi b { font-size: calc(26px * var(--ui)); }
-body.is-mobile .game-over__quest { font-size: calc(18px * var(--ui)); line-height: 1.3; }
-
-/* Кнопки в окне результатов */
-body.is-mobile .game-over__content .pause-btn {
-  font-size: calc(22px * var(--ui));
-  padding: calc(12px * var(--ui)) calc(20px * var(--ui));
-  width: 90%;
-  max-width: calc(400px * var(--ui));
-  margin: 0 auto;
-}
-
-/* Кнопка "Реклама" — чуть меньше остальных */
-body.is-mobile .game-over__content .pause-btn--ad {
-  font-size: calc(18px * var(--ui));
+  justify-content: center; /* Центрируем контент по вертикали */
   padding: calc(10px * var(--ui));
+  gap: calc(8px * var(--ui));
+  overflow-y: auto;
+  min-width: 0;
+}
+
+/* Настройка размеров шрифтов под компактное окно */
+body.is-mobile .game-over__title { 
+  font-size: calc(36px * var(--ui)); 
+  margin-bottom: calc(4px * var(--ui)); 
+}
+body.is-mobile .game-over__sub { 
+  font-size: calc(20px * var(--ui)); 
+  margin-bottom: calc(4px * var(--ui)); 
+}
+body.is-mobile .game-over__points { 
+  font-size: calc(16px * var(--ui)); 
+}
+body.is-mobile .game-over__points b { 
+  font-size: calc(22px * var(--ui)); 
+}
+body.is-mobile .game-over__epi { 
+  font-size: calc(16px * var(--ui)); 
+  line-height: 1.2; 
+}
+body.is-mobile .game-over__epi b { 
+  font-size: calc(22px * var(--ui)); 
+}
+body.is-mobile .game-over__quest { 
+  font-size: calc(14px * var(--ui)); 
+  line-height: 1.2; 
+}
+
+/* Кнопки */
+body.is-mobile .game-over__content .pause-btn {
+  font-size: calc(18px * var(--ui));
+  padding: calc(10px * var(--ui)) calc(16px * var(--ui));
+  width: 95%;
+  margin: 0 auto;
+  flex-shrink: 0;
+}
+body.is-mobile .game-over__content .pause-btn--ad {
+  font-size: calc(14px * var(--ui));
+  padding: calc(8px * var(--ui));
 }
