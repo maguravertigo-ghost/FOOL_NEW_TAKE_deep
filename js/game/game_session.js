@@ -910,7 +910,9 @@ async _animateTake(cards, defender) {
 
   // Автофокус на финальную кнопку — игроку с клавиатурой/ТВ
   // не нужно нажимать стрелку, чтобы увидеть жёлтую обводку.
-  this._focusActionButton();
+    if (!uiScale.isMobile) {
+      this._focusActionButton(); // ← Оборачиваем в if
+    }
 
   // Прогресс-кольцо — только на победе игрока.
     // Поражение и ничья: игрок сам жмёт кнопку, чтобы увидеть результаты.
@@ -1207,11 +1209,13 @@ else                           this._jokerFrame('five');  // ничья
   window.addEventListener('keydown', this._gameOverKeyHandler);
 
   // Автофокус на первую кнопку (реклама / ещё раз / в меню)
-  setTimeout(() => {
-    if (!document.getElementById('game-over')) return;
-    this._gameOverNavIdx = 0;
-    goHighlight(0);
-  }, 100);
+  if (!uiScale.isMobile) { // ← ДОБАВИТЬ ЭТУ ПРОВЕРКУ
+	  setTimeout(() => {
+		if (!document.getElementById('game-over')) return;
+		this._gameOverNavIdx = 0;
+		goHighlight(0);
+	  }, 100);
+	}
 
   // Размеры окна результатов и джокера задаются полностью в CSS
   // (.game-over__box: 2/3 W × 60% H; .game-over__joker--suit: aspect-ratio 1/1).

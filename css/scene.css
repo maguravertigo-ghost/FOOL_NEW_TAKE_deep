@@ -2581,10 +2581,88 @@ body.is-mobile .game-over__sub { font-size: calc(28px * var(--ui)); }
 body.is-mobile .game-over__points { font-size: calc(24px * var(--ui)); }
 body.is-mobile .game-over__epi { font-size: calc(26px * var(--ui)); }
 body.is-mobile .game-over__quest { font-size: calc(22px * var(--ui)); }
+body.is-mobile .joker-suit-wrap {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+body.is-mobile .joker-suit-img {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+}
 
 /* Крупнее текст "Поверните устройство" */
 @media (orientation: portrait) and (pointer: coarse) {
   body::before {
     font-size: 32px; /* Было 22px */
   }
+}
+
+/* ==================================================================
+   ОКНО РЕЗУЛЬТАТОВ (Мобилка — по референсу)
+   ================================================================== */
+
+/* Общая рамка окна (Зеленый прямоугольник на референсе) */
+body.is-mobile .game-over__box {
+  width: calc(var(--scene-w) - calc(40px * var(--ui))); /* Отступ от краев сцены */
+  height: calc(var(--scene-h) - calc(40px * var(--ui)));
+  max-width: none;
+  max-height: none;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
+
+/* Левый блок (Джокер) — занимает 35% ширины окна */
+body.is-mobile .game-over__joker {
+  flex: 0 0 35%;
+  height: 100%;
+  background: #2a2a2e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+body.is-mobile .game-over__joker img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Или contain, если не хочешь обрезки */
+  object-position: center;
+}
+
+/* Правый блок (Текст и кнопки) — занимает оставшиеся 65% */
+body.is-mobile .game-over__content {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: calc(20px * var(--ui));
+  gap: calc(12px * var(--ui));
+  overflow-y: auto; /* Если текста слишком много (Погоны), появится скролл */
+}
+
+/* Настройка размеров шрифтов, чтобы "НИЧЬЯ" и "ПОГОНЫ" влезали */
+body.is-mobile .game-over__title { font-size: calc(42px * var(--ui)); margin-bottom: calc(6px * var(--ui)); }
+body.is-mobile .game-over__sub { font-size: calc(24px * var(--ui)); margin-bottom: calc(4px * var(--ui)); }
+body.is-mobile .game-over__points { font-size: calc(20px * var(--ui)); }
+body.is-mobile .game-over__points b { font-size: calc(26px * var(--ui)); }
+body.is-mobile .game-over__epi { font-size: calc(20px * var(--ui)); line-height: 1.3; }
+body.is-mobile .game-over__epi b { font-size: calc(26px * var(--ui)); }
+body.is-mobile .game-over__quest { font-size: calc(18px * var(--ui)); line-height: 1.3; }
+
+/* Кнопки в окне результатов */
+body.is-mobile .game-over__content .pause-btn {
+  font-size: calc(22px * var(--ui));
+  padding: calc(12px * var(--ui)) calc(20px * var(--ui));
+  width: 90%;
+  max-width: calc(400px * var(--ui));
+  margin: 0 auto;
+}
+
+/* Кнопка "Реклама" — чуть меньше остальных */
+body.is-mobile .game-over__content .pause-btn--ad {
+  font-size: calc(18px * var(--ui));
+  padding: calc(10px * var(--ui));
 }
