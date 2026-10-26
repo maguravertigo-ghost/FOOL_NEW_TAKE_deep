@@ -2649,42 +2649,47 @@ body.is-mobile .game-over__content {
   min-width: 0;
 }
 
-/* Настройка размеров шрифтов под компактное окно */
+/* Настройка размеров шрифтов */
 body.is-mobile .game-over__title { 
-  font-size: calc(36px * var(--ui)); 
-  margin-bottom: calc(4px * var(--ui)); 
+  font-size: calc(48px * var(--ui));   /* Чуть крупнее (Победа/Ничья/Поражение/Погоны) */
+  margin-bottom: calc(6px * var(--ui)); 
 }
 body.is-mobile .game-over__sub { 
-  font-size: calc(20px * var(--ui)); 
-  margin-bottom: calc(4px * var(--ui)); 
-}
-body.is-mobile .game-over__points { 
-  font-size: calc(16px * var(--ui)); 
-}
-body.is-mobile .game-over__points b { 
-  font-size: calc(22px * var(--ui)); 
+  font-size: calc(24px * var(--ui)); 
+  margin-bottom: calc(6px * var(--ui)); 
 }
 body.is-mobile .game-over__epi { 
-  font-size: calc(16px * var(--ui)); 
-  line-height: 1.2; 
+  font-size: calc(26px * var(--ui));   /* Размер заголовка для погон */
+  line-height: 1.2;
+  margin-top: calc(4px * var(--ui));
 }
 body.is-mobile .game-over__epi b { 
-  font-size: calc(22px * var(--ui)); 
+  font-size: calc(30px * var(--ui)); 
+}
+body.is-mobile .game-over__points { 
+  font-size: calc(18px * var(--ui));   /* "Получено очков стиля" — меньше кнопок */
+}
+body.is-mobile .game-over__points b { 
+  font-size: calc(24px * var(--ui)); 
 }
 body.is-mobile .game-over__quest { 
-  font-size: calc(14px * var(--ui)); 
+  font-size: calc(14px * var(--ui));   /* Квест — самый мелкий */
   line-height: 1.2; 
 }
 
 /* Кнопки */
 body.is-mobile .game-over__content .pause-btn {
-  font-size: calc(18px * var(--ui));
-  padding: calc(10px * var(--ui)) calc(16px * var(--ui));
+  font-size: calc(22px * var(--ui));
+  padding: calc(16px * var(--ui)) calc(20px * var(--ui)); /* В 1.75 раза выше */
   width: 95%;
   margin: 0 auto;
   flex-shrink: 0;
 }
 body.is-mobile .game-over__content .pause-btn--ad {
-  font-size: calc(14px * var(--ui));
-  padding: calc(8px * var(--ui));
+  font-size: calc(16px * var(--ui));
+  padding: calc(12px * var(--ui)) calc(16px * var(--ui));
+}
+/* Убираем стандартный фокус браузера на кнопках в окне результатов (мобилка) */
+body.is-mobile .game-over__box button:focus {
+  outline: none;
 }
