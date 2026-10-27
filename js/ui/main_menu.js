@@ -2259,10 +2259,10 @@ _buildPreviewField(container) {
 	el.querySelector('[data-claim]').addEventListener('click', () => {
 	  // смотрим состояние ДО клейма — чтобы понять причину «нечего забирать»
 	  const ranks      = claimableRanks();
-	  const anyProgress = activeOrder().some(r => Progress.quests[r].progress >= 2);
+	  const anyProgress = activeOrder().some(r => Progress.quests[r].progress >= 1);
 	  const allClaimed  = activeOrder().every(r => {
 		const q = Progress.quests[r];
-		return q.progress >= 2 && q.claimed >= q.progress;
+		return q.progress >= 1 && q.claimed >= q.progress;
 	  });
 
 	  const res = claimQuestReward();
@@ -2334,8 +2334,6 @@ _buildPreviewField(container) {
       el.querySelector('.mm-quest-footer-bottom').appendChild(devBtn);
     }
 
-    return el;
-  }
     return el;
   }
 
