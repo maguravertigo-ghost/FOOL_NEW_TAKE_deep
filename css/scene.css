@@ -987,7 +987,7 @@ body.is-mobile .card--stack-sub {
   cursor: pointer;
   transition: background 0.12s ease, border-color 0.12s ease;
 }
-.mm-opt:hover { background: #383840; }
+.mm-opt:hover:not(.mm-opt--active) { background: #383840; }
 .mm-opt--active {
   background: #2e7d32;
   border-color: #4caf50;
@@ -2012,24 +2012,67 @@ body.is-mobile .pause-volume__label {
   font-size: calc(18px * var(--ui));
 }
 
-/* ---- msg-overlay (подтверждения, справка "первые очки") ---- */
+/* ---- msg-overlay (подтверждения, подарок, первые очки, магазин) ---- */
 body.is-mobile .msg-overlay__box {
-  min-width: calc(640px * var(--ui));
-  max-width: calc(90vw - calc(20px * var(--ui)));
-  padding: calc(40px * var(--ui)) calc(48px * var(--ui));
-  gap: calc(24px * var(--ui));
+  width: 65vw;
+  min-width: 0;
+  max-width: none;
+  padding: calc(20px * var(--ui)) calc(24px * var(--ui));
+  align-items: center;           /* дети по центру — кнопка не растягивается */
+  gap: calc(14px * var(--ui));
 }
 body.is-mobile .msg-overlay__title {
-  font-size: calc(40px * var(--ui));
-  letter-spacing: calc(2px * var(--ui));
+  font-size: max(18px, calc(34px * var(--ui)));
+  letter-spacing: 1px;
+  width: 100%;
+  text-align: center;
 }
-body.is-mobile .msg-overlay__body {
-  font-size: calc(26px * var(--ui));
-  line-height: 1.55;
+body.is-mobile .msg-overlay__body,
+body.is-mobile .msg-overlay__body p {
+  font-size: max(15px, calc(22px * var(--ui)));
+  line-height: 1.5;
+  width: 100%;
+  text-align: center;
 }
-body.is-mobile .msg-overlay__actions .mm-btn {
-  font-size: calc(24px * var(--ui));
-  padding: calc(14px * var(--ui)) calc(28px * var(--ui));
+
+/* Кнопки ОК / Да / Отмена — не на всю ширину, но крупные и высокие */
+body.is-mobile .msg-overlay__box .mm-btn {
+  min-width: max(140px, calc(200px * var(--ui)));
+  height: max(48px, calc(64px * var(--ui)));
+  font-size: max(16px, calc(26px * var(--ui)));
+  padding: 0 max(20px, calc(28px * var(--ui)));
+  font-weight: 700;
+  letter-spacing: 1px;
+  flex-shrink: 0;
+}
+body.is-mobile .msg-overlay__actions {
+  gap: calc(10px * var(--ui));
+  width: 100%;
+  justify-content: center;
+}
+
+/* Окно "ВАМ ПОДАРОК" — компактнее */
+body.is-mobile .msg-overlay__box--gift {
+  width: 65vw;
+  max-width: none;
+}
+body.is-mobile .gift-joker img {
+  max-width: max(100px, calc(180px * var(--ui)));
+  max-height: max(100px, calc(180px * var(--ui)));
+}
+body.is-mobile .gift-hint {
+  font-size: max(12px, calc(18px * var(--ui)));
+  margin-top: calc(8px * var(--ui));
+}
+
+/* Чек-бокс "больше не показывать" в магазине */
+body.is-mobile .msg-overlay__check {
+  font-size: max(12px, calc(20px * var(--ui)));
+  gap: calc(8px * var(--ui));
+}
+body.is-mobile .msg-overlay__check input[type="checkbox"] {
+  width: max(18px, calc(26px * var(--ui)));
+  height: max(18px, calc(26px * var(--ui)));
 }
 
 /* ---- Кнопки в оверлеях (Магазин, Стиль, Квест, Справка) ---- */
@@ -2143,9 +2186,9 @@ body.is-mobile .mm-overlay__box--settings .mm-row {
   min-width: 0;
 }
 body.is-mobile .mm-overlay__box--settings .mm-row__label {
-  font-size: calc(18px * var(--ui));
+  font-size: max(14px, calc(24px * var(--ui)));
   min-width: 0;
-  line-height: 1.2;
+  line-height: 1.25;
   flex: 0 0 auto;
 }
 body.is-mobile .mm-overlay__box--settings .mm-row__options {
@@ -2157,8 +2200,9 @@ body.is-mobile .mm-overlay__box--settings .mm-row__options {
   justify-content: flex-end;
 }
 body.is-mobile .mm-overlay__box--settings .mm-opt {
-  font-size: calc(16px * var(--ui));
-  padding: calc(10px * var(--ui)) calc(12px * var(--ui));
+  font-size: max(13px, calc(22px * var(--ui)));
+  padding: max(8px, calc(10px * var(--ui))) max(12px, calc(16px * var(--ui)));
+  min-height: 40px;
 }
 
 /* Кнопка «В МЕНЮ» в настройках — крупнее */
@@ -2585,9 +2629,9 @@ body.is-mobile .game-over__sub { font-size: calc(28px * var(--ui)); }
 body.is-mobile .game-over__points { font-size: calc(24px * var(--ui)); }
 body.is-mobile .game-over__epi { font-size: calc(26px * var(--ui)); }
 body.is-mobile .game-over__quest { 
-  font-size: calc(24px * var(--ui)); /* Увеличили текст про квест */
+  font-size: max(16px, calc(24px * var(--ui)));
   line-height: 1.3; 
-  color: #4fc3f7; /* Синий цвет */
+  color: #4fc3f7;
   font-weight: 700;
   text-shadow: 0 0 8px rgba(79, 195, 247, 0.4);
 }
