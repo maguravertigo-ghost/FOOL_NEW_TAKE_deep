@@ -2035,19 +2035,21 @@ body.is-mobile .msg-overlay__body p {
   text-align: center;
 }
 
-/* Кнопки ОК / Да / Отмена — средние, по центру, не на всю ширину */
-body.is-mobile .msg-overlay__box .mm-btn {
+/* Кнопки ОК / Да / Отмена — компактные */
+body.is-mobile .msg-overlay__box > button.mm-btn,
+body.is-mobile .msg-overlay__box .msg-overlay__actions > button.mm-btn {
   width: auto !important;
-  min-width: max(90px, calc(120px * var(--ui))) !important;
-  max-width: 70% !important;
-  height: max(36px, calc(48px * var(--ui))) !important;
-  font-size: max(13px, calc(18px * var(--ui))) !important;
-  padding: 0 max(16px, calc(20px * var(--ui))) !important;
-  border-radius: 8px !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  height: auto !important;
+  font-size: max(11px, calc(15px * var(--ui))) !important;
+  padding: 8px max(20px, calc(28px * var(--ui))) !important;
+  border-radius: 6px !important;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
   flex-shrink: 0;
   align-self: center;
+  line-height: 1.2;
 }
 body.is-mobile .msg-overlay__actions {
   gap: calc(10px * var(--ui));
