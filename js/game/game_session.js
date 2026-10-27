@@ -1209,14 +1209,14 @@ else                           this._jokerFrame('five');  // ничья
   };
   window.addEventListener('keydown', this._gameOverKeyHandler);
 
-  // Автофокус на первую кнопку (реклама / ещё раз / в меню)
-  if (!uiScale.isMobile) { // ← ДОБАВИТЬ ЭТУ ПРОВЕРКУ
-	  setTimeout(() => {
-		if (!document.getElementById('game-over')) return;
-		this._gameOverNavIdx = 0;
-		goHighlight(0);
-	  }, 100);
-	}
+  // Автофокус на первую кнопку (только для ПК и только если играли с клавиатуры)
+  if (!uiScale.isMobile && window.__lastInputWasKeyboard) {
+    setTimeout(() => {
+      if (!document.getElementById('game-over')) return;
+      this._gameOverNavIdx = 0;
+      goHighlight(0);
+    }, 100);
+  }
 
   // Размеры окна результатов и джокера задаются полностью в CSS
   // (.game-over__box: 2/3 W × 60% H; .game-over__joker--suit: aspect-ratio 1/1).
@@ -2493,8 +2493,7 @@ _updateHandOverlays() {
 }
 
 _maybeAutoFocusFirstCard() {
-	if (uiScale.isMobile) return; // ← ДОБАВИТЬ: на мобилках не подсвечиваем карты сами
-  if (!this._usingKeyboard) return;
+  if (!this._usingKeyboard || !window.__lastInputWasKeyboard) return;
   if (this._kbdFocusOnButton) return;
   if (this.selectedCard) return;
   if (this._slotFocusIdx >= 0) return;
@@ -2518,8 +2517,7 @@ _maybeAutoFocusFirstCard() {
 }
 
 _maybeAutoFocusOnButton() {
-	if (uiScale.isMobile) return; // ← ДОБАВИТЬ
-  if (!this._usingKeyboard) return;
+  if (!this._usingKeyboard || !window.__lastInputWasKeyboard) return;
   if (this._kbdFocusOnButton) return;
   if (this.selectedCard) return;
 

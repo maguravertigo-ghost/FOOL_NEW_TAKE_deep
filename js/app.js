@@ -37,6 +37,8 @@ class App {
     }, true);
     document.addEventListener('pointerdown', () => {
       window.__lastInputWasKeyboard = false;
+      // Глобально снимаем все фокусы при клике или тапе (на мобилке)
+      document.querySelectorAll('.kbd-focus').forEach(el => el.classList.remove('kbd-focus'));
     }, true);
 
     // ---- запрет контекстного меню и выделения ----

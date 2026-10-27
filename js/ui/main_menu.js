@@ -602,8 +602,7 @@ _updateQuestBadge() {
 
     const focusCurrent = () => {
       this.el.querySelectorAll('.kbd-focus').forEach(e => e.classList.remove('kbd-focus'));
-      // На мобилке фокус ставим ТОЛЬКО после реального нажатия клавиш
-      if (uiScale.isMobile && !this._lastInputWasKeyboard) return;
+      if (!window.__lastInputWasKeyboard) return; // Фокус только от клавиатуры
       this._navEl = cellEl(this._grid[this._navPos.r]?.[this._navPos.c]);
       if (this._navEl) this._navEl.classList.add('kbd-focus');
     };
@@ -2310,7 +2309,7 @@ _buildPreviewField(container) {
   _autoFocusOverlay(root, selector = '[data-close], button') {
     if (!root) return;
     this.el.querySelectorAll('.kbd-focus').forEach(e => e.classList.remove('kbd-focus'));
-    if (uiScale.isMobile) return; // На мобилке фокус не ставим — ждём реального нажатия клавиш
+    if (!window.__lastInputWasKeyboard) return; // Не ставим фокус, если ввод был мышью/тачем
     const el = root.querySelector(selector);
     if (el) {
       el.classList.add('kbd-focus');

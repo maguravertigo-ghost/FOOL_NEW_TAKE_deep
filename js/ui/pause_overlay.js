@@ -90,10 +90,16 @@ show() {
   }
   this.el.style.display = 'flex';
 
-  // Автофокус на первую кнопку — чтобы Enter сразу сработал
-  this._navBtns = [...this.el.querySelectorAll('.pause-btn')];
-  this._navIdx = 0;
-  this._navBtns.forEach((b, i) => b.classList.toggle('kbd-focus', i === 0));
+  // Автофокус только если играли с клавиатуры
+  if (window.__lastInputWasKeyboard) {
+    this._navBtns = [...this.el.querySelectorAll('.pause-btn')];
+    this._navIdx = 0;
+    this._navBtns.forEach((b, i) => b.classList.toggle('kbd-focus', i === 0));
+  } else {
+    this._navIdx = -1;
+    this._navBtns = [...this.el.querySelectorAll('.pause-btn')];
+    this._navBtns.forEach(b => b.classList.remove('kbd-focus'));
+  }
 }
   hide() {
     this.el.style.display = 'none';

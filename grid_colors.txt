@@ -23,3 +23,6 @@ vertical_indent = #CCCC66//
 content_body
 content_header
 content_footer
+
+scene_rect = #CCCC66//
+result_window = #FFFF00//
