@@ -1053,9 +1053,13 @@ _showGameOver(winner, opts = {}) {
         counts[rk] = (counts[rk] || 0) + 1;
       }
       for (const rk in counts) {
-        // creditQuest вернет ранг только если прогресс реально засчитан
+        // Проверяем, был ли квест уже выполнен ДО этого матча
+        const wasCompleted = Progress.quests[rk] && Progress.quests[rk].progress >= 1;
+        
         const credited = creditQuest(rk, counts[rk]);
-        if (credited) {
+        
+        // Показываем сообщение ТОЛЬКО если квест только что стал выполненным
+        if (credited && !wasCompleted) {
           questRank = credited;
         }
       }
@@ -1090,7 +1094,7 @@ else                           this._jokerFrame('five');  // ничья
       epaulettes === 3 ? '🎖️🎖️ 👔 Погоны и галстук! +250' :
       '';
     const epi = epiText ? `<div class="game-over__epi">${epiText}</div>` : '';
-    const quest = questRank ? `<div class="game-over__quest">Квест «${questRank}»: прогресс обновлён</div>` : '';
+    const quest = questRank ? `<div class="game-over__quest">Квест «${questRank}» выполнен — заберите награду</div>` : '';
     const pts   = `<div class="game-over__points">Получено очков стиля: <b>${points}</b></div>`;
 
     const adBtn = `<button class="pause-btn pause-btn--ad" data-action="ad">📺 +500 очков за рекламу</button>`;

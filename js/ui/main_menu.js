@@ -1,4 +1,5 @@
 import { ysdk } from '../sdk/yandex_sdk.js';
+import { DEV_MODE } from '../game/constants.js';
 import { audio } from '../audio/audio_engine.js';
 import { withLoading } from './loading_overlay.js';
 import { ASSETS } from '../assets.js';
@@ -2307,6 +2308,34 @@ _buildPreviewField(container) {
 			this._updateQuestBadge();
           } });
     });
+	
+	    // === DEV-КНОПКА ДЛЯ ТЕСТА КВЕСТОВ ===
+    if (DEV_MODE) {
+      const devBtn = document.createElement('button');
+      devBtn.className = 'mm-btn mm-btn--small mm-btn--danger';
+      devBtn.textContent = 'DEV: Выполнить случайный квест';
+      devBtn.style.marginTop = '10px';
+      devBtn.style.width = '100%';
+      devBtn.addEventListener('click', () => {
+        audio.playSfx('tap_up');
+        const uncompleted = activeOrder().filter(r => Progress.quests[r].progress === 0);
+        if (uncompleted.length === 0) {
+          showMessage('Все квесты в текущем режиме выполнены!');
+          return;
+        }
+        const r = uncompleted[Math.floor(Math.random() * uncompleted.length)];
+        Progress.quests[r].progress = 1;
+        saveProgress();
+        this._refreshQuest(el);
+        this._refreshStats();
+        this._updateQuestBadge();
+        showMessage(`Квест «${r}» выполнен (DEV)`);
+      });
+      el.querySelector('.mm-quest-footer-bottom').appendChild(devBtn);
+    }
+
+    return el;
+  }
     return el;
   }
 
@@ -2669,23 +2698,16 @@ _buildPreviewField(container) {
 
     for (const r of order) {
       const q = Progress.quests[r];
-      const done = q.progress >= 1;
+      const done = q.progress >= 1; // Выполнен, если прогресс >= 1
       const claimed = done && q.claimed >= q.progress;
-      const prevOK = (() => {
-        const idx = order.indexOf(r);
-        if (idx <= 0) return true;
-        return order.slice(0, idx).every(p => Progress.quests[p].progress >= 1);
-      })();
 
       const row = document.createElement('div');
-      row.className = 'mm-quest-row' +
-        (done ? ' mm-quest-row--done' : '') +
-        (claimed ? ' mm-quest-row--claimed' : '') +
-        (!prevOK ? ' mm-quest-row--locked' : '');
+      // Оставляем только класс выполненного для зеленого фона, убираем затемнения
+      row.className = 'mm-quest-row' + (done ? ' mm-quest-row--done' : '');
 
       const check = document.createElement('span');
       check.className = 'mm-quest-check';
-      check.textContent = claimed ? '✓' : done ? '✓' : (!prevOK ? '🔒' : '·');
+      check.textContent = claimed ? '✓' : done ? '✓' : '·';
 
       const label = document.createElement('span');
       label.className = 'mm-quest-label';
@@ -2693,12 +2715,16 @@ _buildPreviewField(container) {
 
       const status = document.createElement('span');
       status.className = 'mm-quest-status';
-      if (claimed) { status.textContent = 'получено'; status.classList.add('mm-quest-status--claimed'); }
-      else if (done) {
+      
+      if (claimed) {
+        status.textContent = 'получено';
+        status.classList.add('mm-quest-status--claimed');
+      } else if (done) {
         const pts = 250 + 50 * q.progress;
         status.innerHTML = `<span class="mm-quest-reward">+${pts}</span>`;
-      } else if (!prevOK) { status.textContent = 'заблокировано'; }
-      else { status.textContent = '—'; }
+      } else {
+        status.textContent = 'не выполнено';
+      }
 
       row.appendChild(check);
       row.appendChild(label);
