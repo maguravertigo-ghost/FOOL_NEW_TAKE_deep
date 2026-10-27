@@ -2257,44 +2257,60 @@ _buildPreviewField(container) {
     this._bindClose(el);
 
 	el.querySelector('[data-claim]').addEventListener('click', () => {
-	  // смотрим состояние ДО клейма — чтобы понять причину «нечего забирать»
-	  const ranks      = claimableRanks();
-	  const anyProgress = activeOrder().some(r => Progress.quests[r].progress >= 1);
-	  const allClaimed  = activeOrder().every(r => {
-		const q = Progress.quests[r];
-		return q.progress >= 1 && q.claimed >= q.progress;
-	  });
+	  // смотрим состояние ДО клейма
+	  const wasTest = isTestModeUnlocked();
 
 	  const res = claimQuestReward();
+	  const isTestNow = isTestModeUnlocked();
+	  const justUnlocked = (!wasTest && isTestNow);
+
+	  // Сбрасываем прогресс квестов СРАЗУ (если только что открылось Испытание)
+	  if (justUnlocked) {
+	    for (const r of Object.keys(Progress.quests)) {
+	      Progress.quests[r] = { progress: 0, claimed: 0 };
+	    }
+	    saveProgress();
+	  }
+
 	  this._refreshQuest(el);
 	  this._refreshStats();
 	  this._updateQuestBadge();
 
+	  // === Шаг 1: показываем очки ===
 	  if (res.total > 0) {
-		audio.playSfx('cash');
-		showMessage(
-		  `Получено <b class="mm-stat-value--accent">${res.total}</b> очков стиля.`,
-		  { title: 'Награда' }
-		);
-		return;
+	    audio.playSfx('cash');
+	    showMessage(
+	      `Получено <b class="mm-stat-value--accent">${res.total}</b> очков стиля.`,
+	      {
+	        title: 'Награда',
+	        onClose: () => {
+	          // === Шаг 2: если только что открыли Испытание — показать второе окно ===
+	          if (justUnlocked) this._showTrialUnlockedDialog(el);
+	        }
+	      }
+	    );
+	    return;
 	  }
 
+	  // если наград не было, но Испытание только что открылось (теоретически)
+	  if (justUnlocked) {
+	    this._showTrialUnlockedDialog(el);
+	    return;
+	  }
+
+	  // стандартные ветки ошибок
 	  audio.playSfx('tap_up');
+	  const anyProgress = activeOrder().some(r => Progress.quests[r].progress >= 1);
+	  const allClaimed  = activeOrder().every(r => {
+	    const q = Progress.quests[r];
+	    return q.progress >= 1 && q.claimed >= q.progress;
+	  });
 	  if (!anyProgress) {
-		showMessage(
-		  'Для получения наград выполните хотя бы один квест.',
-		  { title: 'Награда' }
-		);
+	    showMessage('Для получения наград выполните хотя бы один квест.', { title: 'Награда' });
 	  } else if (allClaimed) {
-		showMessage(
-		  'Все доступные награды уже получены.',
-		  { title: 'Награда' }
-		);
+	    showMessage('Все доступные награды уже получены.', { title: 'Награда' });
 	  } else {
-		showMessage(
-		  'Пока нечего забирать.',
-		  { title: 'Награда' }
-		);
+	    showMessage('Пока нечего забирать.', { title: 'Награда' });
 	  }
 	});
     el.querySelector('[data-reset]').addEventListener('click', () => {
@@ -2335,6 +2351,26 @@ _buildPreviewField(container) {
     }
 
     return el;
+  }
+
+  _showTrialUnlockedDialog(questEl) {
+    audio.playSfx('cash');
+    showMessage(
+      `Вы прошли <b>все квесты Классики</b>!<br><br>` +
+      `Теперь доступен новый режим — <b>Испытание</b>. ` +
+      `В нём вы играете полной колодой из <b>52 карт</b>.<br><br>` +
+      `Не забудьте включить его в <b>Настройках</b>.`,
+      {
+        title: 'Испытание открыто!',
+        onClose: () => {
+          // После закрытия — перерисовываем окно квеста уже в режиме 52 карт
+          if (questEl) {
+            this._refreshQuest(questEl);
+            this._updateQuestBadge();
+          }
+        }
+      }
+    );
   }
 
   /** Поставить клавиатурный фокус на первый интерактивный элемент оверлея. */

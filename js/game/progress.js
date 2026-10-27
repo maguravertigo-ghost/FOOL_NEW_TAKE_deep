@@ -16,6 +16,7 @@ function defaultState() {
 	seenStyleItems: {},
 	giftGiven: false,
 	tempItems: null,
+	trialUnlocked: false,
     // какие индексы элементов куплены
 	purchases: {
 	  shirt:  [0],
@@ -44,6 +45,7 @@ function load() {
 	  seenStyleItems: p.seenStyleItems ?? {},
 	  giftGiven: p.giftGiven ?? false,
 	  tempItems: p.tempItems ?? null,
+	  trialUnlocked: p.trialUnlocked ?? false,   // ← ДОБАВИТЬ
     };
   } catch { return defaultState(); }
 }
@@ -85,7 +87,7 @@ export function recordOutcome(winner) {
 
 /** Открыт ли режим «Испытание» — все квесты 36-колоды заклеймлены. */
 export function isTestModeUnlocked() {
-  return ORDER_36.every(r => Progress.quests[r].claimed >= 1);
+  return Progress.trialUnlocked === true;
 }
 
 /** Текущий активный порядок квестов. */
@@ -132,8 +134,21 @@ export function claimQuestReward() {
   }
   if (total > 0) {
     Progress.stylePoints += total;
-    saveProgress();     // ← тут saveProgress, уже без ysdk
   }
+
+  // Проверяем: все ли 36 квестов Классики получены?
+  // Если да — открываем Испытание (52 карты).
+  if (!Progress.trialUnlocked) {
+    const allClassicClaimed = ORDER_36.every(r => {
+      const q = Progress.quests[r];
+      return q && q.progress >= 1 && q.claimed >= q.progress;
+    });
+    if (allClassicClaimed) {
+      Progress.trialUnlocked = true;
+    }
+  }
+
+  saveProgress();
   return { total, ranks };
 }
 
@@ -238,7 +253,7 @@ export function resetQuests() {
     Progress.quests[r] = { progress: 0, claimed: 0 };
   }
   Progress.stylePoints = 0;
-  //ysdk.saveProgress(Progress);
+  Progress.trialUnlocked = false;   // ← сбрасываем и режим
   saveProgress();
 }
 
@@ -268,6 +283,7 @@ export function resetAll() {
   Progress.seenStyleItems = {};
   Progress.giftGiven = false;
   Progress.tempItems = null;
+  Progress.trialUnlocked = false;
 
   // зарезервировано для будущих этапов:
   // Progress.tempItems = null;
