@@ -989,9 +989,9 @@ body.is-mobile .card--stack-sub {
 }
 .mm-opt:hover:not(.mm-opt--active) { background: #383840; }
 .mm-opt--active {
-  background: #2e7d32;
-  border-color: #4caf50;
-  color: #fff;
+  background: #2e7d32 !important;
+  border-color: #4caf50 !important;
+  color: #fff !important;
 }
 .mm-opt:disabled {
   opacity: 0.5;
@@ -2014,12 +2014,12 @@ body.is-mobile .pause-volume__label {
 
 /* ---- msg-overlay (подтверждения, подарок, первые очки, магазин) ---- */
 body.is-mobile .msg-overlay__box {
-  width: 65vw;
-  min-width: 0;
-  max-width: none;
-  padding: calc(20px * var(--ui)) calc(24px * var(--ui));
-  align-items: center;           /* дети по центру — кнопка не растягивается */
-  gap: calc(14px * var(--ui));
+  width: 55vw;
+  max-width: 480px;
+  min-width: 240px;
+  padding: max(16px, calc(20px * var(--ui))) max(20px, calc(24px * var(--ui)));
+  align-items: center;
+  gap: max(10px, calc(14px * var(--ui)));
 }
 body.is-mobile .msg-overlay__title {
   font-size: max(18px, calc(34px * var(--ui)));
@@ -2037,13 +2037,17 @@ body.is-mobile .msg-overlay__body p {
 
 /* Кнопки ОК / Да / Отмена — не на всю ширину, но крупные и высокие */
 body.is-mobile .msg-overlay__box .mm-btn {
-  min-width: max(140px, calc(200px * var(--ui)));
-  height: max(48px, calc(64px * var(--ui)));
-  font-size: max(16px, calc(26px * var(--ui)));
-  padding: 0 max(20px, calc(28px * var(--ui)));
+  width: auto !important;
+  min-width: max(140px, calc(200px * var(--ui))) !important;
+  max-width: 80% !important;
+  height: max(52px, calc(72px * var(--ui))) !important;
+  font-size: max(18px, calc(28px * var(--ui))) !important;
+  padding: 0 max(24px, calc(32px * var(--ui))) !important;
+  border-radius: 10px !important;
   font-weight: 700;
   letter-spacing: 1px;
   flex-shrink: 0;
+  align-self: center;
 }
 body.is-mobile .msg-overlay__actions {
   gap: calc(10px * var(--ui));
@@ -2061,8 +2065,8 @@ body.is-mobile .gift-joker img {
   max-height: max(100px, calc(180px * var(--ui)));
 }
 body.is-mobile .gift-hint {
-  font-size: max(12px, calc(18px * var(--ui)));
-  margin-top: calc(8px * var(--ui));
+  font-size: max(14px, calc(20px * var(--ui)));
+  margin-top: max(8px, calc(10px * var(--ui)));
 }
 
 /* Чек-бокс "больше не показывать" в магазине */
@@ -2120,15 +2124,7 @@ body.is-mobile .mm-btn--mode img {
   margin: 0;
 }
 
-/* ---- Настройки: 2 колонки ---- */
-/* Мобилка: увеличить мелкие тексты в оверлеях */
-body.is-mobile .msg-overlay__check {
-  font-size: calc(18px * var(--ui));
-}
-body.is-mobile .msg-overlay__check input[type="checkbox"] {
-  width: calc(24px * var(--ui));
-  height: calc(24px * var(--ui));
-}
+
 body.is-mobile .mm-overlay__title {
   font-size: calc(34px * var(--ui));
 }
