@@ -1140,7 +1140,11 @@ _updateQuestBadge() {
     const ov = this._activeOverlay;
     if (!ov) return;
     ov.querySelectorAll('.kbd-focus').forEach(x => x.classList.remove('kbd-focus'));
-    if (uiScale.isMobile) return;
+    
+    // Выходим, если это тач или мышь
+    if (!window.__lastInputWasKeyboard) return;
+
+    // Активный таб — точка входа
     const activeTab = ov.querySelector('.mm-tab--active') || ov.querySelector('.mm-tab');
     if (activeTab) activeTab.classList.add('kbd-focus');
   }
@@ -1469,8 +1473,9 @@ _openShop() {
     el.querySelector('[data-close]').addEventListener('click', close);
     el.addEventListener('click', (e) => { if (e.target === el) close(); });
 
-    // Автофокус на OK
+    // Автофокус на OK (только если играем с клавиатуры/ТВ)
     requestAnimationFrame(() => {
+      if (!window.__lastInputWasKeyboard) return;
       const okBtn = el.querySelector('[data-close]');
       if (okBtn) okBtn.classList.add('kbd-focus');
     });
@@ -2373,21 +2378,20 @@ _buildPreviewField(container) {
     const ov = this._activeOverlay;
     if (!ov) return;
     ov.querySelectorAll('.kbd-focus').forEach(x => x.classList.remove('kbd-focus'));
-    if (uiScale.isMobile) return;
+    
+    // Выходим, если это тач или мышь
+    if (!window.__lastInputWasKeyboard) return;
 
     let target = null;
-
+    
     if (this._shopCategory) {
-      // Мы в категории — фокус на «НАЗАД»
       target = ov.querySelector('[data-back]');
     } else if (this._shopLastCategory) {
-      // Вернулись из категории — фокус на ту же категорию
       target = ov.querySelector(`.shop-cat[data-cat="${this._shopLastCategory}"]`);
       this._shopLastCategory = null;
     }
 
     if (!target) {
-      // По умолчанию — «В МЕНЮ»
       target = ov.querySelector('.shop-footer [data-close]');
     }
     if (target) target.classList.add('kbd-focus');
