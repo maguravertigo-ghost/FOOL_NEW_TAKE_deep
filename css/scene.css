@@ -2035,17 +2035,17 @@ body.is-mobile .msg-overlay__body p {
   text-align: center;
 }
 
-/* Кнопки ОК / Да / Отмена — не на всю ширину, но крупные и высокие */
+/* Кнопки ОК / Да / Отмена — средние, по центру, не на всю ширину */
 body.is-mobile .msg-overlay__box .mm-btn {
   width: auto !important;
-  min-width: max(140px, calc(200px * var(--ui))) !important;
-  max-width: 80% !important;
-  height: max(52px, calc(72px * var(--ui))) !important;
-  font-size: max(18px, calc(28px * var(--ui))) !important;
-  padding: 0 max(24px, calc(32px * var(--ui))) !important;
-  border-radius: 10px !important;
+  min-width: max(90px, calc(120px * var(--ui))) !important;
+  max-width: 70% !important;
+  height: max(36px, calc(48px * var(--ui))) !important;
+  font-size: max(13px, calc(18px * var(--ui))) !important;
+  padding: 0 max(16px, calc(20px * var(--ui))) !important;
+  border-radius: 8px !important;
   font-weight: 700;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   flex-shrink: 0;
   align-self: center;
 }
