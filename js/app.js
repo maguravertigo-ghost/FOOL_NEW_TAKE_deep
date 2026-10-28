@@ -571,6 +571,11 @@ async _startGameFromMenu(mode) {
       this.menu.show();
       await sleep(50);
       await this.fade.toClear(650);
+
+      // Страховка: если in-flight _finishGame успел создать новое окно
+      // результатов уже после _cleanupGame — убираем его
+      const go = document.getElementById('game-over');
+      if (go) go.remove();
     } catch (err) {
       console.error('[app] exit to menu failed:', err);
       await this.fade.toClear(400);

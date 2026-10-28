@@ -115,8 +115,10 @@ export class GameSession {
 	this._lastCycledCard = null;
 	this._kbdReturnCard = null;
 	
-	this._finishedViaPogony = false;
-	this._finishedHandCount = 0;
+    this._finishedViaPogony = false;
+    this._finishedHandCount = 0;
+    this._finishedCards = [];
+    this._destroyed = false;
   }
 
   /* ================================================================
@@ -152,6 +154,7 @@ export class GameSession {
   }
   
   destroy() {
+    this._destroyed = true;
     // карты
     for (const c of this.cards) {
       if (c.el && c.el.parentNode) c.el.parentNode.removeChild(c.el);
@@ -923,6 +926,9 @@ async _animateTake(cards, defender) {
       await this._waitPlayerClick();
     }
 
+    // Сессию могли уничтожить пока ждали клик/прогресс (выход в меню) — выходим
+    if (this._destroyed) return;
+
     // --- First-run gift: декремент счётчиков ---
     try {
       this._decayTempItems();
@@ -1019,6 +1025,7 @@ async _animateTake(cards, defender) {
   }
 
 _showGameOver(winner, opts = {}) {
+  if (this._destroyed) return;
   if (document.getElementById('game-over')) return;
   if (this._gameOverShown) return;
   this._gameOverShown = true;
