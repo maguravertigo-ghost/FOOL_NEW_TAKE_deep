@@ -2014,12 +2014,14 @@ body.is-mobile .pause-volume__label {
 
 /* ---- msg-overlay (подтверждения, подарок, первые очки, магазин) ---- */
 body.is-mobile .msg-overlay__box {
-  width: calc(var(--scene-w) * 0.55);
-  max-width: calc(var(--scene-w) * 0.55);
+  width: calc(var(--scene-w) * 0.72);
+  max-width: calc(var(--scene-w) * 0.72);
   min-width: 0;
-  padding: max(16px, calc(20px * var(--ui))) max(20px, calc(24px * var(--ui)));
+  max-height: calc(var(--scene-h) - 16px);
+  padding: max(12px, calc(16px * var(--ui))) max(16px, calc(20px * var(--ui)));
   align-items: center;
-  gap: max(10px, calc(14px * var(--ui)));
+  gap: max(8px, calc(12px * var(--ui)));
+  overflow-y: auto;
 }
 body.is-mobile .msg-overlay__title {
   font-size: max(18px, calc(34px * var(--ui)));
@@ -2059,8 +2061,8 @@ body.is-mobile .msg-overlay__actions {
 
 /* Окно "ВАМ ПОДАРОК" — компактнее */
 body.is-mobile .msg-overlay__box--gift {
-  width: calc(var(--scene-w) * 0.55);
-  max-width: calc(var(--scene-w) * 0.55);
+  width: calc(var(--scene-w) * 0.72);
+  max-width: calc(var(--scene-w) * 0.72);
 }
 body.is-mobile .gift-joker img {
   max-width: max(100px, calc(180px * var(--ui)));
@@ -2150,64 +2152,84 @@ body.is-mobile .mm-overlay__box--about .mm-overlay__body {
 }
 /* Окно настроек на мобилке — почти на всю сцену.
    Столбцы шире, чтобы левый блок не наезжал на центральный разделитель. */
+
+/* Окно настроек на мобилке — фикс под маленькие экраны (iOS Safari).
+   Содержимое скроллится, если не влезает; элементы компактные. */
 body.is-mobile .mm-overlay__box--settings {
-  width: calc(100% - calc(16px * var(--ui)));
+  width: calc(100% - 12px);
   max-width: none;
+  max-height: calc(var(--scene-h) - 12px);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow: hidden;
   position: relative;
-  padding: calc(20px * var(--ui)) calc(24px * var(--ui));
+}
+body.is-mobile .mm-overlay__box--settings .mm-overlay__title {
+  flex-shrink: 0;
+  font-size: max(14px, calc(22px * var(--ui)));
+  margin: 0;
 }
 body.is-mobile .mm-overlay__box--settings .mm-rows {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  column-gap: calc(20px * var(--ui));
-  row-gap: calc(6px * var(--ui));
-  margin: calc(10px * var(--ui)) 0;
+  column-gap: 10px;
+  row-gap: 2px;
+  margin: 4px 0;
+  padding-right: 4px;
+}
+body.is-mobile .mm-overlay__box--settings .mm-rows::-webkit-scrollbar {
+  width: 6px;
+}
+body.is-mobile .mm-overlay__box--settings .mm-rows::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.3);
+  border-radius: 3px;
 }
 body.is-mobile .mm-overlay__box--settings .mm-rows::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: calc(80px * var(--ui));
-  bottom: calc(80px * var(--ui));
-  width: 1px;
-  background: rgba(255,255,255,0.15);
-  transform: translateX(-50%);
+  display: none; /* убираем вертикальный разделитель — при скролле он «висит» криво */
 }
-
-/* Строка настроек: если не влезает — опции переносятся на следующую строку */
 body.is-mobile .mm-overlay__box--settings .mm-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  padding: calc(10px * var(--ui)) calc(4px * var(--ui));
-  gap: calc(6px * var(--ui));
+  justify-content: space-between;
+  padding: 4px 2px;
+  gap: 4px;
   min-width: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 body.is-mobile .mm-overlay__box--settings .mm-row__label {
-  font-size: max(14px, calc(24px * var(--ui)));
+  font-size: max(11px, calc(16px * var(--ui)));
+  line-height: 1.15;
+  flex: 0 1 auto;
   min-width: 0;
-  line-height: 1.25;
-  flex: 0 0 auto;
 }
 body.is-mobile .mm-overlay__box--settings .mm-row__options {
   flex: 0 0 auto;
-  margin-left: auto;
   display: flex;
   flex-wrap: wrap;
-  gap: calc(4px * var(--ui));
+  gap: 3px;
   justify-content: flex-end;
+  margin-left: auto;
 }
 body.is-mobile .mm-overlay__box--settings .mm-opt {
-  font-size: max(13px, calc(22px * var(--ui)));
-  padding: max(8px, calc(10px * var(--ui))) max(12px, calc(16px * var(--ui)));
-  min-height: 40px;
+  font-size: max(10px, calc(14px * var(--ui)));
+  padding: max(4px, calc(5px * var(--ui))) max(7px, calc(9px * var(--ui)));
+  min-height: max(24px, calc(30px * var(--ui)));
+  line-height: 1.1;
+  border-radius: max(4px, calc(6px * var(--ui)));
 }
-
-/* Кнопка «В МЕНЮ» в настройках — крупнее */
 body.is-mobile .mm-overlay__box--settings [data-close] {
-  font-size: calc(24px * var(--ui));
-  padding: calc(14px * var(--ui)) calc(28px * var(--ui));
-  letter-spacing: calc(1px * var(--ui));
+  flex-shrink: 0;
+  font-size: max(13px, calc(18px * var(--ui)));
+  padding: max(6px, calc(8px * var(--ui))) max(16px, calc(20px * var(--ui)));
+  height: max(30px, calc(38px * var(--ui)));
+  align-self: center;
+  margin-top: 4px;
 }
 
 /* ---- Магазин: ценники ---- */
