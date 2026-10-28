@@ -2014,9 +2014,9 @@ body.is-mobile .pause-volume__label {
 
 /* ---- msg-overlay (подтверждения, подарок, первые очки, магазин) ---- */
 body.is-mobile .msg-overlay__box {
-  width: 55vw;
-  max-width: 480px;
-  min-width: 240px;
+  width: calc(var(--scene-w) * 0.55);
+  max-width: calc(var(--scene-w) * 0.55);
+  min-width: 0;
   padding: max(16px, calc(20px * var(--ui))) max(20px, calc(24px * var(--ui)));
   align-items: center;
   gap: max(10px, calc(14px * var(--ui)));
@@ -2059,8 +2059,8 @@ body.is-mobile .msg-overlay__actions {
 
 /* Окно "ВАМ ПОДАРОК" — компактнее */
 body.is-mobile .msg-overlay__box--gift {
-  width: 65vw;
-  max-width: none;
+  width: calc(var(--scene-w) * 0.55);
+  max-width: calc(var(--scene-w) * 0.55);
 }
 body.is-mobile .gift-joker img {
   max-width: max(100px, calc(180px * var(--ui)));

@@ -171,16 +171,34 @@ export class AI {
     const tR = tableRanks(r.table);
     const cands = this.hand.filter(c => canAddToTable(c, tR));
     if (!cands.length) return { type: 'done' };
+
     const limit = Math.min(6, this.defSize);
     if (r.table.length >= limit) return { type: 'done' };
 
-    // Заливаем некозырями (младшими вперёд).
-    // Козырями в дампе — только если совсем нечего, либо это добивание финала.
-    const nonT = cands.filter(c => !this.isTrump(c));
-    let pool = nonT.length ? nonT : cands;
-    if (this.level >= 2 && this.deckLeft > 0 && nonT.length > 0) {
-      pool = nonT; // Не сбрасываем козырей в дампе
+    // Level 1 — «новичок»: сбрасывает что есть, но без козырей
+    if (this.level === 1) {
+      const nonT = cands.filter(c => !this.isTrump(c));
+      if (!nonT.length) return { type: 'done' };
+      nonT.sort((a, b) => this.attackValue(a) - this.attackValue(b));
+      return { type: 'attack', card: nonT[0], dump: true };
     }
+
+    // Level 2, 3: пока колода не пуста — сбрасываем ТОЛЬКО некозырей.
+    // Если некозырей нет — просто заканчиваем дамп, не тратя козыря.
+    const nonT = cands.filter(c => !this.isTrump(c));
+
+    if (this.deckLeft > 0) {
+      if (!nonT.length) return { type: 'done' };      // козыри — не трогаем
+      nonT.sort((a, b) => this.attackValue(a) - this.attackValue(b));
+      return { type: 'attack', card: nonT[0], dump: true };
+    }
+
+    // Эндшпиль (колода пуста): можно и козырем, но только низким (≤10).
+    // Дамы, Короли, Тузы — не тратим даже в дампе.
+    const lowTrumps = cands.filter(c => this.isTrump(c) && this.rank(c) <= 10);
+    const pool = nonT.length ? nonT : lowTrumps;
+    if (!pool.length) return { type: 'done' };
+
     pool.sort((a, b) => this.attackValue(a) - this.attackValue(b));
     return { type: 'attack', card: pool[0], dump: true };
   }

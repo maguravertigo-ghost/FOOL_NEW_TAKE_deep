@@ -585,6 +585,7 @@ _removeDeckShadow() {
 
 	this._finishedViaPogony = false;
 	this._finishedHandCount = 0;
+	this._finishedCards = [];
 
     console.log(`[round ${r.n}] start  attack=${r.attack}  firstMove=${r.firstMove}`);
     this._updateHUD();
@@ -1046,22 +1047,17 @@ _showGameOver(winner, opts = {}) {
 	  if (epaulettes > 0) points += 250;
 
     let questRank = null;
-    if (winner === 'player') {
-      const counts = {};
-      for (const p of this._playerLastPlays) {
-        const rk = p.card.data.rank;
-        counts[rk] = (counts[rk] || 0) + 1;
-      }
-      for (const rk in counts) {
-        // Проверяем, был ли квест уже выполнен ДО этого матча
-        const wasCompleted = Progress.quests[rk] && Progress.quests[rk].progress >= 1;
-        
-        const credited = creditQuest(rk, counts[rk]);
-        
-        // Показываем сообщение ТОЛЬКО если квест только что стал выполненным
-        if (credited && !wasCompleted) {
-          questRank = credited;
-        }
+    // Засчитываем квест ТОЛЬКО если игрок реально повесил погоны
+    // (нажал ПОГОНЫ! в финальном ходу) и карты финиша сохранены.
+    if (winner === 'player' && this._finishedViaPogony && this._finishedCards && this._finishedCards.length > 0) {
+      // В погонах все карты одного ранга — берём первую
+      const rk = this._finishedCards[0].data.rank;
+      const count = this._finishedCards.length;
+
+      const wasCompleted = Progress.quests[rk] && Progress.quests[rk].progress >= 1;
+      const credited = creditQuest(rk, count);
+      if (credited && !wasCompleted) {
+        questRank = credited;
       }
     }
 
@@ -2215,6 +2211,7 @@ _confirmSlot(slot) {
     // Запоминаем: это финиш через кнопку ПОГОНЫ! (иначе — просто финиш обычным ходом)
     this._finishedViaPogony = (kind === 'pogony');
     this._finishedHandCount = cards.length;
+    this._finishedCards = kind === 'pogony' ? [...cards] : [];
 
     this._busy = true;
 
