@@ -54,7 +54,10 @@ export class Interpolator {
   add(move) {
     this.moves.push(move);
     if (this._rafId == null) {
-      this._lastT = performance.now();
+      // НЕ ставим performance.now(): на iOS Safari он рассинхронизирован
+      // с requestAnimationFrame и даёт рывок в первом кадре.
+      // null → первый _tick возьмёт ровно 16 мс (стандартный кадр).
+      this._lastT = null;
       this._rafId = requestAnimationFrame(this._tick);
     }
     return move;
@@ -74,14 +77,16 @@ export class Interpolator {
     if (!this._paused) return;
     this._paused = false;
     if (this.moves.length > 0 && this._rafId == null) {
-      this._lastT = performance.now();
+      this._lastT = null;
       this._rafId = requestAnimationFrame(this._tick);
     }
   }
 
   _tick(t) {
 	if (this._paused) { this._rafId = null; return; }
-    const dt = Math.min(64, t - this._lastT); // защита от длинных пауз
+    // Первый кадр после add()/resume() — синтетические 16 мс,
+    // чтобы не было рывка из-за рассинхрона performance.now() и rAF timestamp на iOS.
+    const dt = (this._lastT === null) ? 16 : Math.min(64, t - this._lastT);
     this._lastT = t;
 
     for (let i = this.moves.length - 1; i >= 0; i--) {

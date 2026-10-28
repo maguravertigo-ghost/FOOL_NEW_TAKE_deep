@@ -335,10 +335,10 @@ _computeSlots(n) {
     // ---------- Фаза 1: по очереди на линию вставки ----------
 	await Promise.all(cards.map((c, i) => new Promise(resolve => {
 	  setTimeout(() => {
-		audio.playSfx('card_fly');
 		moveLinear(this.interp, c, this.scene, entryMarker, insertMarkers[i], {
 		  fromAngle: c.angle,
 		  toAngle:   0,
+		  onStart:   () => audio.playSfx('card_fly'),
 		  onDone:    () => {
 			if (reveal && flipMode === 'immediate') c.setFaceUp(true);
 			resolve();
@@ -515,10 +515,12 @@ _computeSlots(n) {
         startPos[i].angle
       );
       setTimeout(() => {
-		audio.playSfx('card_fly');
+        // Сначала запускаем движение (регистрирует _lastT = null и rAF),
+        // звук — сразу после, чтобы новый Audio не «съел» кадр до _tick.
         moveLinear(this.interp, c, this.scene, fromM, insertMarkers[i], {
           fromAngle: startPos[i].angle,
           toAngle: 0,
+          onStart: () => audio.playSfx('card_fly'),
           onDone: resolve,
         });
       }, i * stagger);
