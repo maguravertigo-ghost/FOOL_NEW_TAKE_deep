@@ -175,15 +175,36 @@ body.is-mobile .card--stack-sub {
 .slot-ui--active {
   opacity: 1;
   border-color: #4caf50;
-  background: rgba(76, 175, 80, 0.15);
-  box-shadow: 0 0 22px rgba(76, 175, 80, 0.7);
+  background: rgba(76, 175, 80, 0.20);
+  /* Контрастная белая обводка + пульсация — видно на любом столе */
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.85),
+    0 0 22px rgba(76, 175, 80, 0.7);
+  animation: slot-active-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes slot-active-pulse {
+  0%, 100% {
+    border-color: #4caf50;
+    box-shadow:
+      0 0 0 3px rgba(255, 255, 255, 0.7),
+      0 0 18px rgba(76, 175, 80, 0.6);
+  }
+  50% {
+    border-color: #81c784;
+    box-shadow:
+      0 0 0 4px rgba(255, 255, 255, 1),
+      0 0 32px rgba(76, 175, 80, 1);
+  }
 }
 /* Слот с клавиатурным фокусом (когда карта выбрана и можно переключать) */
 .slot-ui--focus {
   opacity: 1;
   border-color: #ffd54f;
   background: rgba(255, 213, 79, 0.22);
-  box-shadow: 0 0 26px rgba(255, 213, 79, 0.9);
+  box-shadow:
+    0 0 0 3px rgba(0, 0, 0, 0.6),
+    0 0 26px rgba(255, 213, 79, 0.9);
   animation: slot-pulse 1.2s ease-in-out infinite;
 }
 
@@ -290,50 +311,7 @@ body.is-mobile .card--stack-sub {
   cursor: default;
   filter: grayscale(0.4);
 }
-#action-btn[data-state="info"]:disabled {
-  color: #fff;
-  text-shadow:
-    -1px -1px 0 #0d3b12,
-     1px -1px 0 #0d3b12,
-    -1px  1px 0 #0d3b12,
-     1px  1px 0 #0d3b12,
-     0    2px 4px rgba(0,0,0,0.8);
-  background: linear-gradient(
-    180deg,
-    rgba(63,163,74,0.75) 0%,
-    rgba(46,125,50,0.75) 55%,
-    rgba(27,94,32,0.75) 100%
-  );
-}
-#action-btn[data-state="wait"]:disabled {
-  color: rgba(255,255,255,0.55);
-  text-shadow: none;
-  background: linear-gradient(
-    180deg,
-    rgba(63,163,74,0.40) 0%,
-    rgba(46,125,50,0.40) 55%,
-    rgba(27,94,32,0.40) 100%
-  );
-}
 
-#action-btn[data-state="active"] {
-  color: #fff;
-  text-shadow:
-    -1px -1px 0 #0d3b12,
-     1px -1px 0 #0d3b12,
-    -1px  1px 0 #0d3b12,
-     1px  1px 0 #0d3b12,
-     0    2px 4px rgba(0,0,0,0.8);
-}
-#action-btn:not(:disabled) {
-  color: #fff;
-  text-shadow:
-    -1px -1px 0 #0d3b12,
-     1px -1px 0 #0d3b12,
-    -1px  1px 0 #0d3b12,
-     1px  1px 0 #0d3b12,
-     0    2px 4px rgba(0,0,0,0.8);
-}
 #action-btn { overflow: visible; }
 
 .btn-ring {
@@ -1976,15 +1954,32 @@ body.is-mobile .help-nav__btn {
    box-shadow blur на слабом GPU артефачит и выглядит как «вторая рамка».
    ================================================================== */
 body.is-mobile .slot-ui--active {
-  background: rgba(76, 175, 80, 0.20);
-  border-color: #4caf50;
+  background: rgba(76, 175, 80, 0.35);
+  border: 3px solid #66ff66;
+  outline: 2px solid rgba(255, 255, 255, 0.9);
+  outline-offset: 2px;
   box-shadow: none;
+  animation: slot-mobile-blink 1.2s ease-in-out infinite;
 }
 body.is-mobile .slot-ui--focus {
-  background: rgba(255, 213, 79, 0.25);
-  border-color: #ffd54f;
+  background: rgba(255, 213, 79, 0.35);
+  border: 3px solid #ffd54f;
+  outline: 2px solid rgba(0, 0, 0, 0.85);
+  outline-offset: 2px;
   box-shadow: none;
-  animation: none;
+  animation: slot-mobile-blink 1.2s ease-in-out infinite;
+}
+
+@keyframes slot-mobile-blink {
+  0%, 100% { border-color: #66ff66; }
+  50%      { border-color: #ffffff; }
+}
+body.is-mobile .slot-ui--focus {
+  animation-name: slot-mobile-blink-focus;
+}
+@keyframes slot-mobile-blink-focus {
+  0%, 100% { border-color: #ffd54f; }
+  50%      { border-color: #fff3b3; }
 }
 body.is-mobile .slot-ui--focus::after {
   display: none;
@@ -2766,4 +2761,94 @@ body.is-mobile .game-over__content .pause-btn--ad {
 /* Убираем стандартный фокус браузера на кнопках в окне результатов (мобилка) */
 body.is-mobile .game-over__box button:focus {
   outline: none;
+}
+
+/* ================================================================
+   ЦВЕТОВОЙ КОД КНОПКИ ИГРОКА
+   ================================================================ */
+
+/* info — «МОЙ ХОД», игрок не может нажать, но знает что делать */
+#action-btn[data-state="info"]:disabled {
+  color: #fff;
+  background: linear-gradient(
+    180deg,
+    rgba(63,163,74,0.75) 0%,
+    rgba(46,125,50,0.75) 55%,
+    rgba(27,94,32,0.75) 100%
+  );
+  text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+}
+
+/* wait — «...», кнопка неактивна, почти прозрачна */
+#action-btn[data-state="wait"]:disabled {
+  color: rgba(255,255,255,0.5);
+  background: rgba(30,30,30,0.4);
+  border-color: rgba(0,0,0,0.3);
+  text-shadow: none;
+  box-shadow: none;
+}
+
+/* pass — ПАС, зелёная (безопасное действие) */
+#action-btn[data-state="pass"] {
+  color: #fff;
+  background: linear-gradient(180deg, #4ab854 0%, #2e7d32 55%, #1b5e20 100%);
+  border-color: #0d3b12;
+  text-shadow:
+    -1px -1px 0 #0d3b12, 1px -1px 0 #0d3b12,
+    -1px  1px 0 #0d3b12, 1px  1px 0 #0d3b12,
+    0 2px 4px rgba(0,0,0,0.8);
+  box-shadow:
+    0 4px 0 #0a2e10,
+    0 6px 10px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,255,255,0.3);
+}
+
+/* take — БЕРУ, красная (внимание: забираешь карты) */
+#action-btn[data-state="take"] {
+  color: #fff;
+  background: linear-gradient(180deg, #e53935 0%, #c62828 55%, #8e0000 100%);
+  border-color: #5a0000;
+  text-shadow:
+    -1px -1px 0 #4a0000, 1px -1px 0 #4a0000,
+    -1px  1px 0 #4a0000, 1px  1px 0 #4a0000,
+    0 2px 4px rgba(0,0,0,0.8);
+  box-shadow:
+    0 4px 0 #4a0000,
+    0 6px 10px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,255,255,0.3);
+}
+
+/* pogony — ПОГОНЫ!, жёлтая + пульсация (важное событие) */
+#action-btn[data-state="pogony"] {
+  color: #1a1a1a;
+  background: linear-gradient(180deg, #ffd54f 0%, #ff9800 55%, #e65100 100%);
+  border-color: #8f4300;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.6);
+  animation: btn-pogony-glow 1.4s ease-in-out infinite;
+}
+
+/* vsyo — ВСЁ!, тоже жёлтая + пульсация */
+#action-btn[data-state="vsyo"] {
+  color: #1a1a1a;
+  background: linear-gradient(180deg, #ffd54f 0%, #ff9800 55%, #e65100 100%);
+  border-color: #8f4300;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.6);
+  animation: btn-pogony-glow 1.4s ease-in-out infinite;
+}
+
+@keyframes btn-pogony-glow {
+  0%, 100% {
+    box-shadow:
+      0 4px 0 #4a2000,
+      0 6px 10px rgba(0,0,0,0.5),
+      0 0 18px rgba(255,213,79,0.6),
+      inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+  50% {
+    box-shadow:
+      0 4px 0 #4a2000,
+      0 6px 10px rgba(0,0,0,0.5),
+      0 0 36px rgba(255,213,79,1.0),
+      inset 0 1px 0 rgba(255,255,255,0.3);
+  }
 }

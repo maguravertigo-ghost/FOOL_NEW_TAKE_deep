@@ -2366,42 +2366,44 @@ _repositionActionButton() {
     if (this._victoryPending) return;
 
     const r = this.round;
-    let label, enabled = false;
+
+    // Фаза END — идёт дораздача карт, ничего не показываем
+    if (r.phase === 'END') {
+      this.actionBtn.textContent = '...';
+      this.actionBtn.disabled = true;
+      this.actionBtn.dataset.state = 'wait';
+      return;
+    }
+
+    let label, enabled = false, state = 'wait';
 
     if (r.move === 'player' && r.phase === 'A_START') {
       const finish = this._checkFinishMoves('player');
       if (finish === 'pogony') {
-        label = 'ПОГОНЫ!'; enabled = true;
+        label = 'ПОГОНЫ!'; enabled = true; state = 'pogony';
       } else if (finish === 'vsyo') {
-        label = 'ВСЁ!'; enabled = true;
+        label = 'ВСЁ!'; enabled = true; state = 'vsyo';
       } else {
-        label = 'МОЙ ХОД'; enabled = false;
+        label = 'МОЙ ХОД'; enabled = false; state = 'info';
       }
     } else if (r.move === 'player') {
       if (r.phase === 'A_ADD' || r.phase === 'A_DUMP') {
-        label = 'ПАС'; enabled = true;
+        label = 'ПАС'; enabled = true; state = 'pass';
       } else if (r.phase === 'D_ACT') {
-        label = 'БЕРУ'; enabled = true;
+        label = 'БЕРУ'; enabled = true; state = 'take';
       } else {
-        label = 'МОЙ ХОД'; enabled = false;
+        label = 'МОЙ ХОД'; enabled = false; state = 'info';
       }
     } else {
-      label = '...'; enabled = false;
+      label = '...'; enabled = false; state = 'wait';
     }
 
     this.actionBtn.textContent = label;
     this.actionBtn.disabled = !enabled;
-	
-	if (this._kbdFocusOnButton && this.actionBtn.disabled) {
+    this.actionBtn.dataset.state = state;
+
+    if (this._kbdFocusOnButton && this.actionBtn.disabled) {
       this._clearKbdFocus();
-    }
-	
-    if (label === 'МОЙ ХОД') {
-      this.actionBtn.dataset.state = 'info';
-    } else if (enabled) {
-      this.actionBtn.dataset.state = 'active';
-    } else {
-      this.actionBtn.dataset.state = 'wait';
     }
   }
 
@@ -2417,8 +2419,14 @@ _jokerFrame(name) {
     const r = this.round;
     let text = '...';
 
-    if (r.move === 'cpu') {
+    // Фаза дораздачи — джокер ждёт
+    if (r.phase === 'END') {
+      text = '...';
+    }
+    // Ход CPU
+    else if (r.move === 'cpu') {
       if (r.phase === 'A_START' || r.phase === 'A_ADD' || r.phase === 'A_DUMP') {
+        // CPU атакует — фраза «Мой ход»
         if (!this._cpuTurnPhrase || this._cpuTurnPhraseAt !== r.n + ':' + r.phase) {
           this._cpuTurnPhrase = CPU_TURN_PHRASES[
             Math.floor(Math.random() * CPU_TURN_PHRASES.length)
@@ -2427,15 +2435,51 @@ _jokerFrame(name) {
         }
         text = this._cpuTurnPhrase;
       } else if (r.phase === 'D_ACT') {
+        // CPU защищается — думает
         text = '...';
       }
-    } else {
-      if (r.phase === 'A_DUMP' && r.attack === 'player') text = 'Забираю, подкидывай';
-      else text = '...';
+    }
+    // Ход игрока
+    else {
+      if (r.phase === 'A_START') {
+        text = 'Твой ход';
+      } else if (r.phase === 'A_ADD') {
+        text = 'Отбился! Подкидывай';
+      } else if (r.phase === 'A_DUMP') {
+        text = 'Забираю, подкидывай';
+      } else if (r.phase === 'D_ACT') {
+        // Игрок защищается — оцениваем, есть ли чем крыть
+        const unbeaten = r.table.filter(p => p.atk && !p.def);
+        const playerHand = this.app.accordionPlayer.cards;
+
+        // Может ли игрок побить хотя бы одну карту?
+        const canBeatAny = unbeaten.some(pair =>
+          playerHand.some(c => canBeat(c, pair.atk, this.trump))
+        );
+
+        // Может ли перевести?
+        let canTrans = false;
+        if (this.translateMode && !r.table.some(p => p.def)) {
+          const firstAtk = unbeaten[0]?.atk;
+          if (firstAtk && playerHand.length > 0) {
+            canTrans = playerHand.some(c => {
+              if (c.data.rank !== firstAtk.data.rank) return false;
+              return playerHand.length - 1 >= unbeaten.length;
+            });
+          }
+        }
+
+        if (canBeatAny || canTrans) {
+          text = 'Отбивайся!';
+        } else {
+          text = 'Нечем крыть — бери';
+        }
+      } else {
+        text = '...';
+      }
     }
 
     this.aiMessageEl.textContent = text;
-// display уже 'flex' из _repositionActionButton — не перезаписываем
   }
 
   _onActionButtonClick() {
