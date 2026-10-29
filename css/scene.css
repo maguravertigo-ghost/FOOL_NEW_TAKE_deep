@@ -176,25 +176,24 @@ body.is-mobile .card--stack-sub {
   opacity: 1;
   border-color: #4caf50;
   background: rgba(76, 175, 80, 0.20);
-  /* Контрастная белая обводка + пульсация — видно на любом столе */
-  box-shadow:
-    0 0 0 3px rgba(255, 255, 255, 0.85),
-    0 0 22px rgba(76, 175, 80, 0.7);
-  animation: slot-active-pulse 1.4s ease-in-out infinite;
+  box-shadow: 0 0 22px rgba(76, 175, 80, 0.7);
+  animation: slot-active-pulse 1.8s ease-in-out infinite;
 }
 
+/* Пульсация: текущий зелёный → светлый → текущий → тёмный → текущий.
+   Никакой обводки — только собственный цвет рамки + мягкое свечение. */
 @keyframes slot-active-pulse {
-  0%, 100% {
-    border-color: #4caf50;
-    box-shadow:
-      0 0 0 3px rgba(255, 255, 255, 0.7),
-      0 0 18px rgba(76, 175, 80, 0.6);
+  0%, 50%, 100% {
+    border-color: #4caf50;                     /* текущий зелёный */
+    box-shadow: 0 0 22px rgba(76, 175, 80, 0.7);
   }
-  50% {
-    border-color: #81c784;
-    box-shadow:
-      0 0 0 4px rgba(255, 255, 255, 1),
-      0 0 32px rgba(76, 175, 80, 1);
+  25% {
+    border-color: #81c784;                     /* светло-зелёный */
+    box-shadow: 0 0 28px rgba(129, 199, 132, 0.9);
+  }
+  75% {
+    border-color: #2e7d32;                     /* тёмно-зелёный */
+    box-shadow: 0 0 18px rgba(46, 125, 50, 0.85);
   }
 }
 /* Слот с клавиатурным фокусом (когда карта выбрана и можно переключать) */
@@ -297,8 +296,9 @@ body.is-mobile .card--stack-sub {
   transition: transform 0.08s ease, filter 0.1s ease, background 0.15s ease;
 }
 #action-btn:hover:not(:disabled) {
-  background: linear-gradient(180deg, #4ab854 0%, #388e3c 55%, #215528 100%);
-  filter: brightness(1.05);
+  /* Не меняем фон — иначе красная «БЕРУ» на hover становится зелёной,
+     а жёлтая «ПОГОНЫ!» — тоже. Только яркость. */
+  filter: brightness(1.08);
 }
 #action-btn:active:not(:disabled) {
   transform: translateY(calc(3px * var(--ui)));
@@ -1955,11 +1955,16 @@ body.is-mobile .help-nav__btn {
    ================================================================== */
 body.is-mobile .slot-ui--active {
   background: rgba(76, 175, 80, 0.35);
-  border: 3px solid #66ff66;
-  outline: 2px solid rgba(255, 255, 255, 0.9);
-  outline-offset: 2px;
-  box-shadow: none;
-  animation: slot-mobile-blink 1.2s ease-in-out infinite;
+  border-color: #4caf50;
+  box-shadow: none;             /* без blur — экономим GPU */
+  animation: slot-mobile-pulse 1.8s ease-in-out infinite;
+}
+
+/* Пульсация border-color — дешёвая для GPU, работает на слабых девайсах */
+@keyframes slot-mobile-pulse {
+  0%, 50%, 100% { border-color: #4caf50; }
+  25%           { border-color: #81c784; }
+  75%           { border-color: #2e7d32; }
 }
 body.is-mobile .slot-ui--focus {
   background: rgba(255, 213, 79, 0.35);
@@ -1968,11 +1973,6 @@ body.is-mobile .slot-ui--focus {
   outline-offset: 2px;
   box-shadow: none;
   animation: slot-mobile-blink 1.2s ease-in-out infinite;
-}
-
-@keyframes slot-mobile-blink {
-  0%, 100% { border-color: #66ff66; }
-  50%      { border-color: #ffffff; }
 }
 body.is-mobile .slot-ui--focus {
   animation-name: slot-mobile-blink-focus;
