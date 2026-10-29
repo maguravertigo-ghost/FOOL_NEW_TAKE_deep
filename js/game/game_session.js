@@ -882,7 +882,7 @@ async _animateTake(cards, defender) {
       warmUpDeck(GameSettings.cardStyle, GameSettings.suitStyle);
 
       // Сообщение игроку, что подарок закончился
-      const { showMessage } = await import('../ui/message_overlay.js');
+      // (showMessage уже импортирован в шапке файла — await import не нужен)
       showMessage(
         `Подарок Джокера закончился.<br><br>` +
         `Понравилось оформление? Его можно купить в <b>Магазинчике Джокера</b> ` +
