@@ -1098,8 +1098,8 @@ else                           this._jokerFrame('five');  // ничья
     el.id = 'game-over';
     const title = winner === 'player' ? 'Победа!' :
                   winner === 'cpu'    ? 'Поражение' : 'Ничья';
-    const sub   = winner === 'player' ? 'CPU — дурак' :
-                  winner === 'cpu'    ? 'Ты — дурак' : '';
+    const sub   = winner === 'player' ? 'Джокер остался с картами' :
+                  winner === 'cpu'    ? 'Вы остались с картами' : '';
     const epiText =
       epaulettes === 1 ? '🎖️ Погон! +250' :
       epaulettes === 2 ? '🎖️🎖️ Погоны! +250' :
