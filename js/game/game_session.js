@@ -909,15 +909,22 @@ async _animateTake(cards, defender) {
 
     const btn = this.actionBtn;
     if (btn) {
-      let label;
-      if (winner === 'player')      label = finishLabel || 'ПОБЕДА';
-      else if (winner === 'cpu')    label = finishLabel || 'ПРОИГРАЛ';
-      else                          label = 'НИЧЬЯ';
+      let label, state;
+      if (winner === 'player') {
+        label = finishLabel || 'ПОБЕДА';
+        state = 'win';
+      } else if (winner === 'cpu') {
+        label = finishLabel || 'ПРОИГРАЛ';
+        state = 'lose';
+      } else {
+        label = 'НИЧЬЯ';
+        state = 'draw';
+      }
 
-    btn.textContent = label;
-    btn.disabled = false;
-    btn.dataset.state = 'active';
-  }
+      btn.textContent = label;
+      btn.disabled = false;
+      btn.dataset.state = state;
+    }
 
   this._updateHUD();
 

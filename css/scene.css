@@ -2852,3 +2852,71 @@ body.is-mobile .game-over__box button:focus {
       inset 0 1px 0 rgba(255,255,255,0.3);
   }
 }
+
+/* ================================================================
+   ФИНАЛЬНЫЕ СОСТОЯНИЯ КНОПКИ (после матча)
+   ================================================================ */
+
+/* win — ПОБЕДА / ПОГОНЫ / ВСЁ, оранжевый (как очки стиля) */
+#action-btn[data-state="win"] {
+  color: #fff;
+  background: linear-gradient(180deg, #ffa726 0%, #ff9800 55%, #e65100 100%);
+  border-color: #8f4300;
+  text-shadow:
+    -1px -1px 0 #4a2000, 1px -1px 0 #4a2000,
+    -1px  1px 0 #4a2000, 1px  1px 0 #4a2000,
+    0 2px 4px rgba(0,0,0,0.8);
+  box-shadow:
+    0 4px 0 #4a2000,
+    0 6px 10px rgba(0,0,0,0.5),
+    0 0 24px rgba(255,152,0,0.7),
+    inset 0 1px 0 rgba(255,255,255,0.3);
+  animation: btn-win-glow 1.6s ease-in-out infinite;
+}
+
+@keyframes btn-win-glow {
+  0%, 100% {
+    box-shadow:
+      0 4px 0 #4a2000,
+      0 6px 10px rgba(0,0,0,0.5),
+      0 0 20px rgba(255,152,0,0.6),
+      inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+  50% {
+    box-shadow:
+      0 4px 0 #4a2000,
+      0 6px 10px rgba(0,0,0,0.5),
+      0 0 44px rgba(255,152,0,1.0),
+      inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+}
+
+/* lose — ПРОИГРАЛ, красный (как БЕРУ) */
+#action-btn[data-state="lose"] {
+  color: #fff;
+  background: linear-gradient(180deg, #e53935 0%, #c62828 55%, #8e0000 100%);
+  border-color: #5a0000;
+  text-shadow:
+    -1px -1px 0 #4a0000, 1px -1px 0 #4a0000,
+    -1px  1px 0 #4a0000, 1px  1px 0 #4a0000,
+    0 2px 4px rgba(0,0,0,0.8);
+  box-shadow:
+    0 4px 0 #4a0000,
+    0 6px 10px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,255,255,0.3);
+}
+
+/* draw — НИЧЬЯ, нейтральный серо-синий */
+#action-btn[data-state="draw"] {
+  color: #fff;
+  background: linear-gradient(180deg, #607d8b 0%, #455a64 55%, #263238 100%);
+  border-color: #1c2a30;
+  text-shadow:
+    -1px -1px 0 #1c2a30, 1px -1px 0 #1c2a30,
+    -1px  1px 0 #1c2a30, 1px  1px 0 #1c2a30,
+    0 2px 4px rgba(0,0,0,0.8);
+  box-shadow:
+    0 4px 0 #1c2a30,
+    0 6px 10px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,255,255,0.3);
+}
