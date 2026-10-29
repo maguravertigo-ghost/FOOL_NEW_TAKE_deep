@@ -151,6 +151,12 @@ export class CoinToss {
   }
 
   _createCoin() {
+    // Прелоад всех кадров, чтобы на слабых устройствах анимация не лагала
+    for (const frameUrl of ASSETS.coinFrames) {
+      const pre = new Image();
+      pre.src = frameUrl;
+    }
+	  
     const img = document.createElement('img');
     img.className = 'coin-toss-coin';
     img.src = ASSETS.coinFrames[0];

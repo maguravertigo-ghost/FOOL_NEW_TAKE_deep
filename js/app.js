@@ -342,10 +342,44 @@ class App {
     // 5. Дать браузеру отрисовать кадр, затем сообщить платформе.
     //    Требование 1.19.2: LoadingAPI.ready() в момент, когда игрок
     //    может приступить к игре.
+    // Прогрев рендера — иначе первый матч идёт с лагами
+    await this._warmupRender();
+
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
     ysdk.gameReady();
   }
+  async _warmupRender() {
+    try {
+      // 1. Прогрев аудио (инициализация AudioContext)
+      const silent = new Audio();
+      silent.volume = 0.001;
+      silent.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAgD4AAAB9AAACABAAZGF0YQAAAAA=';
+      silent.play().catch(() => {});
 
+      // 2. Прогрев карты (создание + анимация в 1 кадр) — прогревает
+      //    SVG-рендер, drop-shadow, will-change слой
+      const testData = { rank: '6', suit: 'hearts' };
+      const tmp = new Card(testData);
+      tmp.setFaceUp(true);
+      tmp.setPosition(-500, -500);  // за пределами видимой области
+      this.gameLayer.appendChild(tmp.el);
+
+      // 3. Один кадр анимации — прогревает интерполятор
+      await new Promise(r => {
+        this.interp.add({
+          elapsed: 0,
+          duration: 16,
+          update: (k) => tmp.setPosition(-500 + k * 10, -500),
+          onDone: r,
+        });
+      });
+
+      // 4. Чистим
+      tmp.destroy();
+    } catch (e) {
+      console.warn('[warmup] failed:', e);
+    }
+  }
 _createDevTools() {
   if (!DEV_MODE) return;
 

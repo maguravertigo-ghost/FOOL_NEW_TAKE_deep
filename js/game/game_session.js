@@ -880,6 +880,15 @@ async _animateTake(cards, defender) {
       saveSettings();
       clearCache();
       warmUpDeck(GameSettings.cardStyle, GameSettings.suitStyle);
+
+      // Сообщение игроку, что подарок закончился
+      const { showMessage } = await import('../ui/message_overlay.js');
+      showMessage(
+        `Подарок Джокера закончился.<br><br>` +
+        `Понравилось оформление? Его можно купить в <b>Магазинчике Джокера</b> ` +
+        `за очки стиля — там ещё много интересного.`,
+        { title: 'Подарок истёк' }
+      );
     }
   }
 
@@ -1469,7 +1478,10 @@ else                           this._jokerFrame('five');  // ничья
     const acc = byWho === 'player' ? this.app.accordionPlayer : this.app.accordionCpu;
     acc.extractCard(card);
 
-	audio.playSfx('card_fly');       // ← добавить
+    audio.playSfx('card_fly');
+
+    // Поднимаем карту над всеми во время полёта — иначе она летит под столом
+    card.setZIndex(1500);
 
     this._busy = true;
     await this._moveCardTo(card, slotM, { duration: 320 });
@@ -1521,6 +1533,8 @@ else                           this._jokerFrame('five');  // ничья
     const acc = byWho === 'player' ? this.app.accordionPlayer : this.app.accordionCpu;
     acc.extractCard(card);
 	audio.playSfx('card_fly');       // ← добавить
+
+card.setZIndex(1500);
 
     this._busy = true;
     await this._moveCardTo(card, slotM, { duration: 320 });
@@ -1593,6 +1607,8 @@ if (!stillUnbeaten && this._defenderHandSize() === 0) {
     const acc = byWho === 'player' ? this.app.accordionPlayer : this.app.accordionCpu;
     acc.extractCard(card);
 	audio.playSfx('card_fly');       // ← добавить
+
+card.setZIndex(1500);
 
     this._busy = true;
     await this._moveCardTo(card, slotM, { duration: 320 });
