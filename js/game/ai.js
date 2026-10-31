@@ -129,6 +129,7 @@ export class AI {
   _decideAdd() {
     const r = this.s.round;
     if (this.defSize === 0) return { type: 'pass' };
+	if (r.table.length >= 6) return { type: 'pass' };
 
     const tR = tableRanks(r.table);
     const cands = this.hand.filter(c => canAddToTable(c, tR));
@@ -281,19 +282,27 @@ export class AI {
     // ---------- План полной защиты ----------
     const plan = this.planDefenseAll(unbeaten);
     if (!plan) {
-      // Хотя бы одну карту бить нечем — берём всё (не тратим впустую).
       return { type: 'take' };
     }
 
-    // Если план есть, но цена слишком высокая — тоже берём.
-    // Эвристика: если суммарный «вес» защиты >= 2 * козырей в руке, и при этом
-    // колода ещё не пуста — берём, не разоряемся.
-    const cost = plan.reduce((s, p) => s + this.attackValue(p.def), 0);
+    // Защитник (я) не должен светить карты: если начал крыть — соперник
+    // может подкинуть, и я останусь без козырей. Поэтому:
+    //  • пока колода не пуста — крыть, только если план ЦЕЛИКОМ некозырный,
+    //  • иначе — сразу брать (сохраняем козыри и не раскрываем руку).
     const trumpsInHand = this.hand.filter(c => this.isTrump(c)).length;
-    const cheapPlan = plan.every(p => !this.isTrump(p.def) || this.rank(p.def) < 11);
+    const planHasTrump = plan.some(p => this.isTrump(p.def));
+    const cheapPlan    = !planHasTrump || plan.every(p => this.rank(p.def) < 11);
 
-    if (!cheapPlan && this.deckLeft > 0 && trumpsInHand <= 1) {
-      return { type: 'take' };
+    // В эндшпиле (колода пуста) защита важнее сохранения козырей
+    if (this.deckLeft > 0) {
+      // Не крыть козырями вообще, пока есть альтернатива взять
+      if (planHasTrump) return { type: 'take' };
+      // Очень дорогой некозырный план (например, 3 высокие карты) — тоже брать
+      const cost = plan.reduce((s, p) => s + this.attackValue(p.def), 0);
+      if (cost >= 8 && plan.length >= 2) return { type: 'take' };
+    } else {
+      // Эндшпиль: защищаемся, если хватает козырей
+      if (planHasTrump && trumpsInHand < plan.length) return { type: 'take' };
     }
 
     // Играем первую карту плана

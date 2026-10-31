@@ -1307,7 +1307,7 @@ else                           this._jokerFrame('five');  // ничья
 	    const tid = setTimeout(() => {
 	      console.warn('[ad] timeout — forcing close');
 	      finish({ timeout: true });
-	    }, 15000);
+	    }, 2000);
 
 	    ysdk.showRewarded({
 	      onReward: () => { rewarded = true; },
@@ -1549,11 +1549,12 @@ else                           this._jokerFrame('five');  // ничья
     // отбиться или взять. Конец определяется в _playDefenseCard
     // (когда все карты отбиты) или в _endRound (после отбоя/взятия).
 
-    if (idx + 1 >= 6) {
-      this._updateHUD();
-      this._endRound('discard');
-      return;
-    }
+	if (dumpMode && idx + 1 >= 6) {
+	  // В A_DUMP защитник уже взял — 6-я карта закрывает раунд «взятием»
+	  this._updateHUD();
+	  this._endRound('take');
+	  return;
+	}
 
     if (dumpMode) {
       this._updateHUD();
@@ -1613,6 +1614,15 @@ card.setZIndex(1500);
 	// Если защитник отбился и у него 0 карт — атакующий больше
 // подкинуть не сможет. Автоматически завершаем раунд отбоем.
 if (!stillUnbeaten && this._defenderHandSize() === 0) {
+  this._updateHUD();
+  this._updateButton();
+  this._updateAIMessage();
+  this._endRound('discard');
+  return;
+}
+
+if (!stillUnbeaten && r.table.length >= 6) {
+  // Правило: 6 карт — отбой. Защитник отбил 6-ю — раунд завершён.
   this._updateHUD();
   this._updateButton();
   this._updateAIMessage();
@@ -1704,6 +1714,11 @@ card.setZIndex(1500);
 	    this._endRound('take');
 	    return;
 	  }
+	  
+	if (r.table.length >= 6) {
+	  this._endRound('take');
+	  return;
+	}
 
 	  this._updateButton();
 	  this._updateAIMessage();
@@ -2099,6 +2114,7 @@ _getCardLegalSlots(card) {
     if (!canAddToTable(card, tR)) return out;
 
     if (r.phase === 'A_ADD') {
+		if (r.table.length >= 6) return out;   // NEW
       out.push({ kind: 'atk', index: r.table.length });
       return out;
     }

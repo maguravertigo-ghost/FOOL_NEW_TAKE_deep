@@ -282,19 +282,23 @@ class App {
     ysdk.gameplayStart(); // Требование 1.19.3
   }
 
-  async maybeShowAd() {
-    const now = Date.now();
-    if (now - this._lastAdAt < 180_000) return;
+async maybeShowAd() {
+  const now = Date.now();
+  if (now - this._lastAdAt < 180_000) return;
 
-    // Проверка интернета до попытки
-    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-      console.warn('[app] offline — interstitial skipped');
-      this._lastAdAt = now;
-      return;
-    }
-
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    console.warn('[app] offline — interstitial skipped');
     this._lastAdAt = now;
+    return;
+  }
 
+  if (ysdk.isMock) {
+    console.log('[app] mock mode — interstitial skipped (short delay)');
+    this._lastAdAt = now;
+    await new Promise(r => setTimeout(r, 300));
+    return;
+  }
+	this._lastAdAt = now;
     await new Promise((resolve) => {
       let done = false;
       const finish = () => {

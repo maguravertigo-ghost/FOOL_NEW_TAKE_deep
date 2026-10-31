@@ -152,6 +152,24 @@ export function claimQuestReward() {
   return { total, ranks };
 }
 
+export const AD_ITEMS = {
+  shirt:  [4],   // shirt_N1
+  design: [3],   // 'rank-no-corners'
+  suits:  [5],   // 'golden'
+  table:  [4],   // violet_table
+  decor:  [2],   // parket
+};
+export function isAdItem(cat, index) {
+  return (AD_ITEMS[cat] || []).includes(index);
+}
+export function unlockByAd(cat, index) {
+  if (!Progress.purchases[cat]) Progress.purchases[cat] = [];
+  if (Progress.purchases[cat].includes(index)) return { ok: false, reason: 'already' };
+  Progress.purchases[cat].push(index);
+  saveProgress();
+  return { ok: true };
+}
+
 /* ================================================================
  *  FIRST-RUN GIFT — временные предметы на 3 матча
  * ================================================================ */

@@ -109,6 +109,14 @@ export class YandexSDK {
 	  return this._ready && location.hostname !== 'localhost'
 						  && location.hostname !== '127.0.0.1';
 	}
+	
+	get isMock() {
+	  const p = new URLSearchParams(location.search);
+	  const host = location.hostname;
+	  return p.has('noads') || p.has('dev') ||
+			 host === 'localhost' || host === '127.0.0.1' || host === '' ||
+			 host.endsWith('github.io');
+	}
 
 
   /* ============================================================
@@ -169,6 +177,11 @@ export class YandexSDK {
 
   /** Полноэкранная реклама (интерстишл). */
   async showInterstitial({ onOpen, onClose, onError } = {}) {
+	if (this.isMock) {
+	  console.log('[sdk] mock mode — interstitial auto-skip');
+	  setTimeout(() => onClose?.(true), 400);
+	  return;
+	}
     if (!this.sdk) {
       if (this._isLocal()) {
         console.log('[sdk] local mode — interstitial skipped');
@@ -205,6 +218,15 @@ export class YandexSDK {
 
   /** Реклама за вознаграждение (RV). */
   async showRewarded({ onReward, onClose, onError } = {}) {
+	if (this.isMock) {
+	  console.log('[sdk] mock mode — rewarded auto-skip (reward granted)');
+	  setTimeout(() => {
+		try { onReward?.(); } catch {}
+		try { onClose?.();  } catch {}
+	  }, 600);
+	  return;
+	}
+	  
     // 1. SDK не загружен
     if (!this.sdk) {
       if (this._isLocal()) {
