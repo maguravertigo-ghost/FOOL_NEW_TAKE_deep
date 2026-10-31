@@ -560,13 +560,20 @@ async _startGameFromMenu(mode) {
     const go = document.getElementById('game-over');
     if (go) go.remove();
 
-    // На случай, если пауза осталась от предыдущего матча (потеря фокуса)
     if (this._paused) {
       this._paused = false;
       this.pauseOverlay.hide();
     }
 
+    // 1. Чёрный экран → реклама → тик подарка (сообщение) на чёрном
+    await this.fade.toBlack(320);
     await this.maybeShowAd();
+    if (this.session && this.session._decayTempItems) {
+      await this.session._decayTempItems();
+    }
+
+    // 2. _startGameFromMenu дополнительно сделает toBlack (no-op, уже чёрный)
+    //    и затем fade.toClear — покажет новый матч с актуальным стилем
     return this._startGameFromMenu(m);
   }
 
@@ -592,12 +599,21 @@ async _startGameFromMenu(mode) {
     audio.resumeAllSfx();
     audio.resumeMusic();
     ysdk.gameplayStop();
-	
-	await this.maybeShowAd(); // ← ДОБАВИТЬ ЭТУ СТРОКУ (показ рекламы при выходе)
+
+    // Были ли в окне результатов? → нужен тик подарка
+    const hadGameOver = !!document.getElementById('game-over');
+    const goEl = document.getElementById('game-over');
+    if (goEl) goEl.remove();
 
     try {
+      // 1. Чёрный экран → реклама → тик подарка на чёрном
       await this.fade.toBlack(420);
+      await this.maybeShowAd();
+      if (hadGameOver && this.session && this.session._decayTempItems) {
+        await this.session._decayTempItems();
+      }
 
+      // 2. Убираем сцену, показываем меню
       this._cleanupGame();
       this.hud.setHidden(true);
       if (this.settingsBtn) this.settingsBtn.style.display = 'none';
@@ -605,11 +621,6 @@ async _startGameFromMenu(mode) {
       this.menu.show();
       await sleep(50);
       await this.fade.toClear(650);
-
-      // Страховка: если in-flight _finishGame успел создать новое окно
-      // результатов уже после _cleanupGame — убираем его
-      const go = document.getElementById('game-over');
-      if (go) go.remove();
     } catch (err) {
       console.error('[app] exit to menu failed:', err);
       await this.fade.toClear(400);

@@ -834,7 +834,7 @@ async _animateTake(cards, defender) {
 
   _decayTempItems() {
     const expired = tickTempItems();
-    if (!expired.length) return;
+    if (!expired.length) return Promise.resolve();
 
     let changed = false;
 
@@ -876,20 +876,21 @@ async _animateTake(cards, defender) {
       }
     }
 
-    if (changed) {
-      saveSettings();
-      clearCache();
-      warmUpDeck(GameSettings.cardStyle, GameSettings.suitStyle);
+    if (!changed) return Promise.resolve();
 
-      // Сообщение игроку, что подарок закончился
-      // (showMessage уже импортирован в шапке файла — await import не нужен)
+    saveSettings();
+    clearCache();
+    warmUpDeck(GameSettings.cardStyle, GameSettings.suitStyle);
+
+    // Показываем сообщение и возвращаем Promise, который резолвится при клике ОК
+    return new Promise(resolve => {
       showMessage(
         `Подарок Джокера закончился.<br><br>` +
         `Понравилось оформление? Его можно купить в <b>Магазинчике Джокера</b> ` +
         `за очки стиля — там ещё много интересного.`,
-        { title: 'Подарок истёк' }
+        { title: 'Подарок истёк', onClose: resolve }
       );
-    }
+    });
   }
 
   /**
@@ -944,13 +945,6 @@ async _animateTake(cards, defender) {
 
     // Сессию могли уничтожить пока ждали клик/прогресс (выход в меню) — выходим
     if (this._destroyed) return;
-
-    // --- First-run gift: декремент счётчиков ---
-    try {
-      this._decayTempItems();
-    } catch (e) {
-      console.error('[decayTempItems] failed:', e);
-    }
 
     this._showGameOver(winner);
   }
@@ -1284,38 +1278,53 @@ else                           this._jokerFrame('five');  // ничья
 	  btn.disabled = true;
 	  btn.textContent = '⏳ Загружаем рекламу…';
 
+	  // 1. Fade to black — всё скрыто, реклама на чёрном фоне
+	  await this.app.fade.toBlack(280);
+
 	  const { ysdk } = await import('../sdk/yandex_sdk.js');
-	  ysdk.showRewarded({
-		onReward: () => {
-		  addStylePoints(500);
-		  btn.textContent = '✓ +500 получено';
-		  btn.classList.add('pause-btn--ad-done');
 
-		  // Перевести фокус на «СЫГРАТЬ ЕЩЁ РАЗ» (ad теперь disabled)
-		  const replayBtn = el.querySelector('[data-action="replay"]');
-		  const replayIdx = this._gameOverButtons.indexOf(replayBtn);
-		  if (replayIdx >= 0) {
-			this._gameOverButtons.forEach((b, i) =>
-			  b.classList.toggle('kbd-focus', i === replayIdx)
-			);
-			this._gameOverNavIdx = replayIdx;
-		  }
-
-		  showMessage('+500 очков стиля!', { title: 'Награда' });
-		},
-	    onClose: () => {
-	      // Если награда не пришла (пользователь закрыл до просмотра)
-	      if (btn.textContent.includes('Загружаем')) {
-	        btn.disabled = false;
-	        btn.textContent = '📺 +500 очков за рекламу';
-	      }
-	    },
-	    onError: () => {
-	      btn.disabled = false;
-	      btn.textContent = '📺 +500 очков за рекламу';
-	      showMessage('Реклама недоступна. Попробуйте позже.', { title: 'Реклама' });
-	    },
+	  // 2. Показываем рекламу и ждём результата
+	  const result = await new Promise(resolve => {
+	    let rewarded = false;
+	    ysdk.showRewarded({
+	      onReward: () => { rewarded = true; },
+	      onClose:  () => resolve({ rewarded }),
+	      onError:  () => resolve({ error: true }),
+	    });
 	  });
+
+	  // 3. Обрабатываем результат на чёрном
+	  if (result.rewarded) {
+	    addStylePoints(500);
+	    btn.textContent = '✓ +500 получено';
+	    btn.classList.add('pause-btn--ad-done');
+
+	    // Фокус на «Сыграть ещё раз» (ad теперь disabled)
+	    const replayBtn = el.querySelector('[data-action="replay"]');
+	    const replayIdx = this._gameOverButtons.indexOf(replayBtn);
+	    if (replayIdx >= 0) {
+	      this._gameOverButtons.forEach((b, i) =>
+	        b.classList.toggle('kbd-focus', i === replayIdx)
+	      );
+	      this._gameOverNavIdx = replayIdx;
+	    }
+
+	    // Сообщение на чёрном → fade from black при закрытии
+	    showMessage('+500 очков стиля!', {
+	      title: 'Награда',
+	      onClose: () => this.app.fade.toClear(280),
+	    });
+	  } else if (result.error) {
+	    btn.disabled = false;
+	    btn.textContent = '📺 +500 очков за рекламу';
+	    this.app.fade.toClear(280);
+	    showMessage('Реклама недоступна. Попробуйте позже.', { title: 'Реклама' });
+	  } else {
+	    // Игрок закрыл рекламу, не досмотрев — награда не засчитана
+	    btn.disabled = false;
+	    btn.textContent = '📺 +500 очков за рекламу';
+	    this.app.fade.toClear(280);
+	  }
 	});
 
     console.log('[game over]', winner, { points, epaulettes, questRank });
