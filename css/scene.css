@@ -2990,3 +2990,22 @@ body.is-mobile .mm-lang {
   padding: calc(18px * var(--ui)) calc(28px * var(--ui));
 }
 body.is-mobile .mm-lang__flag { font-size: calc(44px * var(--ui)); }
+
+.lang-flag {
+  display: inline-block;
+  width: 1.2em;
+  height: auto;
+  vertical-align: middle;
+  border-radius: 2px;
+  box-shadow: 0 0 2px rgba(0,0,0,0.4);
+}
+.mm-corner--lang .lang-flag {
+  width: 60%;
+}
+.mm-lang__flag .lang-flag {
+  width: 32px;
+  height: auto;
+}
+body.is-mobile .mm-lang__flag .lang-flag {
+  width: 44px;
+}

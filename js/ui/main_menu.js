@@ -23,8 +23,24 @@ import { attachTokenMark } from './fool_token_mark.js';
 
 import { t, getLang, getAvailableLangs } from '../i18n/index.js';
 
-const LANG_FLAGS = { ru: '🇷🇺', en: '🇬🇧', tr: '🇹🇷' };
-const langFlag = (code) => LANG_FLAGS[code] || '🌐';
+// Если SVG-файлы ещё не добавлены — используется эмодзи как fallback.
+// Как только появятся assets/flags/ru.svg (en.svg, tr.svg) — картинка
+// подхватится автоматически (по onerror → эмодзи).
+const LANG_FLAGS_SVG = {
+  ru: 'assets/flags/ru.svg',
+  en: 'assets/flags/en.svg',
+  tr: 'assets/flags/tr.svg',
+};
+const LANG_FLAGS_EMOJI = { ru: '🇷🇺', en: '🇬🇧', tr: '🇹🇷' };
+
+// Возвращает HTML-строку с <img> (с onerror → эмодзи через замену на текст)
+const langFlagHTML = (code) => {
+  const svg = LANG_FLAGS_SVG[code];
+  const emoji = LANG_FLAGS_EMOJI[code] || '🌐';
+  if (!svg) return emoji;
+  return `<img class="lang-flag" src="${svg}" alt="${code.toUpperCase()}" draggable="false"
+    onerror="this.replaceWith(document.createTextNode('${emoji}'))">`;
+};
 
 export class MainMenu {
   constructor({ onStartGame }) {
@@ -70,7 +86,7 @@ export class MainMenu {
 <div class="mm-bottom-left">
   <button class="mm-corner" data-open="settings">${t('menu.settings')}</button>
   <button class="mm-corner" data-open="about">${t('menu.about')}</button>
-  <button class="mm-corner mm-corner--lang" data-open="lang" title="${t('menu.language')}">${langFlag(getLang())}</button>
+  <button class="mm-corner mm-corner--lang" data-open="lang" title="${t('menu.language')}">${langFlagHTML(getLang())}</button>
 </div>
 
 	<!-- ПРАВЫЙ НИЗ: снизу вверх — МАГАЗИНЧИК, СТИЛЬ, КВЕСТ -->
@@ -86,22 +102,36 @@ export class MainMenu {
     // фон
     this.el.querySelector('.mm-bg').style.backgroundImage = `url("${ASSETS.mainMenuBg}")`;
 
-    // лого
+    // Хелпер: вернуть языковую версию ассета (все 3 версии есть).
+    const pickLang = (m) => (m && typeof m === 'object') ? m[getLang()] || m.ru : m;
+
+    // Лого
     const img = document.createElement('img');
-    img.src = ASSETS.logoMain;
+    img.src = pickLang(ASSETS.logos);
     img.alt = 'Fool';
     img.style.cssText = 'display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;pointer-events:none;';
+    img.onerror = () => {
+      console.warn('[logo] failed to load:', img.src);
+      img.style.visibility = 'hidden';
+    };
     this.el.querySelector('.mm-logo').appendChild(img);
 
-    // картинки кнопок режимов
-    const modeImgs = { podkidnoy: ASSETS.btnPodkidnoy, perevodnoy: ASSETS.btnPerevodnoy };
+    // Кнопки режимов
+    const modeMaps = {
+      podkidnoy: ASSETS.btnPodkidnoy,
+      perevodnoy: ASSETS.btnPerevodnoy,
+    };
     this.el.querySelectorAll('[data-mode]').forEach(btn => {
-      const src = modeImgs[btn.dataset.mode];
+      const src = pickLang(modeMaps[btn.dataset.mode]);
       if (!src) return;
       const im = document.createElement('img');
       im.src = src;
       im.alt = '';
       im.draggable = false;
+      im.onerror = () => {
+        console.warn('[mode-btn] failed to load:', im.src);
+        im.style.visibility = 'hidden';
+      };
       btn.appendChild(im);
     });
 
@@ -391,8 +421,8 @@ _layoutAll() {
       });
     }
 	
-	    // Защитная синхронизация флага с текущим языком
-    if (langBtn) langBtn.textContent = langFlag(getLang());
+	// Защитная синхронизация флага с текущим языком
+	if (langBtn) langBtn.innerHTML = langFlagHTML(getLang());
 }
 
 show() {
@@ -1209,10 +1239,10 @@ _openLang() {
         <div class="mm-overlay__title">${t('lang.title')}</div>
         <div class="mm-langs">
           ${getAvailableLangs().map(code => `
-            <button class="mm-lang ${code === getLang() ? 'mm-lang--active' : ''}" data-lang="${code}">
-              <span class="mm-lang__flag">${langFlag(code)}</span>
-              <span class="mm-lang__name">${t('lang.' + code)}</span>
-            </button>
+			<button class="mm-lang ${code === getLang() ? 'mm-lang--active' : ''}" data-lang="${code}">
+			  <span class="mm-lang__flag">${langFlagHTML(code)}</span>
+			  <span class="mm-lang__name">${t('lang.' + code)}</span>
+			</button>
           `).join('')}
         </div>
         <button class="mm-btn mm-btn--small" data-close>${t('lang.close')}</button>

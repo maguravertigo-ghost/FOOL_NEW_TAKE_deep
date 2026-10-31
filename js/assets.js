@@ -2,14 +2,19 @@ const BASE = 'assets';
 
 export const ASSETS = {
   logos: {
-    ru: `${BASE}/hud/logo_main_ru.png`,
-    en: `${BASE}/hud/logo_main_en.png`,
-    tr: `${BASE}/hud/logo_main_tr.png`,
+    ru: `${BASE}/hud/logo/logo_main_RU.png`,
+    en: `${BASE}/hud/logo/logo_main_EN.png`,
+    tr: `${BASE}/hud/logo/logo_main_TR.png`,
   },
   btnPodkidnoy: {
-    ru: `${BASE}/hud/buttons/straight_bttn_ru.png`,
-    en: `${BASE}/hud/buttons/straight_bttn_en.png`,
-    tr: `${BASE}/hud/buttons/straight_bttn_tr.png`,
+    ru: `${BASE}/hud/buttons/straight_bttn_RU.png`,
+    en: `${BASE}/hud/buttons/straight_bttn_EN.png`,
+    tr: `${BASE}/hud/buttons/straight_bttn_TR.png`,
+  },
+  btnPerevodnoy: {
+    ru: `${BASE}/hud/buttons/transfer_bttn_RU.png`,
+    en: `${BASE}/hud/buttons/transfer_bttn_EN.png`,
+    tr: `${BASE}/hud/buttons/transfer_bttn_TR.png`,
   },
   table:  `${BASE}/table_texture/default_table.svg`,
   shirt:  `${BASE}/card_shirt/default/card_shirt.svg`,
@@ -31,12 +36,7 @@ export const ASSETS = {
 	newOneIcon: `${BASE}/hud/icons/new_one.svg`,
 	lockIcon:   `${BASE}/hud/icons/lock.svg`,
   
-  logoMain: `${BASE}/hud/logo_main.png`,
-  
   mainMenuBg: `${BASE}/hud/main_menu_bg.png`,
-  
-	btnPodkidnoy:  `${BASE}/hud/buttons/straight_bttn.png`,
-	btnPerevodnoy: `${BASE}/hud/buttons/transfer_bttn.png`,
   
     // Joker
   jokerWin:     `${BASE}/hud/joker/joker_wins.png`,
