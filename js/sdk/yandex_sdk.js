@@ -170,31 +170,82 @@ export class YandexSDK {
   /** Полноэкранная реклама (интерстишл). */
   async showInterstitial({ onOpen, onClose, onError } = {}) {
     if (!this.sdk) {
-      // локально — просто вызываем onClose
-      if (onClose) onClose(true);
+      if (this._isLocal()) {
+        console.log('[sdk] local mode — interstitial skipped');
+        onClose?.(true);
+      } else {
+        console.warn('[sdk] no SDK — interstitial unavailable');
+        onClose?.(false);
+      }
+      return;
+    }
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      console.warn('[sdk] offline — interstitial skipped');
+      onClose?.(false);
       return;
     }
     this.sdk.adv.showFullscreenAdv({
       callbacks: {
         onOpen:  () => { console.log('[sdk] ad open');  onOpen?.(); },
         onClose: (wasShown) => { console.log('[sdk] ad close', wasShown); onClose?.(wasShown); },
-        onError: (err) => { console.warn('[sdk] ad error', err); onError?.(err); },
+        onError: (err) => {
+          console.warn('[sdk] ad error', err);
+          onError?.(err);
+          onClose?.(false);
+        },
       },
     });
   }
 
+  _isLocal() {
+    const host = location.hostname;
+    return host === 'localhost' || host === '127.0.0.1' ||
+           host === '' || host.endsWith('.local');
+  }
+
   /** Реклама за вознаграждение (RV). */
   async showRewarded({ onReward, onClose, onError } = {}) {
+    // 1. SDK не загружен
     if (!this.sdk) {
-      if (onReward) onReward();   // локально — сразу даём награду
+      if (this._isLocal()) {
+        // Локальная разработка — авто-скип через задержку
+        console.log('[sdk] local mode — fake rewarded (skip)');
+        setTimeout(() => {
+          try { onReward?.(); } catch (e) {}
+          try { onClose?.();  } catch (e) {}
+        }, 800);
+        return;
+      }
+      // Прод без SDK — считаем как «нет интернета»
+      console.warn('[sdk] no SDK — rewarded unavailable');
+      setTimeout(() => {
+        try { onError?.(new Error('sdk_not_ready')); } catch (e) {}
+        try { onClose?.(); } catch (e) {}
+      }, 300);
       return;
     }
+
+    // 2. Нет интернета
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      console.warn('[sdk] offline — rewarded not shown');
+      setTimeout(() => {
+        try { onError?.(new Error('offline')); } catch (e) {}
+        try { onClose?.(); } catch (e) {}
+      }, 300);
+      return;
+    }
+
+    // 3. Нормальный показ
     this.sdk.adv.showRewardedVideo({
       callbacks: {
         onOpen:   () => console.log('[sdk] rv open'),
         onRewarded: () => { console.log('[sdk] rv rewarded'); onReward?.(); },
-        onClose:  () => { console.log('[sdk] rv close'); onClose?.(); },
-        onError:  (err) => { console.warn('[sdk] rv error', err); onError?.(err); },
+        onClose:  () => { console.log('[sdk] rv close');  onClose?.(); },
+        onError:  (err) => {
+          console.warn('[sdk] rv error', err);
+          onError?.(err);
+          onClose?.();   // гарантируем закрытие даже при ошибке
+        },
       },
     });
   }

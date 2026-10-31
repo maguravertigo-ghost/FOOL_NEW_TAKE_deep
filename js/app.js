@@ -285,12 +285,34 @@ class App {
   async maybeShowAd() {
     const now = Date.now();
     if (now - this._lastAdAt < 180_000) return;
+
+    // Проверка интернета до попытки
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      console.warn('[app] offline — interstitial skipped');
+      this._lastAdAt = now;
+      return;
+    }
+
     this._lastAdAt = now;
+
     await new Promise((resolve) => {
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        clearTimeout(tid);
+        this.resumeFromAd();
+        resolve();
+      };
+      const tid = setTimeout(() => {
+        console.warn('[app] interstitial timeout — forcing close');
+        finish();
+      }, 15000);
+
       ysdk.showInterstitial({
         onOpen:  () => this.pauseForAd(),
-        onClose: () => { this.resumeFromAd(); resolve(); },
-        onError: () => resolve(),
+        onClose: () => finish(),
+        onError: () => finish(),
       });
     });
   }

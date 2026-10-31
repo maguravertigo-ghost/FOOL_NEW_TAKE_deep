@@ -1275,31 +1275,53 @@ else                           this._jokerFrame('five');  // ничья
 	  audio.playSfx('tap');
 	  const btn = el.querySelector('[data-action="ad"]');
 	  if (btn.disabled) return;
+
+	  // 1. Проверка интернета ДО затемнения
+	  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+	    showMessage(
+	      'Нет соединения с интернетом.<br><br>' +
+	      'Подключите интернет и попробуйте снова.',
+	      { title: 'Соединение потеряно' }
+	    );
+	    return;
+	  }
+
 	  btn.disabled = true;
 	  btn.textContent = '⏳ Загружаем рекламу…';
 
-	  // 1. Fade to black — всё скрыто, реклама на чёрном фоне
+	  // 2. Fade to black
 	  await this.app.fade.toBlack(280);
 
 	  const { ysdk } = await import('../sdk/yandex_sdk.js');
 
-	  // 2. Показываем рекламу и ждём результата
+	  // 3. Показ с таймаутом 15с
 	  const result = await new Promise(resolve => {
 	    let rewarded = false;
+	    let done = false;
+	    const finish = (r) => {
+	      if (done) return;
+	      done = true;
+	      clearTimeout(tid);
+	      resolve(r);
+	    };
+	    const tid = setTimeout(() => {
+	      console.warn('[ad] timeout — forcing close');
+	      finish({ timeout: true });
+	    }, 15000);
+
 	    ysdk.showRewarded({
 	      onReward: () => { rewarded = true; },
-	      onClose:  () => resolve({ rewarded }),
-	      onError:  () => resolve({ error: true }),
+	      onClose:  () => finish({ rewarded }),
+	      onError:  () => finish({ error: true }),
 	    });
 	  });
 
-	  // 3. Обрабатываем результат на чёрном
+	  // 4. Обработка результата
 	  if (result.rewarded) {
 	    addStylePoints(500);
 	    btn.textContent = '✓ +500 получено';
 	    btn.classList.add('pause-btn--ad-done');
 
-	    // Фокус на «Сыграть ещё раз» (ad теперь disabled)
 	    const replayBtn = el.querySelector('[data-action="replay"]');
 	    const replayIdx = this._gameOverButtons.indexOf(replayBtn);
 	    if (replayIdx >= 0) {
@@ -1309,22 +1331,32 @@ else                           this._jokerFrame('five');  // ничья
 	      this._gameOverNavIdx = replayIdx;
 	    }
 
-	    // Сообщение на чёрном → fade from black при закрытии
 	    showMessage('+500 очков стиля!', {
 	      title: 'Награда',
 	      onClose: () => this.app.fade.toClear(280),
 	    });
-	  } else if (result.error) {
-	    btn.disabled = false;
-	    btn.textContent = '📺 +500 очков за рекламу';
-	    this.app.fade.toClear(280);
-	    showMessage('Реклама недоступна. Попробуйте позже.', { title: 'Реклама' });
-	  } else {
-	    // Игрок закрыл рекламу, не досмотрев — награда не засчитана
-	    btn.disabled = false;
-	    btn.textContent = '📺 +500 очков за рекламу';
-	    this.app.fade.toClear(280);
+	    return;
 	  }
+
+	  // Ошибка / offline / timeout
+	  this.app.fade.toClear(280);
+	  btn.disabled = false;
+	  btn.textContent = '📺 +500 очков за рекламу';
+
+	  if (result.timeout) {
+	    showMessage(
+	      'Соединение потеряно.<br><br>' +
+	      'Подключите интернет и перезапустите игру.',
+	      { title: 'Соединение потеряно' }
+	    );
+	  } else if (result.error) {
+	    showMessage(
+	      'Реклама недоступна.<br><br>' +
+	      'Проверьте интернет-соединение.',
+	      { title: 'Реклама' }
+	    );
+	  }
+	  // если просто result.rewarded === false (закрыл до конца) — ничего не пишем
 	});
 
     console.log('[game over]', winner, { points, epaulettes, questRank });
