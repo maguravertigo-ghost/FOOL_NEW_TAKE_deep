@@ -251,4 +251,18 @@ export const TR = {
   'fullscreen.enter':     'Tam ekran',
   'fullscreen.exit':      'Tam ekrandan çık',
   'fullscreen.error':     'Tarayıcı tam ekran modunu değiştirmeye izin vermedi. <b>F11</b> tuşuna basın veya tarayıcı menüsünü kullanın.',
+
+  // ---- Auth ----
+  'auth.button':          'GİRİŞ YAP',
+  'auth.title':           'Giriş',
+  'auth.benefits':        '<b>Yandex ID</b> ile giriş yapın:<br>• ilerlemeyi bulutta saklayın;<br>• herhangi bir cihazda oynamaya devam edin;<br>• tarayıcı değiştirseniz bile satın alımlarınızı ve başarımlarınızı kaybetmeyin.<br><br>Reddedip giriş yapmadan oynamaya devam edebilirsiniz.',
+  'auth.yes':             'Giriş yap',
+  'auth.cancel':          'Şimdi değil',
+  'auth.successTitle':    'Giriş yapıldı',
+  'auth.successText':     'İlerleme artık Yandex bulutuna kaydediliyor.',
+  'auth.failTitle':       'Giriş başarısız',
+  'auth.failText':        'Daha sonra tekrar deneyin veya giriş yapmadan oynamaya devam edin.',
+  'auth.mockTitle':       'Yetkilendirme',
+  'auth.mockText':        'Yerel mod — yetkilendirme kullanılamıyor.',
+  'auth.already':         'Zaten giriş yapılmış',
 };

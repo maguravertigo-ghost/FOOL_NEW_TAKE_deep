@@ -340,6 +340,9 @@ async maybeShowAd() {
     // 1. SDK — до загрузки ресурсов
     await ysdk.init();
 
+    // 1a. Пробуем получить Player сразу — чтобы isAuthorized() знал статус
+    await ysdk.refreshPlayer();
+
 const { setLang, getSavedLang } = await import('./i18n/index.js');
 const savedLang = getSavedLang();
 const sdkLang   = ysdk.getLang();

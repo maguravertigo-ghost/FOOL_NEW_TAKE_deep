@@ -154,13 +154,30 @@ export class YandexSDK {
    * ============================================================ */
 
   /** Запросить авторизацию игрока (по кнопке). */
+  /**
+   * Открыть диалог авторизации Яндекс ID.
+   * Возвращает Player, если игрок авторизован, иначе null.
+   * ВАЖНО: вызывать только по осознанному действию игрока (нажатие кнопки).
+   */
   async authorize() {
-    if (!this.sdk) return null;
+    if (!this.sdk) {
+      console.log('[sdk] authorize skipped — no SDK (mock mode)');
+      return null;
+    }
     try {
-      const p = await this.sdk.auth.openAuthDialog();
-      console.log('[sdk] auth dialog returned');
+      // 1. Открываем диалог Яндекс ID
+      await this.sdk.auth.openAuthDialog();
+
+      // 2. Перезапрашиваем Player — теперь он должен быть authorized
       this.player = await this.sdk.getPlayer({ scopes: false });
-      return this.player;
+
+      if (this.player && this.player.isAuthorized()) {
+        console.log('[sdk] auth OK, player:', this.player.getUniqueID?.() ?? '(no id)');
+        return this.player;
+      }
+
+      console.warn('[sdk] auth dialog closed, but player is still not authorized');
+      return null;
     } catch (e) {
       console.warn('[sdk] auth failed:', e);
       return null;
@@ -168,7 +185,19 @@ export class YandexSDK {
   }
 
   isAuthorized() {
-    return this.player ? this.player.getMode() !== 'lite' : false;
+    return !!(this.player && this.player.isAuthorized && this.player.isAuthorized());
+  }
+
+  /** Перезапросить Player без открытия диалога (например, после reload). */
+  async refreshPlayer() {
+    if (!this.sdk) return null;
+    try {
+      this.player = await this.sdk.getPlayer({ scopes: false });
+      return this.player;
+    } catch (e) {
+      console.warn('[sdk] refreshPlayer failed:', e);
+      return null;
+    }
   }
 
   /* ============================================================

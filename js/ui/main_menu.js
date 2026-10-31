@@ -84,6 +84,7 @@ export class MainMenu {
 
 	<!-- ЛЕВЫЙ НИЗ: снизу вверх — НАСТРОЙКИ, ОБ ИГРЕ -->
 <div class="mm-bottom-left">
+  <button class="mm-corner mm-corner--auth" data-auth="login" style="display:none">${t('auth.button')}</button>
   <button class="mm-corner" data-open="settings">${t('menu.settings')}</button>
   <button class="mm-corner" data-open="about">${t('menu.about')}</button>
   <button class="mm-corner mm-corner--lang" data-open="lang" title="${t('menu.language')}">${langFlagHTML(getLang())}</button>
@@ -150,7 +151,13 @@ export class MainMenu {
 		this._openOverlay(btn.dataset.open);
 	  })
 	);
-
+    const authBtn = this.el.querySelector('[data-auth="login"]');
+    if (authBtn) {
+      authBtn.addEventListener('click', () => {
+        if (this._activeOverlay) return;
+        this._onAuthClick();
+      });
+    }
     const fsBtn = this.el.querySelector('[data-fs-toggle]');
     if (fsBtn) {
       // Иконка (SVG), вписываем 64%×64% — как кнопка паузы в матче
@@ -252,6 +259,7 @@ _cacheRefs() {
     sideR:    this.el.querySelectorAll('.mm-bottom-right .mm-corner'),
 	questBtn: this.el.querySelector('[data-open="quest"]'),
 	fsBtn: this.el.querySelector('[data-fs-toggle]'),
+	authBtn: this.el.querySelector('[data-auth="login"]'),
   };
 }
 _layoutAll() {
@@ -374,8 +382,9 @@ _layoutAll() {
   }
 
   // --- Боковые кнопки ---
-  const lb = H.rectLeftButtons(this.refs.sideL.length);
-  this.refs.sideL.forEach((el, i) => {
+const visibleSideL = [...this.refs.sideL].filter(el => el.style.display !== 'none');
+const lb = H.rectLeftButtons(visibleSideL.length);
+visibleSideL.forEach((el, i) => {
     const r = lb[i];
     Object.assign(el.style, {
       position: 'absolute',
@@ -389,8 +398,9 @@ _layoutAll() {
     });
   });
 
-  const rb = H.rectRightButtons(this.refs.sideR.length);
-  this.refs.sideR.forEach((el, i) => {
+const visibleSideR = [...this.refs.sideR].filter(el => el.style.display !== 'none');
+const rb = H.rectRightButtons(visibleSideR.length);
+visibleSideR.forEach((el, i) => {
     const r = rb[i];
     Object.assign(el.style, {
       position: 'absolute',
@@ -428,6 +438,7 @@ _layoutAll() {
 show() {
   this.el.style.display = 'block';
   this._refreshStats();
+  this._updateAuthButton();
   this._closeOverlay();
   this._layoutAll();
   bus.resume('ui.main-menu');
@@ -455,6 +466,56 @@ _refreshStats() {
   this._updateFoolTokenMarks();
   this._updateStyleBadge();
 }
+
+  _updateAuthButton() {
+    const btn = this.refs.authBtn;
+    if (!btn) return;
+
+    // В мок-режиме или без SDK — кнопку не показываем
+    if (!ysdk.sdk) {
+      btn.style.display = 'none';
+      return;
+    }
+
+    // Если уже авторизован — скрываем (требование: не показывать предложение повторно)
+    if (ysdk.isAuthorized()) {
+      btn.style.display = 'none';
+      return;
+    }
+
+    // Иначе — показываем
+    btn.style.display = '';
+  }
+
+  async _onAuthClick() {
+    audio.playSfx('tap');
+    // Показываем диалог с пояснением преимуществ — требование 1.2.1
+    showConfirm(t('auth.benefits'), {
+      title: t('auth.title'),
+      onConfirm: async () => {
+        const player = await ysdk.authorize();
+
+        if (player) {
+          // Подтягиваем прогресс из облака
+          try {
+            const remote = await ysdk.loadProgress();
+            if (remote && typeof remote.stylePoints === 'number') {
+              Object.assign(Progress, remote);
+              saveProgress();
+            }
+          } catch { /* noop */ }
+
+          this._refreshStats();
+          this._updateAuthButton();
+
+          showMessage(t('auth.successText'), { title: t('auth.successTitle') });
+        } else {
+          showMessage(t('auth.failText'), { title: t('auth.failTitle') });
+        }
+      },
+      onCancel: () => { /* отказ — продолжаем играть */ },
+    });
+  }
 
   _updateStyleBadge() {
     const btn = this.el.querySelector('[data-open="style"]');

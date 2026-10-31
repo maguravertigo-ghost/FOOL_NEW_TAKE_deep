@@ -243,4 +243,18 @@ export const EN = {
   'fullscreen.enter':     'Fullscreen',
   'fullscreen.exit':      'Exit fullscreen',
   'fullscreen.error':     'The browser blocked fullscreen mode. Press <b>F11</b> or use the browser menu.',
+
+  // ---- Auth ----
+  'auth.button':          'SIGN IN',
+  'auth.title':           'Sign in',
+  'auth.benefits':        'Sign in with <b>Yandex ID</b> to:<br>• save progress in the cloud;<br>• continue playing on any device;<br>• keep purchases and achievements across browsers.<br><br>You can decline and keep playing without signing in.',
+  'auth.yes':             'Sign in',
+  'auth.cancel':          'Not now',
+  'auth.successTitle':    'Signed in',
+  'auth.successText':     'Progress is now saved to Yandex cloud.',
+  'auth.failTitle':       'Sign-in failed',
+  'auth.failText':        'Try again later or continue playing without signing in.',
+  'auth.mockTitle':       'Authorization',
+  'auth.mockText':        'Local mode — authorization is unavailable.',
+  'auth.already':         'Already signed in',
 };
