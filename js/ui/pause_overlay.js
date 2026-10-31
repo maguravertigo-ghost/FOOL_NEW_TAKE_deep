@@ -1,4 +1,5 @@
 import { audio } from '../audio/audio_engine.js';
+import { t } from '../i18n/index.js';
 
 export class PauseOverlay {
   constructor({ onResume, onExit }) {
@@ -9,15 +10,15 @@ export class PauseOverlay {
     this.el.id = 'pause-overlay';
     this.el.innerHTML = `
       <div class="pause-box">
-        <div class="pause-title">ПАУЗА</div>
-        <div class="pause-volume">
-          <div class="pause-volume__label">ГРОМКОСТЬ</div>
+        <div class="pause-title">${t('pause.title')}</div>
+<div class="pause-volume">
+  <div class="pause-volume__label">${t('pause.volume')}</div>
           <input type="range" id="pause-volume-slider"
                  min="0" max="100" step="1"
                  value="${Math.round(audio.getVolume() * 100)}">
         </div>
-        <button class="pause-btn" data-action="resume">Продолжить игру</button>
-        <button class="pause-btn pause-btn--danger" data-action="exit">Выйти в главное меню</button>
+<button class="pause-btn" data-action="resume">${t('pause.resume')}</button>
+<button class="pause-btn pause-btn--danger" data-action="exit">${t('pause.exit')}</button>
       </div>
     `;
     this.el.style.display = 'none';

@@ -21,19 +21,20 @@ import { uiScale } from '../ui/ui_scale.js';
 import { recordOutcome } from './progress.js';
 
 import { showMessage } from '../ui/message_overlay.js';
+import { t } from '../i18n/index.js';
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const Z_HAND_BASE  = 100;
 const Z_TABLE_BASE = 200;
 const LIFT_PX      = 0.22 * REAL.h;
 
-const CPU_TURN_PHRASES = [
-  'Мой ход',
-  'Моя очередь ходить',
-  'Я хожу',
-  'Мой черёд',
-  'Теперь я хожу',
-  'Ну держись!',
+const CPU_TURN_PHRASE_KEYS = [
+  'game.cpu.phrases.0',
+  'game.cpu.phrases.1',
+  'game.cpu.phrases.2',
+  'game.cpu.phrases.3',
+  'game.cpu.phrases.4',
+  'game.cpu.phrases.5',
 ];
 
 const cmpCard = (a, b) => {
@@ -926,14 +927,12 @@ async _animateTake(cards, defender) {
     warmUpDeck(GameSettings.cardStyle, GameSettings.suitStyle);
 
     // Показываем сообщение и возвращаем Promise, который резолвится при клике ОК
-    return new Promise(resolve => {
-      showMessage(
-        `Подарок Джокера закончился.<br><br>` +
-        `Понравилось оформление? Его можно купить в <b>Магазинчике Джокера</b> ` +
-        `за очки стиля — там ещё много интересного.`,
-        { title: 'Подарок истёк', onClose: resolve }
-      );
-    });
+	return new Promise(resolve => {
+	  showMessage(
+		t('game.giftExpired.text'),
+		{ title: t('game.giftExpired.title'), onClose: resolve }
+	  );
+	});
   }
 
   /**
@@ -954,16 +953,16 @@ async _animateTake(cards, defender) {
     const btn = this.actionBtn;
     if (btn) {
       let label, state;
-      if (winner === 'player') {
-        label = finishLabel || 'ПОБЕДА';
-        state = 'win';
-      } else if (winner === 'cpu') {
-        label = finishLabel || 'ПРОИГРАЛ';
-        state = 'lose';
-      } else {
-        label = 'НИЧЬЯ';
-        state = 'draw';
-      }
+		if (winner === 'player') {
+		  label = finishLabel || t('game.finish.win');
+		  state = 'win';
+		} else if (winner === 'cpu') {
+		  label = finishLabel || t('game.finish.lose');
+		  state = 'lose';
+		} else {
+		  label = t('game.finish.draw');
+		  state = 'draw';
+		}
 
       btn.textContent = label;
       btn.disabled = false;
@@ -1140,20 +1139,18 @@ else                           this._jokerFrame('five');  // ничья
     // ---- HTML ----
     const el = document.createElement('div');
     el.id = 'game-over';
-    const title = winner === 'player' ? 'Победа!' :
-                  winner === 'cpu'    ? 'Поражение' : 'Ничья';
-    const sub   = winner === 'player' ? 'Джокер остался с картами' :
-                  winner === 'cpu'    ? 'Вы остались с картами' : '';
-    const epiText =
-      epaulettes === 1 ? '🎖️ Погон! +250' :
-      epaulettes === 2 ? '🎖️🎖️ Погоны! +250' :
-      epaulettes === 3 ? '🎖️🎖️ 👔 Погоны и галстук! +250' :
-      '';
+	const title = winner === 'player' ? t('game.over.win') :
+				  winner === 'cpu'    ? t('game.over.lose') : t('game.over.draw');
+	const sub   = winner === 'player' ? t('game.over.winSub') :
+				  winner === 'cpu'    ? t('game.over.loseSub') : '';
+	const epiText =
+	  epaulettes === 1 ? t('game.over.epi1') :
+	  epaulettes === 2 ? t('game.over.epi2') :
+	  epaulettes === 3 ? t('game.over.epi3') : '';
     const epi = epiText ? `<div class="game-over__epi">${epiText}</div>` : '';
-    const quest = questRank ? `<div class="game-over__quest">Квест «${questRank}» выполнен — заберите награду</div>` : '';
-    const pts   = `<div class="game-over__points">Получено очков стиля: <b>${points}</b></div>`;
-
-    const adBtn = `<button class="pause-btn pause-btn--ad" data-action="ad">📺 +500 очков за рекламу</button>`;
+	const quest = questRank ? `<div class="game-over__quest">${t('game.over.questDone', { rank: questRank })}</div>` : '';
+	const pts   = `<div class="game-over__points">${t('game.over.points', { n: points })}</div>`;
+	const adBtn = `<button class="pause-btn pause-btn--ad" data-action="ad">${t('game.over.ad')}</button>`;
 
   let jokerHTML = '';
 
@@ -1207,8 +1204,8 @@ else                           this._jokerFrame('five');  // ничья
         ${pts}
         ${quest}
         ${adBtn}
-        <button class="pause-btn" data-action="replay">СЫГРАТЬ ЕЩЁ РАЗ</button>
-        <button class="pause-btn pause-btn--danger" data-action="menu">ВЫЙТИ В МЕНЮ</button>
+		<button class="pause-btn" data-action="replay">${t('game.over.replay')}</button>
+		<button class="pause-btn pause-btn--danger" data-action="menu">${t('game.over.menu')}</button>
     </div>
   </div>`;
 
@@ -1320,16 +1317,15 @@ el.querySelector('[data-action="ad"]').addEventListener('click', async () => {
   if (btn.disabled) return;
 
   if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-    showMessage(
-      'Нет соединения с интернетом.<br><br>' +
-      'Подключите интернет и попробуйте снова.',
-      { title: 'Соединение потеряно' }
-    );
+	showMessage(
+	  t('game.over.adNoNet'),
+	  { title: t('game.over.adNoConnTitle') }
+	);
     return;
   }
 
   btn.disabled = true;
-  btn.textContent = '⏳ Загружаем рекламу…';
+  btn.textContent = t('game.over.adLoading');
 
   await this.app.fade.toBlack(280);
 
@@ -1357,7 +1353,7 @@ el.querySelector('[data-action="ad"]').addEventListener('click', async () => {
 
   if (result.rewarded) {
     addStylePoints(500);
-    btn.textContent = '✓ +500 получено';
+    btn.textContent = t('game.over.adDone');
     btn.classList.add('pause-btn--ad-done');
 
     const replayBtn = el.querySelector('[data-action="replay"]');
@@ -1369,27 +1365,27 @@ el.querySelector('[data-action="ad"]').addEventListener('click', async () => {
 
     // Сообщение — ТОЛЬКО для реальной рекламы (награда за жест)
     // В мок-режиме ничего не показываем — просто вернулись в окно.
-    if (!ysdk.isMock) {
-      showMessage('+500 очков стиля!', { title: 'Награда' });
-    }
+	if (!ysdk.isMock) {
+	  showMessage(t('game.over.adRewardText'), { title: t('game.over.adRewardTitle') });
+	}
     return;
   }
 
   // Провал — возвращаем кнопку и объясняем
-  btn.disabled = false;
-  btn.textContent = '📺 +500 очков за рекламу';
+	btn.disabled = false;
+	btn.textContent = t('game.over.ad');
 
-  if (result.timeout) {
-    showMessage(
-      'Соединение потеряно.<br><br>Подключите интернет и перезапустите игру.',
-      { title: 'Соединение потеряно' }
-    );
-  } else if (result.error) {
-    showMessage(
-      'Реклама недоступна.<br><br>Проверьте интернет-соединение.',
-      { title: 'Реклама' }
-    );
-  }
+	if (result.timeout) {
+	  showMessage(
+		t('game.over.adTimeout'),
+		{ title: t('game.over.adNoConnTitle') }
+	  );
+	} else if (result.error) {
+	  showMessage(
+		t('game.over.adError'),
+		{ title: t('game.over.adTitle') }
+	  );
+	}
 });
 
     console.log('[game over]', winner, { points, epaulettes, questRank });
@@ -1523,13 +1519,10 @@ el.querySelector('[data-action="ad"]').addEventListener('click', async () => {
   
   _showFirstWinCongratsDialog() {
     return new Promise(resolve => {
-      showMessage(
-        'Вы получили свои <b>первые очки стиля</b>!<br><br>' +
-        'Теперь вы можете посетить <b>Магазинчик Джокера</b> — там ещё много ' +
-        'интересного: новые рубашки, столы, декорации и оформление карт. ' +
-        'Придайте своей игре собственный неповторимый стиль!',
-        { title: 'Поздравляем!', onClose: resolve }
-      );
+		showMessage(
+		  t('game.firstWin.text'),
+		  { title: t('game.firstWin.title'), onClose: resolve }
+		);
     });
   }
 
@@ -2362,8 +2355,8 @@ _confirmSlot(slot) {
     this._busy = false;
 
     // финальная метка
-    const finishLabel = kind === 'pogony' ? 'ПОГОНЫ!' :
-                        kind === 'vsyo'   ? 'ВСЁ!'    : null;
+	const finishLabel = kind === 'pogony' ? t('game.finish.pogony') :
+						kind === 'vsyo'   ? t('game.finish.vsyo')   : null;
 
     // Остановка — карты остаются на столе. Победитель — тот, кто выкинул.
     const winner = side;
@@ -2474,26 +2467,26 @@ _repositionActionButton() {
 
     let label, enabled = false, state = 'wait';
 
-    if (r.move === 'player' && r.phase === 'A_START') {
-      const finish = this._checkFinishMoves('player');
-      if (finish === 'pogony') {
-        label = 'ПОГОНЫ!'; enabled = true; state = 'pogony';
-      } else if (finish === 'vsyo') {
-        label = 'ВСЁ!'; enabled = true; state = 'vsyo';
-      } else {
-        label = 'МОЙ ХОД'; enabled = false; state = 'info';
-      }
-    } else if (r.move === 'player') {
-      if (r.phase === 'A_ADD' || r.phase === 'A_DUMP') {
-        label = 'ПАС'; enabled = true; state = 'pass';
-      } else if (r.phase === 'D_ACT') {
-        label = 'БЕРУ'; enabled = true; state = 'take';
-      } else {
-        label = 'МОЙ ХОД'; enabled = false; state = 'info';
-      }
-    } else {
-      label = '...'; enabled = false; state = 'wait';
-    }
+	if (r.move === 'player' && r.phase === 'A_START') {
+	  const finish = this._checkFinishMoves('player');
+	  if (finish === 'pogony') {
+		label = t('game.btn.pogony'); enabled = true; state = 'pogony';
+	  } else if (finish === 'vsyo') {
+		label = t('game.btn.vsyo'); enabled = true; state = 'vsyo';
+	  } else {
+		label = t('game.btn.myTurn'); enabled = false; state = 'info';
+	  }
+	} else if (r.move === 'player') {
+	  if (r.phase === 'A_ADD' || r.phase === 'A_DUMP') {
+		label = t('game.btn.pass'); enabled = true; state = 'pass';
+	  } else if (r.phase === 'D_ACT') {
+		label = t('game.btn.take'); enabled = true; state = 'take';
+	  } else {
+		label = t('game.btn.myTurn'); enabled = false; state = 'info';
+	  }
+	} else {
+	  label = '...'; enabled = false; state = 'wait';
+	}
 
     this.actionBtn.textContent = label;
     this.actionBtn.disabled = !enabled;
@@ -2525,9 +2518,8 @@ _jokerFrame(name) {
       if (r.phase === 'A_START' || r.phase === 'A_ADD' || r.phase === 'A_DUMP') {
         // CPU атакует — фраза «Мой ход»
         if (!this._cpuTurnPhrase || this._cpuTurnPhraseAt !== r.n + ':' + r.phase) {
-          this._cpuTurnPhrase = CPU_TURN_PHRASES[
-            Math.floor(Math.random() * CPU_TURN_PHRASES.length)
-          ];
+		const k = CPU_TURN_PHRASE_KEYS[Math.floor(Math.random() * CPU_TURN_PHRASE_KEYS.length)];
+		this._cpuTurnPhrase = t(k);
           this._cpuTurnPhraseAt = r.n + ':' + r.phase;
         }
         text = this._cpuTurnPhrase;
@@ -2538,13 +2530,13 @@ _jokerFrame(name) {
     }
     // Ход игрока
     else {
-      if (r.phase === 'A_START') {
-        text = 'Твой ход';
-      } else if (r.phase === 'A_ADD') {
-        text = 'Отбился! Подкидывай';
-      } else if (r.phase === 'A_DUMP') {
-        text = 'Забираю, подкидывай';
-      } else if (r.phase === 'D_ACT') {
+		if (r.phase === 'A_START') {
+		  text = t('game.ai.yourTurn');
+		} else if (r.phase === 'A_ADD') {
+		  text = t('game.ai.defended');
+		} else if (r.phase === 'A_DUMP') {
+		  text = t('game.ai.take');
+		} else if (r.phase === 'D_ACT') {
         // Игрок защищается — оцениваем, есть ли чем крыть
         const unbeaten = r.table.filter(p => p.atk && !p.def);
         const playerHand = this.app.accordionPlayer.cards;
@@ -2566,11 +2558,11 @@ _jokerFrame(name) {
           }
         }
 
-        if (canBeatAny || canTrans) {
-          text = 'Отбивайся!';
-        } else {
-          text = 'Нечем крыть — бери';
-        }
+		if (canBeatAny || canTrans) {
+		  text = t('game.ai.defend');
+		} else {
+		  text = t('game.ai.cantBeat');
+		}
       } else {
         text = '...';
       }
@@ -2592,20 +2584,19 @@ _jokerFrame(name) {
     const r = this.round;
     if (r.move !== 'player') return;
 
-    const label = this.actionBtn.textContent;
-    audio.playSfx('button_click');
+	const st = this.actionBtn.dataset.state;
+	audio.playSfx('button_click');
 
-    if (label === 'ПОГОНЫ!' || label === 'ВСЁ!') {
-      const kind = label === 'ПОГОНЫ!' ? 'pogony' : 'vsyo';
-      this._playFinishMove('player', kind);
-      return;
-    }
+	if (st === 'pogony' || st === 'vsyo') {
+	  this._playFinishMove('player', st);
+	  return;
+	}
 
-    if (label === 'БЕРУ') this._defenderTake('player');
-    else if (label === 'ПАС') {
-      if (r.phase === 'A_DUMP') this._attackerDone();
-      else this._attackerPass();
-    }
+	if (st === 'take') this._defenderTake('player');
+	else if (st === 'pass') {
+	  if (r.phase === 'A_DUMP') this._attackerDone();
+	  else this._attackerPass();
+	}
   }
 
   _updateHUD() {

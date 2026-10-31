@@ -105,4 +105,142 @@ export const EN = {
   'quest.reward.nothing': 'Nothing to claim yet.',
   'quest.trial.title':    'Trial unlocked!',
   'quest.trial.text':     'You completed <b>all Classic quests</b>!<br><br>A new mode is now available — <b>Trial</b>. You play with the full <b>52-card</b> deck.<br><br>Enable it in <b>Settings</b>.',
+  // ---- In-game: player action button ----
+  'game.btn.pass':        'PASS',
+  'game.btn.take':        'TAKE',
+  'game.btn.myTurn':      'MY TURN',
+  'game.btn.pogony':      'EPAULETTES!',
+  'game.btn.vsyo':        'ALL!',
+
+  // ---- In-game: Joker phrases ----
+  'game.ai.yourTurn':     'Your turn',
+  'game.ai.defended':     'Defended! Add more',
+  'game.ai.take':         'Taking, add more',
+  'game.ai.defend':       'Defend!',
+  'game.ai.cantBeat':     'Can\'t beat — take',
+  'game.cpu.phrases.0':   'My turn',
+  'game.cpu.phrases.1':   'My move',
+  'game.cpu.phrases.2':   'I\'m up',
+  'game.cpu.phrases.3':   'My turn now',
+  'game.cpu.phrases.4':   'Now it\'s me',
+  'game.cpu.phrases.5':   'Hold on!',
+
+  // ---- In-game: finish labels ----
+  'game.finish.win':      'VICTORY',
+  'game.finish.lose':     'DEFEAT',
+  'game.finish.draw':     'DRAW',
+  'game.finish.pogony':   'EPAULETTES!',
+  'game.finish.vsyo':     'ALL!',
+
+  // ---- Game over screen ----
+  'game.over.win':        'Victory!',
+  'game.over.lose':       'Defeat',
+  'game.over.draw':       'Draw',
+  'game.over.winSub':     'Joker is left with cards',
+  'game.over.loseSub':    'You are left with cards',
+  'game.over.epi1':       '🎖️ One epaulette! +250',
+  'game.over.epi2':       '🎖️🎖️ Two epaulettes! +250',
+  'game.over.epi3':       '🎖️🎖️ 👔 Epaulettes and tie! +250',
+  'game.over.questDone':  'Quest «{rank}» complete — claim your reward',
+  'game.over.points':     'Style points earned: <b>{n}</b>',
+  'game.over.ad':         '📺 +500 points for watching an ad',
+  'game.over.adLoading':  '⏳ Loading ad…',
+  'game.over.adDone':     '✓ +500 received',
+  'game.over.adRewardTitle': 'Reward',
+  'game.over.adRewardText':  '+500 style points!',
+  'game.over.adTitle':    'Ad',
+  'game.over.adNoConnTitle': 'Connection lost',
+  'game.over.adNoNet':    'No internet connection.<br><br>Connect to the internet and try again.',
+  'game.over.adTimeout':  'Connection lost.<br><br>Connect to the internet and restart the game.',
+  'game.over.adError':    'Ad is not available.<br><br>Check your internet connection.',
+  'game.over.replay':     'PLAY AGAIN',
+  'game.over.menu':       'EXIT TO MENU',
+
+  // ---- First win dialog ----
+  'game.firstWin.title':  'Congratulations!',
+  'game.firstWin.text':   'You\'ve earned your <b>first style points</b>!<br><br>Now you can visit the <b>Joker\'s Shop</b> — there\'s plenty more to discover: new card backs, tables, decorations and card designs. Give your game its own unique style!',
+
+  // ---- Gift expired ----
+  'game.giftExpired.title': 'Gift expired',
+  'game.giftExpired.text':  'The Joker\'s gift has expired.<br><br>Liked the design? You can buy it at the <b>Joker\'s Shop</b> for style points — there\'s more to discover.',
+
+  // ---- Pause overlay ----
+  'pause.title':          'PAUSE',
+  'pause.volume':         'VOLUME',
+  'pause.resume':         'Resume game',
+  'pause.exit':           'Exit to main menu',
+
+  // ---- Coin toss ----
+  'coin.tossTitle':       'COIN TOSS',
+  'coin.firstMoveCpu':    'FIRST MOVE: THE JOKER',
+  'coin.firstMovePlayer': 'FIRST MOVE: THE PLAYER',
+
+  // ---- Gift dialog ----
+  'gift.title':           'YOU HAVE A GIFT!',
+  'gift.text':            'The Joker gives you a <b>gift style for your game room</b> for <b>3 matches</b>.',
+  'gift.hint':            'More details: MAIN MENU → STYLE',
+  'gift.ok':              'OK',
+
+  // ---- Help ----
+  'help.title':           'HELP',
+  'help.scrollUp':        'Scroll up',
+  'help.scrollDown':      'Scroll down',
+  'help.close':           'TO MENU',
+
+  'help.intro':           '<b>Fool</b> — a card game of Durak against the Joker. Win matches, complete quests, earn style points and unlock new game decorations.',
+
+  'help.goal.title':      'Goal',
+  'help.goal.text':       'Discard all your cards before your opponent. Whoever is left with cards is the «fool». Each player is dealt 6 cards. The top card of the deck becomes the trump.',
+
+  'help.start.title':     'Match start',
+  'help.start.text':      'Before each match, it\'s decided who goes first.<br>• If someone has the <b>fool\'s token</b> (given to the loser of the previous match) — the one <b>without</b> the token goes first.<br>• If nobody has it — for instance, on the first match or after a draw — a <b>coin toss</b> is held: the Joker\'s coin decides. The winning side goes first.<br><br>The deck is shuffled, and each player is dealt <b>6 cards</b>. The one who goes first receives cards first. The top card of the deck is revealed — its suit becomes the <b>trump</b>, and the card is placed face-down under the deck. It will come out of the deck <b>last</b>.<br><br>During the game:<br>• <b>Attack / defend / translate</b> — pick a card in hand and place it in a highlighted slot on the table.<br>• <b>Pass / Take / Epaulettes! / All!</b> — press the <b>player button</b> on the right. It always shows the current available action.<br>The round ends automatically when all cards are beaten or the defender takes the table.',
+
+  'help.flow.title':      'Game flow',
+  'help.flow.text':       '<b>Attack.</b> The first player places a card — attacks.<br><b>Defense.</b> The second player must beat the card with a higher card of the same suit or with any trump (if the attacking card is not a trump). A trump card can only be beaten by a higher trump.<br><b>Adding.</b> After all cards are beaten, the attacker can add cards of the same rank as those already on the table.<br><b>Taking.</b> If the defender can\'t beat a card — they take all cards from the table.<br><b>Trump.</b> Beats any non-trump card. A trump can only be beaten by a higher trump.',
+
+  'help.modes.title':     'Game modes',
+  'help.modes.text':      '<b>Podkidnoy.</b> Classic mode. The defender only beats cards or takes them.<br><b>Perevodnoy.</b> Before the first beaten card, the defender can translate the attack to the attacker — by placing a card of the same rank. Roles swap.',
+
+  'help.toss.title':      'Coin toss — the Joker\'s coin',
+  'help.toss.cpuLabel':   'Joker<br>goes first',
+  'help.toss.playerLabel':'Player<br>goes first',
+  'help.toss.text':       'At the very first match (and after each draw), a coin toss is held. The coin decides who goes first and receives cards first.',
+
+  'help.token.title':     'The fool\'s token',
+  'help.token.text':      'The loser of a match receives the <b>fool\'s token</b>. In all following matches, the token holder receives cards second, and the opponent goes first. After a draw, the token is discarded and the next match starts with a coin toss.<br><br>The token is shown on the mode button in the main menu (if the player is the fool) or on the Joker in dialogs (if the AI is the fool). Also, at the start of the match, the token is passed to the previous loser.',
+
+  'help.epi.title':       'Epaulettes and tie',
+  'help.epi.text':        'If you finish a match by discarding several cards of the same rank in a row, you «hang epaulettes» on the Joker:<br><br>• 1 card → <b>1 epaulette</b><br>• 2 cards → <b>2 epaulettes</b><br>• 3+ cards → <b>2 epaulettes + tie</b><br><br>Epaulettes grant <b>style points</b>. This event triggers only when the player themselves presses the <b>EPAULETTES!</b> button in the final round.',
+
+  'help.points.title':    'Style points',
+  'help.points.text':     'The game\'s internal currency. Earned by:<br><br>• <b>100</b> — for a victory<br>• <b>+50/+100/+250/+500</b> — for epaulettes<br>• <b>250 + 50×N</b> — for a quest (N — progress)<br><br>Spent in the <b>Joker\'s Shop</b> on game decorations.',
+
+  'help.quest.title':     'Quest',
+  'help.quest.text':      'Each quest entry is a separate <b>card rank</b> (6, 7, 8, … A). All quest entries are available immediately and can be completed in any order.<br><br>To advance a quest, you must finish a match with <b>epaulettes</b>: on your final turn, press the <b>EPAULETTES!</b> button while discarding one or more cards of that rank.<br><br>• <b>1 card</b> of one rank → progress 1<br>• <b>2 cards</b> → progress 2<br>• <b>3 cards</b> → progress 3<br>• <b>4 cards</b> → progress 4 (max)<br><br>Each progress level grants <b>extra style points</b> — the more cards of the same rank discarded at once, the higher the reward.<br><br>After all classic quests (6–A) are completed, the <b>Trial</b> unlocks — it adds quests for ranks <b>2, 3, 4, 5</b>. These can only be completed with the <b>52-card</b> deck, enabled in <b>Settings</b>. The rest of the Trial quests can be completed with the 36-card deck too.<br><br>The badge on the <b>QUEST</b> button in the menu means there are unclaimed rewards.',
+
+  'help.shop.title':      'Shop & Style',
+  'help.shop.text':       'The <b>Shop</b> sells card backs, <b>card designs</b> (front-side styles), suits, tables and decorations. Categories are highlighted in green if they contain something you can afford.<br><br>Purchased items appear in the <b>STYLE</b> section — where you can apply them to the current game room look (match).',
+
+  'help.badges.title':    'Menu badges',
+  'help.badges.text':     '<b>NEW</b> on a tile in STYLE — the item is purchased but not yet opened. Click on it — the badge disappears. If the NEW badge is shown on the STYLE button in the menu, there are unseen items.<br><br>The <b>chip</b> on the QUEST button — unclaimed rewards.',
+
+  'help.settings.title':  'Settings',
+  'help.settings.text':   '• <b>Sound & music</b> — on/off.<br>• <b>Deck size</b> — 36 or 52 cards.<br>• <b>Hand layout</b> — fan or straight line.<br>• <b>Move hints</b> — red marks on illegal cards.<br>• <b>Deck counter</b> — number of cards left in the deck.<br>• <b>AI level</b> — novice / normal / expert.',
+
+  'help.pause.title':     'Volume and pause',
+  'help.pause.text':      'During a match, music and sound volume is controlled in the <b>PAUSE</b> window — opened with the pause button (two vertical bars, like in media players) in the top-left corner of the scene or the <b>Esc</b> key. It also has «Resume game» and «Exit to main menu».<br><br>In the main menu, sounds and music can be turned off entirely in <b>SETTINGS</b>.',
+
+  'help.mouse.title':     'Controls — mouse and touch',
+  'help.mouse.text':      '<b>Card selection.</b> Click / tap a card in hand — the card lifts and available table slots are highlighted.<br><b>Play.</b> Click a highlighted slot — the card flies there. Click the card again — deselect.<br><b>Player button.</b> Bottom right — <b>TAKE</b>, <b>PASS</b>, <b>EPAULETTES!</b>, <b>ALL!</b> or <b>MY TURN</b>.<br><b>Pause.</b> Pause button (two vertical bars) in the top-left corner of the scene.',
+
+  'help.kb.title':        'Controls — keyboard (in-match)',
+  'help.kb.text':         '• <b>←</b> / <b>→</b> — switch between cards in hand. At the hand\'s edge, an arrow moves focus to the <b>player button</b> — and back to the first card.<br>• <b>↑</b> — from a card, go to the <b>table</b>: available slots are highlighted (beat / translate / add). Press again for the next slot.<br>• <b>↓</b> — quick jump to the <b>player button</b> (from the table — back to the card).<br>• <b>Enter</b> — play the selected card into the highlighted slot or press the player button.<br>• <b>Backspace</b> — deselect the card.<br>• <b>Esc</b> — pause / close window.<br><br><b>In menus and dialogs:</b><br>• <b>Arrows</b> — move between buttons.<br>• <b>Enter</b> / <b>Space</b> — press the focused button.<br>• <b>Esc</b> — close the window / return to menu.',
+
+  'help.tv.title':        'Controls — TV remote',
+  'help.tv.text':         'The game is designed for <b>arrows + OK</b> from a remote. When it works as intended, navigation across buttons, cards and slots is the same as on a keyboard.<br><br><b>Why a cursor circle appears on Android TV.</b> The TV browser often defaults to <b>virtual mouse</b> mode: the D-pad moves the cursor and does not pass arrow keypresses to the page. In this mode, our game doesn\'t receive events — that\'s why controls «don\'t work».<br><br><b>How to switch the remote to D-pad mode:</b><br>• On most TVs, the remote has a <b>«pointer»</b> or <b>«dpad»</b> button that toggles between «cursor ↔ arrows».<br>• Android TV / Google TV: remote settings — toggle «pointer / D-pad». Sometimes long-pressing the center D-pad button suffices.<br>• Samsung / LG: the <b>Return / Back</b> button exits cursor mode.<br>• Apple TV: the Siri Remote uses swipes; the <b>Menu</b> button helps activate D-pad in the browser.<br><br><b>After switching:</b><br>• <b>Arrows</b> — navigate buttons and cards.<br>• <b>OK / Enter</b> — press.<br>• <b>Back</b> — pause during the game, close a dialog in the menu.',
+
+  // ---- Fullscreen ----
+  'fullscreen.enter':     'Fullscreen',
+  'fullscreen.exit':      'Exit fullscreen',
+  'fullscreen.error':     'The browser blocked fullscreen mode. Press <b>F11</b> or use the browser menu.',
 };

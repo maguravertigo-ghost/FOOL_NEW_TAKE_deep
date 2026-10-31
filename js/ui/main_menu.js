@@ -142,7 +142,7 @@ export class MainMenu {
         const on = document.fullscreenElement ||
                    ysdk.getFullscreenStatus() === 'on';
         // textContent НЕ трогаем — иконка уже в кнопке
-        fsBtn.setAttribute('title', on ? 'Выйти из полноэкранного режима' : 'На весь экран');
+        fsBtn.setAttribute('title', on ? t('fullscreen.exit') : t('fullscreen.enter'));
         fsBtn.dataset.state = on ? 'on' : 'off';
       };
       updateIcon();
@@ -175,11 +175,10 @@ if (isIOS) {
       }
     } catch (e) {
       console.warn('[fs] toggle error:', e);
-      showMessage(
-        'Браузер не разрешил переключить полноэкранный режим. ' +
-        'Нажмите <b>F11</b> или используйте меню браузера.',
-        { title: 'Полный экран' }
-      );
+		showMessage(
+		  t('fullscreen.error'),
+		  { title: t('fullscreen.enter') }
+		);
     }
     setTimeout(updateIcon, 150);
   });
@@ -848,182 +847,97 @@ _updateQuestBadge() {
       ov.innerHTML = `
         <div class="mm-overlay__box mm-overlay__box--full">
           <div class="mm-overlay__header">
-            <div class="mm-overlay__title">СПРАВКА</div>
+            <div class="mm-overlay__title">${t('help.title')}</div>
             <div class="help-nav">
-              <button class="mm-btn mm-btn--small help-nav__btn" data-help-up title="Прокрутить вверх">↑</button>
-              <button class="mm-btn mm-btn--small help-nav__btn" data-help-down title="Прокрутить вниз">↓</button>
-              <button class="mm-btn mm-btn--small" data-close>В МЕНЮ</button>
+              <button class="mm-btn mm-btn--small help-nav__btn" data-help-up title="${t('help.scrollUp')}">↑</button>
+              <button class="mm-btn mm-btn--small help-nav__btn" data-help-down title="${t('help.scrollDown')}">↓</button>
+              <button class="mm-btn mm-btn--small" data-close>${t('help.close')}</button>
             </div>
           </div>
           <div class="mm-overlay__body mm-overlay__body--scroll help-body">
 
-            <div class="help-intro">
-              <b>Fool</b> — карточная игра в дурака против Джокера.
-              Выигрывайте матчи, выполняйте квесты, зарабатывайте очки стиля
-              и открывайте новое оформление игры.
+            <div class="help-intro">${t('help.intro')}</div>
+
+            <div class="help-section">
+              <div class="help-section__title">${t('help.goal.title')}</div>
+              <div class="help-section__text">${t('help.goal.text')}</div>
             </div>
 
             <div class="help-section">
-              <div class="help-section__title">Цель игры</div>
-              <div class="help-section__text">
-                Сбросить все карты раньше соперника. Кто остался с картами — тот «дурак».
-                Каждому раздаётся по 6 карт. Верхняя карта колоды — козырь.
-              </div>
-            </div>
-			
-			<div class="help-section">
-			  <div class="help-section__title">Начало матча</div>
-			  <div class="help-section__text">
-				Перед каждым матчем определяется, кто ходит первым.<br>
-				• Если у кого-то есть <b>жетон дурака</b> (его получает проигравший
-				в прошлом матче) — первым ходит тот, у кого жетона <b>нет</b>.<br>
-				• Если жетона нет ни у кого — например, это первый матч или ничья —
-				проводится <b>жеребьёвка</b>: бросок монеты Джокера. Выпавшая
-				сторона монеты ходит первой.<br>
-				<br>
-				Колода перемешивается, каждому раздаётся по <b>6 карт</b>. Первым
-				карты получает тот, у кого монета или нет жетона дурака. Верхняя карта колоды
-				открывается — её масть становится <b>козырем</b>, а сама карта
-				ложится под колоду рубашкой вверх. Она выйдет из колоды
-				<b>последней</b>.<br><br>
-				Дальше игрок действует так:<br>
-				• <b>Атака / защита / перевод</b> — выбрать карту в руке
-				и положить в подсвеченный слот - нужно выбрать слот на столе для хода.<br>
-				• <b>Пас / Беру / Погоны! / Всё!</b> — нажать <b>кнопку игрока</b>
-				справа. На ней всегда написано текущее доступное действие.<br>
-				Раунд завершается сам, когда все карты отбиты или защитник забрал стол.
-			  </div>
-			</div>
-            <div class="help-section">
-              <div class="help-section__title">Ход игры</div>
-              <div class="help-section__text">
-                <b>Атака.</b> Первый игрок кладёт карту — атакует.<br>
-                <b>Защита.</b> Второй должен побить эту карту старшей картой - выше рангом, той же масти или любым козырем, если это некозырная карта. Или для козырных карт - так же картой рангом старше.<br>
-                <b>Подкидывание.</b> После отбоя атакующий может подкинуть карты того же ранга, что уже лежат на столе.<br>
-                <b>Взятие.</b> Если отбиться нечем — защитник забирает все карты со стола.<br>
-                <b>Козырь.</b> Бьёт любую некозырную. Козырь бьётся только козырем старшего ранга.
-              </div>
+              <div class="help-section__title">${t('help.start.title')}</div>
+              <div class="help-section__text">${t('help.start.text')}</div>
             </div>
 
             <div class="help-section">
-              <div class="help-section__title">Режимы игры</div>
-              <div class="help-section__text">
-                <b>Подкидной.</b> Классический режим. Защитник только отбивается или берёт.<br>
-                <b>Переводной.</b> До первого отбоя защитник может перевести атаку на атакующего — положить карту того же ранга. Роли меняются.
-              </div>
+              <div class="help-section__title">${t('help.flow.title')}</div>
+              <div class="help-section__text">${t('help.flow.text')}</div>
             </div>
 
             <div class="help-section">
-              <div class="help-section__title">Жеребьёвка — монета Джокера</div>
+              <div class="help-section__title">${t('help.modes.title')}</div>
+              <div class="help-section__text">${t('help.modes.text')}</div>
+            </div>
+
+            <div class="help-section">
+              <div class="help-section__title">${t('help.toss.title')}</div>
               <div class="help-section__row">
                 <div class="help-coins">
                   <div class="help-coin">
                     <img src="${ASSETS.coinFrames[0]}" alt="">
-                    <span>Джокер<br>ходит первым</span>
+                    <span>${t('help.toss.cpuLabel')}</span>
                   </div>
                   <div class="help-coin">
                     <img src="${ASSETS.coinFrames[4]}" alt="">
-                    <span>Игрок<br>ходит первым</span>
+                    <span>${t('help.toss.playerLabel')}</span>
                   </div>
                 </div>
-                <div class="help-section__text">
-                  В начале самого первого матча (и после каждой ничьей) проводится жеребьёвка.
-                  Монета определяет, кто ходит первым и первым получает карты.
-                </div>
+                <div class="help-section__text">${t('help.toss.text')}</div>
               </div>
             </div>
 
             <div class="help-section">
-              <div class="help-section__title">Жетон дурака</div>
+              <div class="help-section__title">${t('help.token.title')}</div>
               <div class="help-section__row">
                 <div class="help-section__img">
                   <img src="${ASSETS.foolToken}" alt="">
                 </div>
-                <div class="help-section__text">
-                  Кто проиграл матч — получает <b>жетон дурака</b>.
-                  Во всех следующих матчах обладатель жетона получает карты вторым,
-                  а соперник — первым. При ничьей жетон дурака сбрасывается,
-                  и следующий матч снова начинается с жеребьёвки.
-                  <br><br>
-                  Жетон виден на кнопке режима в главном меню
-                  (если дурак — игрок) или на джокере в окнах
-                  (если дурак — ИИ). Так же в начале матча - жетон переходит к тому кто проиграл прошлый матч.
-                </div>
+                <div class="help-section__text">${t('help.token.text')}</div>
               </div>
             </div>
 
             <div class="help-section">
-              <div class="help-section__title">Погоны и галстук</div>
+              <div class="help-section__title">${t('help.epi.title')}</div>
               <div class="help-section__row">
                 <div class="help-section__img help-section__img--row">
                   <img src="${ASSETS.pogon}" alt="">
                   <img src="${ASSETS.galstuk}" alt="">
                 </div>
-                <div class="help-section__text">
-                  Если вы заканчиваете матч, выкидывая подряд несколько карт одного ранга,
-                  вы «вешаете погоны» джокеру:
-                  <br><br>
-                  • 1 карта → <b>1 погон</b><br>
-                  • 2 карты → <b>2 погона</b><br>
-                  • 3+ карт → <b>2 погона + галстук</b>
-                  <br><br>
-                  За погоны начисляются <b>очки стиля</b>.
-                  Событие срабатывает только, если игрок сам нажимает кнопку
-                  <b>ПОГОНЫ!</b> в финальном раунде.
-                </div>
+                <div class="help-section__text">${t('help.epi.text')}</div>
               </div>
             </div>
 
             <div class="help-section">
-              <div class="help-section__title">Очки стиля</div>
+              <div class="help-section__title">${t('help.points.title')}</div>
               <div class="help-section__row">
                 <div class="help-section__img">
                   <img src="${ASSETS.jokerSetNice}" alt="">
                 </div>
-                <div class="help-section__text">
-                  Внутренняя валюта игры. Зарабатываются так:
-                  <br><br>
-                  • <b>100</b> — за победу<br>
-                  • <b>+50/+100/+250/+500</b> — за погоны<br>
-                  • <b>250 + 50×N</b> — за квест (N — прогресс)
-                  <br><br>
-                  Тратятся в <b>Магазинчике Джокера</b> на покупку элементов оформления игры.
-                </div>
+                <div class="help-section__text">${t('help.points.text')}</div>
               </div>
             </div>
 
-			<div class="help-section">
-			  <div class="help-section__title">Квест</div>
-			  <div class="help-section__row">
-				<div class="help-section__img">
-				  <img src="${ASSETS.pokerChip}" alt="">
-				</div>
-				<div class="help-section__text">
-				  Каждый пункт квеста — это отдельный <b>ранг карты</b> (6, 7, 8, … A).
-				  Все пункты квеста доступны сразу, выполнять их можно в любом порядке.<br><br>
-				  Чтобы продвинуть квест, нужно закончить матч <b>погонами</b>:
-				  на финальном ходу нажать кнопку <b>ПОГОНЫ!</b>, выкинув одну
-				  или несколько карт этого ранга.<br><br>
-				  • <b>1 карта</b> одного ранга → прогресс 1<br>
-				  • <b>2 карты</b> → прогресс 2<br>
-				  • <b>3 карты</b> → прогресс 3<br>
-				  • <b>4 карты</b> → прогресс 4 (максимум)<br><br>
-				  За каждый уровень прогресса начисляются <b>дополнительные очки
-				  стиля</b> — чем больше карт одного ранга выкинули разом,
-				  тем выше награда.<br><br>
-				  Когда все квесты классики (6–A) пройдены, открывается
-				  <b>Испытание</b> — там добавляются квесты на ранги
-				  <b>2, 3, 4, 5</b>. Их можно выполнить только с колодой
-				  <b>52 карты</b> — включается в <b>Настройках</b>.
-				  Остальные квесты Испытания проходятся и с колодой 36 карт.<br><br>
-				  Значок на кнопке <b>КВЕСТ</b> в меню означает, что есть
-				  неполученные награды.
-				</div>
-			  </div>
-			</div>
+            <div class="help-section">
+              <div class="help-section__title">${t('help.quest.title')}</div>
+              <div class="help-section__row">
+                <div class="help-section__img">
+                  <img src="${ASSETS.pokerChip}" alt="">
+                </div>
+                <div class="help-section__text">${t('help.quest.text')}</div>
+              </div>
+            </div>
 
             <div class="help-section">
-              <div class="help-section__title">Магазинчик и Стиль</div>
+              <div class="help-section__title">${t('help.shop.title')}</div>
               <div class="help-section__row">
                 <div class="help-section__icons">
                   <img src="${ASSETS.shopIcons.shirt}" alt="">
@@ -1032,131 +946,50 @@ _updateQuestBadge() {
                   <img src="${ASSETS.shopIcons.table}" alt="">
                   <img src="${ASSETS.shopIcons.decor}" alt="">
                 </div>
-                <div class="help-section__text">
-					В <b>Магазинчике</b> покупаются рубашки карт, <b>оформление карт</b>
-					(стиль лицевой стороны), масти, столы и декорации. Категории подсвечиваются
-                  зелёным, если в них есть товар, который вы можете купить.
-                  <br><br>
-                  Купленные элементы открываются в разделе <b>СТИЛЬ</b> —
-                  там их можно применить к текущему оформлению игровой комнаты (матч).
-                </div>
+                <div class="help-section__text">${t('help.shop.text')}</div>
               </div>
             </div>
 
             <div class="help-section">
-              <div class="help-section__title">Значки в меню</div>
+              <div class="help-section__title">${t('help.badges.title')}</div>
               <div class="help-section__row">
                 <div class="help-section__img help-section__img--row">
                   <img src="${ASSETS.newOneIcon}" alt="">
                   <img src="${ASSETS.pokerChip}" alt="">
                 </div>
-                <div class="help-section__text">
-                  <b>NEW</b> на плитке в СТИЛЬ — элемент куплен, но ещё
-                  не открыт. Кликните по нему — значок исчезнет. Если
-                  на кнопке СТИЛЬ в меню горит NEW, значит есть непросмотренные элементы.
-                  <br><br>
-                  <b>Фишка</b> на кнопке КВЕСТ — есть неполученные награды.
-                </div>
+                <div class="help-section__text">${t('help.badges.text')}</div>
               </div>
             </div>
 
             <div class="help-section">
-              <div class="help-section__title">Настройки</div>
-              <div class="help-section__text">
-                • <b>Звуки и музыка</b> — включение/отключение.<br>
-                • <b>Карт в колоде</b> — 36 или 52 карты.<br>
-                • <b>Карты в руке</b> — веер или прямая линия.<br>
-                • <b>Подсказки хода</b> — красные метки на нелегальных картах.<br>
-                • <b>Счётчик колоды</b> — число оставшихся карт на колоде.<br>
-                • <b>Уровень AI</b> — новичок / обычный / эксперт.
-              </div>
+              <div class="help-section__title">${t('help.settings.title')}</div>
+              <div class="help-section__text">${t('help.settings.text')}</div>
             </div>
 
-			<div class="help-section">
-			  <div class="help-section__title">Громкость и пауза</div>
-			  <div class="help-section__text">
-				Во время матча громкость музыки и звуков регулируется в окне
-				<b>ПАУЗА</b> — оно открывается кнопкой паузы (две вертикальные полосы,
-				как в проигрывателях) в левом верхнем углу сцены или
-				клавишей <b>Esc</b>. Там же — «Продолжить игру»
-				и «Выйти в главное меню».
-				<br><br>
-				В главном меню звуки и музыку можно полностью отключить
-				в <b>НАСТРОЙКАХ</b>.
-			  </div>
-			</div>
+            <div class="help-section">
+              <div class="help-section__title">${t('help.pause.title')}</div>
+              <div class="help-section__text">${t('help.pause.text')}</div>
+            </div>
 
-			<div class="help-section">
-			  <div class="help-section__title">Управление — мышь и касание</div>
-			  <div class="help-section__text">
-				<b>Выбор карты.</b> Клик / касание по карте в руке — карта приподнимается
-				и подсвечиваются доступные слоты на столе.<br>
-				<b>Ход.</b> Клик по подсвеченному слоту — карта летит туда.
-				Повторный клик по самой карте — снять выбор.<br>
-				<b>Кнопка игрока.</b> Справа внизу — <b>БЕРУ</b>, <b>ПАС</b>,
-				<b>ПОГОНЫ!</b>, <b>ВСЁ!</b> или <b>МОЙ ХОД</b>.<br>
-				<b>Пауза.</b> Кнопка паузы (две вертикальные полосы) в левом
-				верхнем углу сцены.
-			  </div>
-			</div>
+            <div class="help-section">
+              <div class="help-section__title">${t('help.mouse.title')}</div>
+              <div class="help-section__text">${t('help.mouse.text')}</div>
+            </div>
 
-			<div class="help-section">
-			  <div class="help-section__title">Управление — клавиатура (в матче)</div>
-			  <div class="help-section__text">
-				• <b>←</b> / <b>→</b> — переключение карт в руке. У края руки стрелка
-				переводит фокус на <b>кнопку игрока</b> — и обратно к первой карте.<br>
-				• <b>↑</b> — из карты перейти на <b>стол</b>: подсвечиваются доступные
-				слоты (крыть / перевести / подкинуть). Повторное нажатие — следующий слот.<br>
-				• <b>↓</b> — быстрый переход на <b>кнопку игрока</b> (а со стола —
-				обратно к карте).<br>
-				• <b>Enter</b> — сыграть выбранную карту в подсвеченный слот
-				или нажать кнопку игрока.<br>
-				• <b>Backspace</b> — снять выбор с карты.<br>
-				• <b>Esc</b> — пауза / закрыть окно.
-				<br><br>
-				<b>В меню и окнах:</b><br>
-				• <b>Стрелки</b> — перемещение между кнопками.<br>
-				• <b>Enter</b> / <b>Space</b> — нажать выбранную кнопку.<br>
-				• <b>Esc</b> — закрыть окно / выйти в меню.
-			  </div>
-			</div>
+            <div class="help-section">
+              <div class="help-section__title">${t('help.kb.title')}</div>
+              <div class="help-section__text">${t('help.kb.text')}</div>
+            </div>
 
-			<div class="help-section">
-			  <div class="help-section__title">Управление — ТВ-пульт</div>
-			  <div class="help-section__text">
-				Игра рассчитана на <b>стрелки + OK</b> с пульта. Когда работает
-				как надо — навигация по кнопкам, картам и слотам такая же,
-				как на клавиатуре.
-				<br><br>
-				<b>Почему на Android TV виден кружок-курсор.</b> Браузер
-				на телевизоре по умолчанию часто работает в режиме
-				<b>виртуальной мыши</b>: D-pad двигает курсор, а не передаёт
-				нажатия стрелок странице. В этом режиме наша игра не получает
-				события — вот почему управление «не работает».<br>
-				<br>
-				<b>Как переключить пульт в режим навигации (D-pad):</b><br>
-				• На большинстве ТВ на пульте есть кнопка <b>«указатель»</b>
-				или <b>«крестовина»</b> — она переключает режимы «курсор ↔ стрелки».<br>
-				• Android TV / Google TV: в настройках пульта — переключение
-				«указатель / D-pad». Иногда достаточно нажать и удерживать
-				центральную кнопку крестовины.<br>
-				• Samsung / LG: кнопка <b>Return / Back</b> выводит из режима
-				курсора.<br>
-				• Apple TV: пульт Siri Remote использует свайпы; кнопка <b>Menu</b>
-				помогает активировать D-pad в браузере.<br>
-				<br>
-				<b>После переключения:</b><br>
-				• <b>Стрелки</b> — навигация по кнопкам и картам.<br>
-				• <b>OK / Enter</b> — нажать.<br>
-				• <b>Back</b> — пауза во время игры, закрыть окно в меню.
-			  </div>
-			</div>
+            <div class="help-section">
+              <div class="help-section__title">${t('help.tv.title')}</div>
+              <div class="help-section__text">${t('help.tv.text')}</div>
+            </div>
 
           </div>
         </div>`;
       this._bindClose(ov);
 
-      // Кнопки прокрутки контента
       const helpBody = ov.querySelector('.help-body');
       const upBtn = ov.querySelector('[data-help-up]');
       const downBtn = ov.querySelector('[data-help-down]');

@@ -2,6 +2,7 @@ import { ASSETS } from '../assets.js';
 import { SceneLayout } from '../game/scene_layout.js';
 import { Progress } from '../game/progress.js';
 import { uiScale } from './ui_scale.js';
+import { t } from '../i18n/index.js';
 
 /* Размер монеты в ref-px (231×246 × масштаб 0.5). */
 const COIN_W_REF = 231 * 0.5;
@@ -42,7 +43,7 @@ export class CoinToss {
    */
   async run() {
     this._createLayer();
-    this._createStrip('ЖЕРЕБЬЁВКА');
+    this._createStrip(t('coin.tossTitle'));
     this._createCoin();
 
     const W = this.scene.width, H = this.scene.height;
@@ -59,9 +60,9 @@ export class CoinToss {
 
     await this._spin(targetFrame);
 
-    const labelText = (result === 'cpu')
-      ? 'ПЕРВЫЙ ХОД ДЕЛАЕТ: ДЖОКЕР'
-      : 'ПЕРВЫЙ ХОД ДЕЛАЕТ: ИГРОК';
+	const labelText = (result === 'cpu')
+	  ? t('coin.firstMoveCpu')
+	  : t('coin.firstMovePlayer');
     this._setStripLabel(labelText);
 
     await this._sleep(1500);

@@ -25,6 +25,7 @@ import { Progress, saveProgress, addStylePoints,
 import { showMessage, showConfirm } from './ui/message_overlay.js';
 import { CoinToss } from './ui/coin_toss.js';
 import { clearCache } from './game/card_cache.js';
+import { t } from './i18n/index.js';
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
@@ -970,20 +971,19 @@ async _startGameFromMenu(mode) {
       const el = document.createElement('div');
       el.className = 'msg-overlay';
       el.style.display = 'flex';
-      el.innerHTML = `
-        <div class="msg-overlay__box msg-overlay__box--gift">
-          <div class="msg-overlay__title">ВАМ ПОДАРОК!</div>
-          <div class="gift-joker">
-            <img src="${ASSETS.jokerFaceSmiling}" alt="">
-          </div>
-          <div class="msg-overlay__body">
-            Джокер дарит Вам <b>подарочный стиль оформления игровой комнаты</b>
-            на <b>3 матча</b>.
-            <div class="gift-hint">Подробнее: ГЛАВНОЕ МЕНЮ → СТИЛЬ</div>
-          </div>
-          <button class="mm-btn mm-btn--small" data-msg-btn data-close>ОК</button>
-        </div>
-      `;
+		el.innerHTML = `
+		  <div class="msg-overlay__box msg-overlay__box--gift">
+			<div class="msg-overlay__title">${t('gift.title')}</div>
+			<div class="gift-joker">
+			  <img src="${ASSETS.jokerFaceSmiling}" alt="">
+			</div>
+			<div class="msg-overlay__body">
+			  ${t('gift.text')}
+			  <div class="gift-hint">${t('gift.hint')}</div>
+			</div>
+			<button class="mm-btn mm-btn--small" data-msg-btn data-close>${t('gift.ok')}</button>
+		  </div>
+		`;
       document.getElementById('scene').appendChild(el);
 
       // Автофокус на OK — если предыдущее действие было с клавиатуры/ТВ
