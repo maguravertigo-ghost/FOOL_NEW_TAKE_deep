@@ -21,6 +21,11 @@ import { uiScale } from './ui_scale.js';
 import { bus } from '../core/event_bus.js';
 import { attachTokenMark } from './fool_token_mark.js';
 
+import { t, getLang, getAvailableLangs } from '../i18n/index.js';
+
+const LANG_FLAGS = { ru: '🇷🇺', en: '🇬🇧', tr: '🇹🇷' };
+const langFlag = (code) => LANG_FLAGS[code] || '🌐';
+
 export class MainMenu {
   constructor({ onStartGame }) {
     this.onStartGame = onStartGame;
@@ -32,47 +37,48 @@ export class MainMenu {
       <div class="mm-bg"></div>
 
 	<!-- ЛЕВЫЙ ВЕРХ: статистика -->
-	<div class="mm-top-left">
-	  <div class="mm-stat-block">
-		<div class="mm-stat-row"><span>ИГР СЫГРАНО:</span><b>${Progress.stats.games}</b></div>
-		<div class="mm-stat-row"><span>ПОБЕД:</span><b>${Progress.stats.wins}</b></div>
-		<div class="mm-stat-row"><span>ПОРАЖЕНИЙ:</span><b>${Progress.stats.losses}</b></div>
-		<div class="mm-stat-row"><span>НИЧЬИХ:</span><b>${Progress.stats.draws}</b></div>
-	  </div>
-	</div>
+<div class="mm-top-left">
+  <div class="mm-stat-block">
+    <div class="mm-stat-row" data-stat="games"><span>${t('menu.games')}</span><b>${Progress.stats.games}</b></div>
+    <div class="mm-stat-row" data-stat="wins"><span>${t('menu.wins')}</span><b>${Progress.stats.wins}</b></div>
+    <div class="mm-stat-row" data-stat="losses"><span>${t('menu.losses')}</span><b>${Progress.stats.losses}</b></div>
+    <div class="mm-stat-row" data-stat="draws"><span>${t('menu.draws')}</span><b>${Progress.stats.draws}</b></div>
+  </div>
+</div>
 
 	<!-- ПРАВЫЙ ВЕРХ: очки стиля + кнопка КАК ИГРАТЬ -->
-	<div class="mm-top-right">
-	  <div class="mm-style-points">
-		<span class="mm-style-points__label">ОЧКИ СТИЛЯ:</span>
-		<b class="mm-style-points__value">${Progress.stylePoints}</b>
-	  </div>
-	  <button class="mm-corner" data-open="help">КАК ИГРАТЬ</button>
-	  <button class="mm-corner mm-corner--fs" data-fs-toggle title="На весь экран"></button>
-	</div>
+<div class="mm-top-right">
+  <div class="mm-style-points">
+    <span class="mm-style-points__label">${t('menu.stylePoints')}</span>
+    <b class="mm-style-points__value">${Progress.stylePoints}</b>
+  </div>
+  <button class="mm-corner" data-open="help">${t('menu.help')}</button>
+  <button class="mm-corner mm-corner--fs" data-fs-toggle title="${t('menu.fullscreen')}"></button>
+</div>
 
 	<!-- ЦЕНТР: лого, кнопки, автор -->
-	<div class="mm-center">
-	  <div class="mm-logo"></div>
-	  <div class="mm-buttons">
-		<button class="mm-btn mm-btn--mode" data-mode="podkidnoy"></button>
-		<button class="mm-btn mm-btn--mode" data-mode="perevodnoy"></button>
-	  </div>
-	  <div class="mm-author">segurakaa</div>
-	</div>
+<div class="mm-center">
+  <div class="mm-logo"></div>
+  <div class="mm-buttons">
+    <button class="mm-btn mm-btn--mode" data-mode="podkidnoy"></button>
+    <button class="mm-btn mm-btn--mode" data-mode="perevodnoy"></button>
+  </div>
+  <div class="mm-author">${t('menu.author')}</div>
+</div>
 
 	<!-- ЛЕВЫЙ НИЗ: снизу вверх — НАСТРОЙКИ, ОБ ИГРЕ -->
-	<div class="mm-bottom-left">
-	  <button class="mm-corner" data-open="settings">НАСТРОЙКИ</button>
-	  <button class="mm-corner" data-open="about">ОБ ИГРЕ</button>
-	</div>
+<div class="mm-bottom-left">
+  <button class="mm-corner" data-open="settings">${t('menu.settings')}</button>
+  <button class="mm-corner" data-open="about">${t('menu.about')}</button>
+  <button class="mm-corner mm-corner--lang" data-open="lang" title="${t('menu.language')}">${langFlag(getLang())}</button>
+</div>
 
 	<!-- ПРАВЫЙ НИЗ: снизу вверх — МАГАЗИНЧИК, СТИЛЬ, КВЕСТ -->
-	<div class="mm-bottom-right">
-	  <button class="mm-corner" data-open="shop">МАГАЗИНЧИК</button>
-	  <button class="mm-corner" data-open="style">СТИЛЬ</button>
-	  <button class="mm-corner mm-corner--quest" data-open="quest">КВЕСТ</button>
-	</div>   `
+<div class="mm-bottom-right">
+  <button class="mm-corner" data-open="shop">${t('menu.shop')}</button>
+  <button class="mm-corner" data-open="style">${t('menu.style')}</button>
+  <button class="mm-corner mm-corner--quest" data-open="quest">${t('menu.quest')}</button>
+</div>   `
 	;
 	this.el.style.display = 'none';
 	document.getElementById('scene').appendChild(this.el);
@@ -183,7 +189,7 @@ if (isIOS) {
       document.addEventListener('webkitfullscreenchange', updateIcon);
     }
 
-    this._overlays = { about: null, shop: null, settings: null, style: null, quest: null, help: null };
+    this._overlays = { about: null, shop: null, settings: null, style: null, quest: null, help: null, lang: null };
     this._activeOverlay = null;
     this._previewOverlay = null;
     this._shopCategory = null;
@@ -368,6 +374,26 @@ _layoutAll() {
       boxSizing: 'border-box',
     });
   });
+
+      // Кнопка-флаг языка — квадратная, компактная, выровнена по правому краю блока
+    const langBtn = this.el.querySelector('[data-open="lang"]');
+    if (langBtn && lb.length) {
+      const size = lb[lb.length - 1].height;
+      Object.assign(langBtn.style, {
+        width:  size + 'px',
+        height: size + 'px',
+        padding: '0',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: H.s(H.isMobile ? 32 : 22) + 'px',
+        lineHeight: '1',
+        textAlign: 'center',
+      });
+    }
+	
+	    // Защитная синхронизация флага с текущим языком
+    if (langBtn) langBtn.textContent = langFlag(getLang());
 }
 
 show() {
@@ -384,28 +410,22 @@ show() {
   }
 
 _refreshStats() {
-  const set = (label, val) => {
-    const rows = this.el.querySelectorAll('.mm-stat-row');
-    for (const r of rows) {
-      const span = r.querySelector('span');
-      if (span && span.textContent.startsWith(label)) {
-        const b = r.querySelector('b');
-        if (b) b.textContent = val;
-      }
-    }
+  const set = (key, val) => {
+    const b = this.el.querySelector(`.mm-stat-row[data-stat="${key}"] b`);
+    if (b) b.textContent = val;
   };
-  set('ИГР СЫГРАНО', Progress.stats.games);
-  set('ПОБЕД',       Progress.stats.wins);
-  set('ПОРАЖЕНИЙ',   Progress.stats.losses);
-  set('НИЧЬИХ',      Progress.stats.draws);
+  set('games',  Progress.stats.games);
+  set('wins',   Progress.stats.wins);
+  set('losses', Progress.stats.losses);
+  set('draws',  Progress.stats.draws);
 
   const sp = this.el.querySelector('.mm-style-points__value');
   if (sp) sp.textContent = Progress.stylePoints;
-    // ---- иконка «есть непроклеймленные награды» на кнопке КВЕСТ ----
-    this._updateQuestBadge();
-    this._updateFoolTokenMarks();
-    this._updateStyleBadge();
-  }
+
+  this._updateQuestBadge();
+  this._updateFoolTokenMarks();
+  this._updateStyleBadge();
+}
 
   _updateStyleBadge() {
     const btn = this.el.querySelector('[data-open="style"]');
@@ -497,8 +517,9 @@ _updateQuestBadge() {
     if (name === 'settings') return this._openSettings();
     if (name === 'style')    return this._openStyle();
     if (name === 'quest')    return this._openQuest();
-    if (name === 'help')     return this._openHelp();
-    if (name === 'shop')     return this._openShop();
+	if (name === 'help')     return this._openHelp();
+	if (name === 'shop')     return this._openShop();
+	if (name === 'lang')     return this._openLang();
     const ov = this._getSimpleOverlay(name);
     if (!ov) return;
     ov.style.display = 'flex';
@@ -546,12 +567,13 @@ _updateQuestBadge() {
 
   _setupKeyboardNav() {
     // ---- Сетка 3×4 (сверху вниз, слева направо). null = пустая ячейка ----
-    this._grid = [
-      ['fs',       null,         'help'],
-      [null,       'mode0',      'quest'],
-      ['about',    'mode1',      'style'],
-      ['settings', null,         'shop'],
-    ];
+	this._grid = [
+	  ['fs',       null,         'help'],
+	  ['lang',     null,         null],
+	  [null,       'mode0',      'quest'],
+	  ['about',    'mode1',      'style'],
+	  ['settings', null,         'shop'],
+	];
     this._navPos = { r: 0, c: 0 };
     this._navEl = null;
     this._lastInputWasKeyboard = false;
@@ -570,6 +592,7 @@ _updateQuestBadge() {
         case 'settings': return this.el.querySelector('[data-open="settings"]');
         case 'mode0':    return this.el.querySelector('[data-mode="podkidnoy"]');
         case 'mode1':    return this.el.querySelector('[data-mode="perevodnoy"]');
+		case 'lang':     return this.el.querySelector('[data-open="lang"]');
       }
       return null;
     };
@@ -664,6 +687,11 @@ _updateQuestBadge() {
 
       // === Оверлей открыт — обрабатываем навигацию в нём ===
       if (this._activeOverlay) {
+		// Выбор языка
+		if (this._activeOverlay.querySelector('.mm-langs')) {
+		  this._navigateLang(e);
+		  return;
+		}
         // Магазин — категории или витрина
         if (this._activeOverlay.querySelector('.shop-box')) {
           this._navigateShop(e);
@@ -790,18 +818,18 @@ _updateQuestBadge() {
   _buildAbout() {
     const el = document.createElement('div');
     el.className = 'mm-overlay';
-    el.innerHTML = `
-      <div class="mm-overlay__box mm-overlay__box--about">
-        <div class="mm-overlay__body mm-overlay__body--scroll">
-          <p><b>Игра в дурака</b> — классика русской карточной игры.</p>
-          <p>Автор кода и оформления: <b>Segura Kaa</b></p>
-          <p>2024 ©</p>
-        </div>
-        <div class="mm-about-joker">
-          <img src="${ASSETS.jokerLies}" alt="">
-        </div>
-        <button class="mm-btn mm-btn--small" data-close>В МЕНЮ</button>
-      </div>`;
+	el.innerHTML = `
+	  <div class="mm-overlay__box mm-overlay__box--about">
+		<div class="mm-overlay__body mm-overlay__body--scroll">
+		  <p>${t('about.text1')}</p>
+		  <p>${t('about.text2')}</p>
+		  <p>${t('about.text3')}</p>
+		</div>
+		<div class="mm-about-joker">
+		  <img src="${ASSETS.jokerLies}" alt="">
+		</div>
+		<button class="mm-btn mm-btn--small" data-close>${t('about.close')}</button>
+	  </div>`;
     this._bindClose(el);
 	attachTokenMark(el.querySelector('.mm-about-joker'), {
       side: 'cpu', corner: 'br',
@@ -1338,6 +1366,44 @@ _updateQuestBadge() {
     }
   }
 
+_openLang() {
+  let ov = this._overlays.lang;
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.className = 'mm-overlay';
+    ov.innerHTML = `
+      <div class="mm-overlay__box mm-overlay__box--lang">
+        <div class="mm-overlay__title">${t('lang.title')}</div>
+        <div class="mm-langs">
+          ${getAvailableLangs().map(code => `
+            <button class="mm-lang ${code === getLang() ? 'mm-lang--active' : ''}" data-lang="${code}">
+              <span class="mm-lang__flag">${langFlag(code)}</span>
+              <span class="mm-lang__name">${t('lang.' + code)}</span>
+            </button>
+          `).join('')}
+        </div>
+        <button class="mm-btn mm-btn--small" data-close>${t('lang.close')}</button>
+      </div>`;
+    this._bindClose(ov);
+
+    ov.querySelectorAll('[data-lang]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const code = btn.dataset.lang;
+        if (code === getLang()) return;
+        audio.playSfx('switch');
+        try { localStorage.setItem('fool_lang', code); } catch {}
+        location.reload();
+      });
+    });
+
+    this.el.appendChild(ov);
+    this._overlays.lang = ov;
+  }
+  ov.style.display = 'flex';
+  this._activeOverlay = ov;
+  requestAnimationFrame(() => this._autoFocusOverlay(ov, '[data-close]'));
+}
+
   /* ---------------- SETTINGS ---------------- */
 
   _openSettings() {
@@ -1352,30 +1418,30 @@ _updateQuestBadge() {
   _buildSettings() {
     const el = document.createElement('div');
     el.className = 'mm-overlay';
-    el.innerHTML = `
-      <div class="mm-overlay__box mm-overlay__box--settings">
-        <div class="mm-overlay__title">НАСТРОЙКИ</div>
-        <div class="mm-rows"></div>
-        <button class="mm-btn mm-btn--small" data-close>В МЕНЮ</button>
-      </div>`;
+	el.innerHTML = `
+	  <div class="mm-overlay__box mm-overlay__box--settings">
+		<div class="mm-overlay__title">${t('settings.title')}</div>
+		<div class="mm-rows"></div>
+		<button class="mm-btn mm-btn--small" data-close>${t('settings.close')}</button>
+	  </div>`;
     this._bindClose(el);
     const rows = el.querySelector('.mm-rows');
-    rows.appendChild(this._makeRow('Звуки эффектов', 'sfxEnabled', [
-      { label: 'вкл.', val: true }, { label: 'откл.', val: false }]));
-    rows.appendChild(this._makeRow('Музыка в игре', 'musicEnabled', [
-      { label: 'вкл.', val: true }, { label: 'откл.', val: false }]));
-    rows.appendChild(this._makeRow('Карт в колоде', 'deckSize', [
-      { label: '36', val: 36 }, { label: '52', val: 52 }]));
-    rows.appendChild(this._makeRow('Карты в руке', 'handLayout', [
-      { label: 'веер', val: 'fan' }, { label: 'прямо', val: 'straight' }]));
-	rows.appendChild(this._makeRow('Подсказки хода', 'moveHints', [
-	  { label: 'вкл.', val: true }, { label: 'откл.', val: false }]));
-	rows.appendChild(this._makeRow('Счётчик колоды', 'showDeckCounter', [
-	  { label: 'вкл.', val: true }, { label: 'откл.', val: false }]));
-	rows.appendChild(this._makeRow('Уровень AI', 'aiLevel', [
-	  { label: 'новичок', val: 1 },
-	  { label: 'обычный', val: 2 },
-	  { label: 'эксперт', val: 3 }]));
+	rows.appendChild(this._makeRow(t('settings.sfx'), 'sfxEnabled', [
+	  { label: t('settings.on'), val: true }, { label: t('settings.off'), val: false }]));
+	rows.appendChild(this._makeRow(t('settings.music'), 'musicEnabled', [
+	  { label: t('settings.on'), val: true }, { label: t('settings.off'), val: false }]));
+	rows.appendChild(this._makeRow(t('settings.deckSize'), 'deckSize', [
+	  { label: '36', val: 36 }, { label: '52', val: 52 }]));
+	rows.appendChild(this._makeRow(t('settings.handLayout'), 'handLayout', [
+	  { label: t('settings.fan'), val: 'fan' }, { label: t('settings.straight'), val: 'straight' }]));
+	rows.appendChild(this._makeRow(t('settings.moveHints'), 'moveHints', [
+	  { label: t('settings.on'), val: true }, { label: t('settings.off'), val: false }]));
+	rows.appendChild(this._makeRow(t('settings.showDeckCounter'), 'showDeckCounter', [
+	  { label: t('settings.on'), val: true }, { label: t('settings.off'), val: false }]));
+	rows.appendChild(this._makeRow(t('settings.aiLevel'), 'aiLevel', [
+	  { label: t('settings.aiNovice'), val: 1 },
+	  { label: t('settings.aiNormal'), val: 2 },
+	  { label: t('settings.aiExpert'), val: 3 }]));
     return el;
   }
   
@@ -1508,17 +1574,13 @@ _openShop() {
     el.style.display = 'flex';
     el.innerHTML = `
       <div class="msg-overlay__box">
-        <div class="msg-overlay__title">Добро пожаловать!</div>
-        <div class="msg-overlay__body">
-          Добро пожаловать в <b>Магазинчик Джокера</b> — здесь есть много
-          интересного, чтобы сделать вашу игру ярче и красивее.
-          Придайте своей игре собственный неповторимый стиль!
-        </div>
-        <label class="msg-overlay__check">
-          <input type="checkbox" class="shop-intro-check">
-          <span>Больше не показывать при входе</span>
-        </label>
-        <button class="mm-btn mm-btn--small" data-msg-btn data-close>ОК</button>
+        <div class="msg-overlay__title">${t('shop.welcome.title')}</div>
+<div class="msg-overlay__body">${t('shop.welcome.text')}</div>
+<label class="msg-overlay__check">
+  <input type="checkbox" class="shop-intro-check">
+  <span>${t('shop.welcome.checkbox')}</span>
+</label>
+<button class="mm-btn mm-btn--small" data-msg-btn data-close>${t('shop.welcome.ok')}</button>
       </div>
     `;
     document.getElementById('scene').appendChild(el);
@@ -1556,7 +1618,7 @@ if (!root.querySelector('.shop-box')) {
             <img src="${ASSETS.jokerShop}" alt="">
           </div>
           <div class="shop-balance">
-            <span>ОЧКОВ СТИЛЯ</span>
+            <span>${t('shop.balance')}</span>
             <b>0</b>
           </div>
         </div>
@@ -1566,8 +1628,8 @@ if (!root.querySelector('.shop-box')) {
           </div>
           <div class="shop-content-inner"></div>
           <div class="shop-footer">
-            <button class="mm-btn mm-btn--small" data-back style="display:none;">НАЗАД</button>
-            <button class="mm-btn mm-btn--small" data-close>В МЕНЮ</button>
+            <button class="mm-btn mm-btn--small" data-back style="display:none;">${t('shop.back')}</button>
+			<button class="mm-btn mm-btn--small" data-close>${t('shop.menu')}</button>
           </div>
         </div>
       </div>`;
@@ -1601,7 +1663,7 @@ if (!root.querySelector('.shop-box')) {
 	inner.style.opacity = '0';
 	requestAnimationFrame(() => {
 		inner.innerHTML = '';
-		titleEl.textContent = category ? 'ВИТРИНА' : 'ВЫБЕРИ КАТЕГОРИЮ';
+		titleEl.textContent = category ? t('shop.showcase') : t('shop.categories');
 		inner.appendChild(
 		  category ? this._buildShopItems(category) : this._buildShopCategories()
 		);
@@ -1745,13 +1807,13 @@ _makePreview(item, cat) {
 }
 
 _buildShopCategories() {
-  const CATS = [
-    { id: 'shirt',  label: 'РУБАШКИ',    icon: ASSETS.shopIcons.shirt },
-    { id: 'design', label: 'ОФОРМЛЕНИЕ', icon: ASSETS.shopIcons.design },
-    { id: 'suits',  label: 'МАСТИ',      icon: ASSETS.shopIcons.suits },
-    { id: 'table',  label: 'СТОЛ',       icon: ASSETS.shopIcons.table },
-    { id: 'decor',  label: 'ДЕКОРАЦИИ',  icon: ASSETS.shopIcons.decor },
-  ];
+const CATS = [
+  { id: 'shirt',  label: t('shop.cat.shirt'),  icon: ASSETS.shopIcons.shirt },
+  { id: 'design', label: t('shop.cat.design'), icon: ASSETS.shopIcons.design },
+  { id: 'suits',  label: t('shop.cat.suits'),  icon: ASSETS.shopIcons.suits },
+  { id: 'table',  label: t('shop.cat.table'),  icon: ASSETS.shopIcons.table },
+  { id: 'decor',  label: t('shop.cat.decor'),  icon: ASSETS.shopIcons.decor },
+];
 
   const wrap = document.createElement('div');
   wrap.style.cssText = 'display:flex;flex-direction:column;gap:16px;flex:1 1 auto;';
@@ -1793,41 +1855,28 @@ _buildShopCategories() {
   return wrap;
 }
 
-  _shopCategoriesHTML() {
-    return `
-      <div class="shop-title">ВЫБЕРИ КАТЕГОРИЮ</div>
-      <div class="shop-cats">
-        <button class="shop-cat" data-cat="shirt">РУБАШКИ</button>
-        <button class="shop-cat" data-cat="design">ОФОРМЛЕНИЕ</button>
-        <button class="shop-cat" data-cat="decor">ДЕКОРАЦИИ</button>
-        <button class="shop-cat" data-cat="table">СТОЛ</button>
-		<button class="shop-cat" data-cat="suits">МАСТИ</button>
-      </div>
-    `;
-  }
-
 _shopItemsFor(cat) {
   if (cat === 'table') {
     return ASSETS.tables.map((src, i) => ({
-      src, price: PRICES.table, index: i, label: 'Стол ' + (i + 1),
+      src, price: PRICES.table, index: i, label: t('shop.item.table') + ' ' + (i + 1),
     }));
   }
   if (cat === 'decor') {
     return ASSETS.decorations.map((src, i) => ({
-      src, price: PRICES.decor, index: i, label: 'Декор ' + (i + 1),
+      src, price: PRICES.decor, index: i, label: t('shop.item.decor') + ' ' + (i + 1),
     }));
   }
   if (cat === 'shirt') {
     return ASSETS.shirts.map((src, i) => ({
-      src, price: PRICES.shirt, index: i, label: 'Рубашка ' + (i + 1),
+      src, price: PRICES.shirt, index: i, label: t('shop.item.shirt') + ' ' + (i + 1),
     }));
   }
   if (cat === 'design') {
     return [
-      { cardStyle: 'grid',            label: 'Сетка' },
-      { cardStyle: 'center',          label: 'Центр' },
-      { cardStyle: 'rank',            label: 'Ранг+масть' },
-      { cardStyle: 'rank-no-corners', label: 'Только центр' },
+      { cardStyle: 'grid',            label: t('shop.item.design.grid') },
+      { cardStyle: 'center',          label: t('shop.item.design.center') },
+      { cardStyle: 'rank',            label: t('shop.item.design.rank') },
+      { cardStyle: 'rank-no-corners', label: t('shop.item.design.rankNoCorners') },
     ].map((it, i) => ({ ...it, index: i, price: PRICES.design }));
   }
   if (cat === 'suits') {
@@ -1837,40 +1886,6 @@ _shopItemsFor(cat) {
   return [];
 }
 
-  _shopCategoryHTML(cat) {
-    const items = this._shopItemsFor(cat);
-const tilesHTML = items.map(item => {
-  const bought = isPurchased(cat, item.index);
-  let preview;
-  if (cat === 'design' || cat === 'suits') {
-    const card = spawnCard(
-      'K', 'hearts',
-      item.cardStyle || GameSettings.cardStyle,
-      item.suitStyle || GameSettings.suitStyle
-    );
-    card.style.setProperty('--card-w', '110px');
-    const wrap = document.createElement('div');
-    wrap.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;';
-    wrap.appendChild(card);
-    preview = wrap.outerHTML;
-  } else {
-    preview = `<img src="${item.src}" alt="">`;
-  }
-
-  return `
-    <div class="shop-item ${bought ? 'shop-item--bought' : ''}" data-buy="${cat}:${item.index}">
-      ${preview}
-      ${bought
-        ? `<div class="mm-tile__check">✓</div>`
-        : `<div class="shop-item__price">${item.price}</div>`}
-    </div>`;
-}).join('');
-
-    return `
-      <div class="shop-title">ВИТРИНА</div>
-      <div class="shop-items">${tilesHTML}</div>
-    `;
-  }
 
 _confirmBuy(root, key) {
   const [cat, idxStr] = key.split(':');
@@ -1885,24 +1900,23 @@ _confirmBuy(root, key) {
   // Запоминаем плитку, чтобы восстановить фокус после закрытия диалога
   this._shopPendingFocus = { cat, index };
 
-  showConfirm(
-    `Вы желаете приобрести:<br><b>${item.label}</b><br>за <b class="mm-stat-value--accent">${item.price}</b> очков стиля?`,
-    {
-      title: 'Покупка',
-      onConfirm: () => {
-        const res = purchaseItem(cat, index, item.price);
-        if (!res.ok) {
-          audio.playSfx('tap_up');
-          showMessage(res.reason === 'no_money' ? 'Недостаточно очков стиля.' : 'Уже куплено.');
-          this._shopPendingFocus = null;
-          return;
-        }
-        audio.playSfx('buy');
-        this._applyStyleItem(cat, item);
-        this._refreshStats();
-        // _shopPendingFocus уже установлен — _renderShop вернёт фокус на плитку
-        this._renderShop(root, this._shopCategory);
-      },
+showConfirm(
+  t('shop.buy.question', { label: item.label, price: item.price }),
+  {
+    title: t('shop.buy.title'),
+		onConfirm: () => {
+		  const res = purchaseItem(cat, index, item.price);
+		  if (!res.ok) {
+			audio.playSfx('tap_up');
+			showMessage(res.reason === 'no_money' ? t('shop.buy.noMoney') : t('shop.buy.already'));
+			this._shopPendingFocus = null;
+			return;
+		  }
+		  audio.playSfx('buy');
+		  this._applyStyleItem(cat, item);
+		  this._refreshStats();
+		  this._renderShop(root, this._shopCategory);
+		},
       onCancel: () => {
         // Вернуть фокус на ту же плитку (без пересоздания контента)
         const pf = this._shopPendingFocus;
@@ -1953,22 +1967,22 @@ _openStyle() {
   _buildStyle() {
     const el = document.createElement('div');
     el.className = 'mm-overlay';
-    el.innerHTML = `
-      <div class="mm-overlay__box mm-overlay__box--full">
-        <div class="mm-overlay__title">КОЛЛЕКЦИЯ СТИЛЕЙ</div>
-		<div class="mm-tabs">
-		  <button class="mm-tab" data-cat="shirt">РУБАШКА</button>
-		  <button class="mm-tab" data-cat="design">ОФОРМЛЕНИЕ</button>
-		  <button class="mm-tab" data-cat="suits">МАСТИ</button>
-		  <button class="mm-tab" data-cat="table">СТОЛ</button>
-		  <button class="mm-tab" data-cat="decor">ДЕКОРАЦИИ</button>
-		</div>
-        <div class="mm-tiles"></div>
-        <div class="mm-overlay__footer">
-          <button class="mm-btn" data-preview>ПРОСМОТРЕТЬ СТИЛЬ</button>
-          <button class="mm-btn mm-btn--small" data-close>В МЕНЮ</button>
-        </div>
-      </div>`;
+el.innerHTML = `
+  <div class="mm-overlay__box mm-overlay__box--full">
+    <div class="mm-overlay__title">${t('style.title')}</div>
+    <div class="mm-tabs">
+      <button class="mm-tab" data-cat="shirt">${t('style.tab.shirt')}</button>
+      <button class="mm-tab" data-cat="design">${t('style.tab.design')}</button>
+      <button class="mm-tab" data-cat="suits">${t('style.tab.suits')}</button>
+      <button class="mm-tab" data-cat="table">${t('style.tab.table')}</button>
+      <button class="mm-tab" data-cat="decor">${t('style.tab.decor')}</button>
+    </div>
+    <div class="mm-tiles"></div>
+    <div class="mm-overlay__footer">
+      <button class="mm-btn" data-preview>${t('style.preview')}</button>
+      <button class="mm-btn mm-btn--small" data-close>${t('style.close')}</button>
+    </div>
+  </div>`;
     this._bindClose(el);
     el.querySelector('[data-preview]').addEventListener('click', () => {
 	  audio.playSfx('tap_up');
@@ -2046,9 +2060,9 @@ _renderStyleTiles(root) {
     tile.addEventListener('click', () => {
       if (!isPurchased(cat, i)) {
         showMessage(
-          'Выигрывайте очки стиля в матчах и выполняйте квесты — тогда сможете приобрести этот элемент в магазинчике Джокера.',
-          { title: 'Заблокировано' }
-        );
+  t('style.locked.message'),
+  { title: t('style.locked.title') }
+);
         return;
       }
       audio.playSfx('switch');
@@ -2112,20 +2126,26 @@ _applyStyleItem(cat, item) {
 
 _styleItemsFor(cat) {
   if (cat === 'table') {
-    return ASSETS.tables.map((src, i) => ({ src, label: 'Стол ' + (i + 1), index: i }));
+    return ASSETS.tables.map((src, i) => ({
+      src, label: t('shop.item.table') + ' ' + (i + 1), index: i,
+    }));
   }
   if (cat === 'decor') {
-    return ASSETS.decorations.map((src, i) => ({ src, label: 'Декор ' + (i + 1), index: i }));
+    return ASSETS.decorations.map((src, i) => ({
+      src, label: t('shop.item.decor') + ' ' + (i + 1), index: i,
+    }));
   }
   if (cat === 'shirt') {
-    return ASSETS.shirts.map((src, i) => ({ src, label: 'Рубашка ' + (i + 1), index: i }));
+    return ASSETS.shirts.map((src, i) => ({
+      src, label: t('shop.item.shirt') + ' ' + (i + 1), index: i,
+    }));
   }
   if (cat === 'design') {
     return [
-      { cardStyle: 'grid',            label: 'Сетка' },
-      { cardStyle: 'center',          label: 'Центр' },
-      { cardStyle: 'rank',            label: 'Ранг+масть' },
-      { cardStyle: 'rank-no-corners', label: 'Только центр' },
+      { cardStyle: 'grid',            label: t('shop.item.design.grid') },
+      { cardStyle: 'center',          label: t('shop.item.design.center') },
+      { cardStyle: 'rank',            label: t('shop.item.design.rank') },
+      { cardStyle: 'rank-no-corners', label: t('shop.item.design.rankNoCorners') },
     ].map((it, i) => ({ ...it, index: i }));
   }
   if (cat === 'suits') {
@@ -2143,7 +2163,7 @@ async _openPreview() {
 
   await withLoading(() => {
     this._buildPreviewField(this._previewOverlay);
-  }, { text: 'Собираем макет…', minMs: 2000 });
+  }, { text: t('style.preview.loading'), minMs: 2000 });
 
   // защита от закрытия оверлея во время загрузки (Esc, клик по фону и т.п.)
   if (!this._previewOverlay) return;
@@ -2281,7 +2301,7 @@ _buildPreviewField(container) {
   // ---- подсказка ----
   const hint = document.createElement('div');
   hint.className = 'sp-hint';
-  hint.textContent = 'нажать, чтобы вернуться';
+  hint.textContent = t('style.preview.back');
   field.appendChild(hint);
 }
 
@@ -2302,20 +2322,21 @@ _buildPreviewField(container) {
     this._questNav = { row: 0, col: 0 };
     requestAnimationFrame(() => this._autoFocusOverlay(ov, '[data-claim]'));
   }
+ 
   _buildQuest() {
     const el = document.createElement('div');
     el.className = 'mm-overlay';
 	el.innerHTML = `
 	  <div class="mm-overlay__box mm-overlay__box--quest">
-		<div class="mm-overlay__title">КВЕСТ</div>
-		<div class="mm-quest-list"></div>
-		<div class="mm-overlay__footer">
-		  <button class="mm-btn" data-claim>ПОЛУЧИТЬ НАГРАДУ</button>
-		  <button class="mm-btn mm-btn--small" data-close>В МЕНЮ</button>
-		</div>
-		<div class="mm-quest-footer-bottom">
-		  <button class="mm-btn mm-btn--small mm-btn--danger" data-reset>ОСТАНОВИТЬ КВЕСТ</button>
-		</div>
+		<div class="mm-overlay__title">${t('quest.title')}</div>
+<div class="mm-quest-list"></div>
+<div class="mm-overlay__footer">
+  <button class="mm-btn" data-claim>${t('quest.claim')}</button>
+  <button class="mm-btn mm-btn--small" data-close>${t('quest.close')}</button>
+</div>
+<div class="mm-quest-footer-bottom">
+  <button class="mm-btn mm-btn--small mm-btn--danger" data-reset>${t('quest.reset')}</button>
+</div>
 	  </div>`;
     this._bindClose(el);
 
@@ -2340,20 +2361,19 @@ _buildPreviewField(container) {
 	  this._updateQuestBadge();
 
 	  // === Шаг 1: показываем очки ===
-	  if (res.total > 0) {
-	    audio.playSfx('cash');
-	    showMessage(
-	      `Получено <b class="mm-stat-value--accent">${res.total}</b> очков стиля.`,
-	      {
-	        title: 'Награда',
-	        onClose: () => {
-	          // === Шаг 2: если только что открыли Испытание — показать второе окно ===
-	          if (justUnlocked) this._showTrialUnlockedDialog(el);
-	        }
-	      }
-	    );
-	    return;
-	  }
+	if (res.total > 0) {
+	  audio.playSfx('cash');
+	  showMessage(
+		t('quest.reward.received', { n: res.total }),
+		{
+		  title: t('quest.reward.title'),
+		  onClose: () => {
+			if (justUnlocked) this._showTrialUnlockedDialog(el);
+		  }
+		}
+	  );
+	  return;
+	}
 
 	  // если наград не было, но Испытание только что открылось (теоретически)
 	  if (justUnlocked) {
@@ -2368,24 +2388,28 @@ _buildPreviewField(container) {
 	    const q = Progress.quests[r];
 	    return q.progress >= 1 && q.claimed >= q.progress;
 	  });
-	  if (!anyProgress) {
-	    showMessage('Для получения наград выполните хотя бы один квест.', { title: 'Награда' });
-	  } else if (allClaimed) {
-	    showMessage('Все доступные награды уже получены.', { title: 'Награда' });
-	  } else {
-	    showMessage('Пока нечего забирать.', { title: 'Награда' });
-	  }
+	if (!anyProgress) {
+	  showMessage(t('quest.reward.none'), { title: t('quest.reward.title') });
+	} else if (allClaimed) {
+	  showMessage(t('quest.reward.allClaimed'), { title: t('quest.reward.title') });
+	} else {
+	  showMessage(t('quest.reward.nothing'), { title: t('quest.reward.title') });
+	}
 	});
     el.querySelector('[data-reset]').addEventListener('click', () => {
       audio.playSfx('tap_up');
-	  showConfirm('Завершить квест? Прогресс и очки будут потеряны.',
-        { title: 'Завершить квест?',
-          onConfirm: () => {
-            resetQuests();
-            this._refreshQuest(el);
-            this._refreshStats();
-			this._updateQuestBadge();
-          } });
+		showConfirm(
+		  t('quest.resetConfirm'),
+		  {
+			title: t('quest.resetTitle'),
+			onConfirm: () => {
+			  resetQuests();
+			  this._refreshQuest(el);
+			  this._refreshStats();
+			  this._updateQuestBadge();
+			}
+		  }
+		);
     });
 	
 	    // === DEV-КНОПКА ДЛЯ ТЕСТА КВЕСТОВ ===
@@ -2416,25 +2440,21 @@ _buildPreviewField(container) {
     return el;
   }
 
-  _showTrialUnlockedDialog(questEl) {
-    audio.playSfx('cash');
-    showMessage(
-      `Вы прошли <b>все квесты Классики</b>!<br><br>` +
-      `Теперь доступен новый режим — <b>Испытание</b>. ` +
-      `В нём вы играете полной колодой из <b>52 карт</b>.<br><br>` +
-      `Не забудьте включить его в <b>Настройках</b>.`,
-      {
-        title: 'Испытание открыто!',
-        onClose: () => {
-          // После закрытия — перерисовываем окно квеста уже в режиме 52 карт
-          if (questEl) {
-            this._refreshQuest(questEl);
-            this._updateQuestBadge();
-          }
+_showTrialUnlockedDialog(questEl) {
+  audio.playSfx('cash');
+  showMessage(
+    t('quest.trial.text'),
+    {
+      title: t('quest.trial.title'),
+      onClose: () => {
+        if (questEl) {
+          this._refreshQuest(questEl);
+          this._updateQuestBadge();
         }
       }
-    );
-  }
+    }
+  );
+}
 
   /** Поставить клавиатурный фокус на первый интерактивный элемент оверлея. */
   _autoFocusOverlay(root, selector = '[data-close], button') {
@@ -2698,6 +2718,34 @@ _buildPreviewField(container) {
     }
   }
 
+_navigateLang(e) {
+  const ov = this._activeOverlay;
+  if (!ov) return;
+  this._lastInputWasKeyboard = true;
+  e.preventDefault();
+  const list = [...ov.querySelectorAll('[data-lang], [data-close]')];
+  if (!list.length) return;
+
+  let cur = ov.querySelector('.kbd-focus');
+  if (!cur || !list.includes(cur)) {
+    list[0].classList.add('kbd-focus');
+    cur = list[0];
+  }
+
+  if (e.key === 'Enter' || e.key === ' ') {
+    audio.playSfx('tap');
+    cur.click();
+    return;
+  }
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
+    const dir = (e.key === 'ArrowDown' || e.key === 'ArrowRight') ? 1 : -1;
+    const idx = list.indexOf(cur);
+    const nextIdx = (idx + dir + list.length) % list.length;
+    list.forEach(x => x.classList.remove('kbd-focus'));
+    list[nextIdx].classList.add('kbd-focus');
+  }
+}
+
   _navigateSettings(e) {
     const ov = this._activeOverlay;
     if (!ov) return;
@@ -2790,7 +2838,7 @@ _buildPreviewField(container) {
     // заголовок режима
     const header = document.createElement('div');
     header.className = 'mm-quest-header';
-    header.textContent = isTest ? 'РЕЖИМ: ИСПЫТАНИЕ (52)' : 'РЕЖИМ: КЛАССИКА (36)';
+    header.textContent = isTest ? t('quest.headerTrial') : t('quest.headerClassic');
     list.appendChild(header);
 
     for (const r of order) {
@@ -2813,15 +2861,16 @@ _buildPreviewField(container) {
       const status = document.createElement('span');
       status.className = 'mm-quest-status';
       
-      if (claimed) {
-        status.textContent = 'получено';
-        status.classList.add('mm-quest-status--claimed');
-      } else if (done) {
-        const pts = 250 + 50 * q.progress;
-        status.innerHTML = `<span class="mm-quest-reward">+${pts}</span>`;
-      } else {
-        status.textContent = 'не выполнено';
-      }
+if (claimed) {
+  status.textContent = t('quest.claimed');
+  status.classList.add('mm-quest-status--claimed');
+} else if (done) {
+  const pts = 250 + 50 * q.progress;
+  status.innerHTML = `<span class="mm-quest-reward">+${pts}</span>`;
+} else {
+  status.textContent = t('quest.notDone');
+}
+
 
       row.appendChild(check);
       row.appendChild(label);
@@ -2833,7 +2882,7 @@ _buildPreviewField(container) {
     if (!isTest) {
       const hint = document.createElement('div');
       hint.className = 'mm-quest-hint';
-      hint.textContent = 'Завершите все квесты классики, чтобы открыть Испытание.';
+      hint.textContent = t('quest.hintClassic');
       list.appendChild(hint);
     }
   }

@@ -1356,7 +1356,7 @@ body.is-mobile .mm-style-points__value {
    ================================================================== */
 .msg-overlay {
   position: fixed;
-  inset: auto;
+  inset: 0;
   z-index: 1100;
   display: flex;
   align-items: center;
@@ -1401,7 +1401,7 @@ body.is-mobile .mm-style-points__value {
    ================================================================== */
 .loading-overlay {
   position: fixed;
-  inset: auto;
+  inset: 0;
   z-index: 2000;
   display: flex;
   flex-direction: column;
@@ -2935,3 +2935,58 @@ body.is-mobile .game-over__box button:focus {
     0 6px 10px rgba(0,0,0,0.5),
     inset 0 1px 0 rgba(255,255,255,0.3);
 }
+
+/* ---------- Кнопка-флаг языка в главном меню ---------- */
+.mm-corner--lang {
+  padding: 0 !important;
+  font-size: calc(22px * var(--ui));
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+body.is-mobile .mm-corner--lang {
+  font-size: calc(32px * var(--ui));
+}
+
+/* ---------- Оверлей выбора языка ---------- */
+.mm-overlay__box--lang {
+  width: min(calc(560px * var(--ui)), calc(100% - calc(60px * var(--ui))));
+}
+.mm-langs {
+  display: flex;
+  flex-direction: column;
+  gap: calc(12px * var(--ui));
+}
+.mm-lang {
+  display: flex;
+  align-items: center;
+  gap: calc(16px * var(--ui));
+  padding: calc(14px * var(--ui)) calc(24px * var(--ui));
+  font: 700 calc(18px * var(--ui)) system-ui, sans-serif;
+  letter-spacing: calc(2px * var(--ui));
+  color: #fff;
+  background: #2b2b30;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: calc(10px * var(--ui));
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.mm-lang:hover { background: #3a3a42; }
+.mm-lang--active {
+  background: #2e7d32;
+  border-color: #4caf50;
+}
+.mm-lang__flag {
+  font-size: calc(32px * var(--ui));
+  line-height: 1;
+}
+.mm-lang__name {
+  flex: 1 1 auto;
+  text-align: left;
+}
+body.is-mobile .mm-lang {
+  font-size: calc(24px * var(--ui));
+  padding: calc(18px * var(--ui)) calc(28px * var(--ui));
+}
+body.is-mobile .mm-lang__flag { font-size: calc(44px * var(--ui)); }

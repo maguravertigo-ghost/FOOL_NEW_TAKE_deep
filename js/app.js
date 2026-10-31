@@ -339,13 +339,19 @@ async maybeShowAd() {
     // 1. SDK — до загрузки ресурсов
     await ysdk.init();
 
-    // Автоопределение языка (требование 2.14). Определяем ДО загрузки
-    // текстов, чтобы меню сразу открылось на нужном языке.
-    const lang = ysdk.getLang();
-    const deviceType = ysdk.getDeviceType();
-    console.log('[boot] lang =', lang, ' device =', deviceType);
-    const { setLang } = await import('./i18n/index.js');
-    setLang(lang);
+const { setLang, getSavedLang } = await import('./i18n/index.js');
+const savedLang = getSavedLang();
+const sdkLang   = ysdk.getLang();
+const deviceType = ysdk.getDeviceType();
+console.log('[boot] lang =', savedLang || sdkLang, ' device =', deviceType);
+
+if (!savedLang && sdkLang && sdkLang !== 'ru') {
+  try { localStorage.setItem('fool_lang', sdkLang); } catch {}
+  location.reload();
+  return;
+}
+
+setLang(savedLang || sdkLang, { persist: false });
 
     // 2. Ресурсы игры
     await preloadSvgs();

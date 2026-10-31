@@ -1,9 +1,118 @@
-/**
- * Русский словарь строк.
- * Заполняется постепенно по мере выноса строк из кода.
- * Ключи — плоские, с точками-разделителями групп.
- * Пример: 'menu.mode.podkidnoy': 'Подкидной',
- */
+// js/i18n/ru.js
 export const RU = {
-  // Пока пусто — API готов, тексты выносим на Этапе 10.
+  // ---- Main menu ----
+  'menu.games':           'ИГР СЫГРАНО:',
+  'menu.wins':            'ПОБЕД:',
+  'menu.losses':          'ПОРАЖЕНИЙ:',
+  'menu.draws':           'НИЧЬИХ:',
+  'menu.stylePoints':     'ОЧКИ СТИЛЯ:',
+  'menu.help':            'КАК ИГРАТЬ',
+  'menu.settings':        'НАСТРОЙКИ',
+  'menu.about':           'ОБ ИГРЕ',
+  'menu.shop':            'МАГАЗИНЧИК',
+  'menu.style':           'СТИЛЬ',
+  'menu.quest':           'КВЕСТ',
+  'menu.language':        'Язык',
+  'menu.fullscreen':      'На весь экран',
+  'menu.author':          'segurakaa',
+
+  // ---- Language overlay ----
+  'lang.title':           'ВЫБОР ЯЗЫКА',
+  'lang.ru':              'Русский',
+  'lang.en':              'English',
+  'lang.tr':              'Türkçe',
+  'lang.close':           'ЗАКРЫТЬ',
+  
+  // ---- Dialogs (showMessage / showConfirm) ----
+  'dialog.ok':            'ОК',
+  'dialog.cancel':        'Отмена',
+  'dialog.yes':           'Да',
+  
+  // ---- About ----
+  'about.text1':          '<b>Игра в дурака</b> — классика русской карточной игры.',
+  'about.text2':          'Автор кода и оформления: <b>Segura Kaa</b>',
+  'about.text3':          '2024 ©',
+  'about.close':          'В МЕНЮ',
+
+  // ---- Settings ----
+  'settings.title':       'НАСТРОЙКИ',
+  'settings.sfx':         'Звуки эффектов',
+  'settings.music':       'Музыка в игре',
+  'settings.deckSize':    'Карт в колоде',
+  'settings.handLayout':  'Карты в руке',
+  'settings.moveHints':   'Подсказки хода',
+  'settings.showDeckCounter': 'Счётчик колоды',
+  'settings.aiLevel':     'Уровень AI',
+  'settings.on':          'вкл.',
+  'settings.off':         'откл.',
+  'settings.fan':         'веер',
+  'settings.straight':    'прямо',
+  'settings.aiNovice':    'новичок',
+  'settings.aiNormal':    'обычный',
+  'settings.aiExpert':    'эксперт',
+  'settings.close':       'В МЕНЮ',
+
+  // ---- Shop ----
+  'shop.categories':      'ВЫБЕРИ КАТЕГОРИЮ',
+  'shop.showcase':        'ВИТРИНА',
+  'shop.balance':         'ОЧКОВ СТИЛЯ',
+  'shop.back':            'НАЗАД',
+  'shop.menu':            'В МЕНЮ',
+  'shop.cat.shirt':       'РУБАШКИ',
+  'shop.cat.design':      'ОФОРМЛЕНИЕ',
+  'shop.cat.suits':       'МАСТИ',
+  'shop.cat.table':       'СТОЛ',
+  'shop.cat.decor':       'ДЕКОРАЦИИ',
+  'shop.item.shirt':      'Рубашка',
+  'shop.item.table':      'Стол',
+  'shop.item.decor':      'Декор',
+  'shop.item.design.grid':           'Сетка',
+  'shop.item.design.center':         'Центр',
+  'shop.item.design.rank':           'Ранг+масть',
+  'shop.item.design.rankNoCorners':  'Только центр',
+  'shop.buy.title':       'Покупка',
+  'shop.buy.question':    'Вы желаете приобрести:<br><b>{label}</b><br>за <b class="mm-stat-value--accent">{price}</b> очков стиля?',
+  'shop.buy.noMoney':     'Недостаточно очков стиля.',
+  'shop.buy.already':     'Уже куплено.',
+  'shop.welcome.title':   'Добро пожаловать!',
+  'shop.welcome.text':    'Добро пожаловать в <b>Магазинчик Джокера</b> — здесь есть много интересного, чтобы сделать вашу игру ярче и красивее. Придайте своей игре собственный неповторимый стиль!',
+  'shop.welcome.checkbox':'Больше не показывать при входе',
+  'shop.welcome.ok':      'ОК',
+
+  // ---- Style ----
+  'style.title':          'КОЛЛЕКЦИЯ СТИЛЕЙ',
+  'style.tab.shirt':      'РУБАШКА',
+  'style.tab.design':     'ОФОРМЛЕНИЕ',
+  'style.tab.suits':      'МАСТИ',
+  'style.tab.table':      'СТОЛ',
+  'style.tab.decor':      'ДЕКОРАЦИИ',
+  'style.preview':        'ПРОСМОТРЕТЬ СТИЛЬ',
+  'style.close':          'В МЕНЮ',
+  'style.locked.title':   'Заблокировано',
+  'style.locked.message': 'Выигрывайте очки стиля в матчах и выполняйте квесты — тогда сможете приобрести этот элемент в магазинчике Джокера.',
+  'style.preview.loading':'Собираем макет…',
+  'style.preview.back':   'нажать, чтобы вернуться',
+
+  // ---- Quest ----
+  'quest.title':          'КВЕСТ',
+  'quest.claim':          'ПОЛУЧИТЬ НАГРАДУ',
+  'quest.close':          'В МЕНЮ',
+  'quest.reset':          'ОСТАНОВИТЬ КВЕСТ',
+  'quest.resetTitle':     'Завершить квест?',
+  'quest.resetConfirm':   'Завершить квест? Прогресс и очки будут потеряны.',
+  'quest.claimed':        'получено',
+  'quest.notDone':        'не выполнено',
+  'quest.headerClassic':  'РЕЖИМ: КЛАССИКА (36)',
+  'quest.headerTrial':    'РЕЖИМ: ИСПЫТАНИЕ (52)',
+  'quest.hintClassic':    'Завершите все квесты классики, чтобы открыть Испытание.',
+  'quest.reward.title':   'Награда',
+  'quest.reward.received':'Получено <b class="mm-stat-value--accent">{n}</b> очков стиля.',
+  'quest.reward.none':    'Для получения наград выполните хотя бы один квест.',
+  'quest.reward.allClaimed': 'Все доступные награды уже получены.',
+  'quest.reward.nothing': 'Пока нечего забирать.',
+  'quest.trial.title':    'Испытание открыто!',
+  'quest.trial.text':     'Вы прошли <b>все квесты Классики</b>!<br><br>Теперь доступен новый режим — <b>Испытание</b>. В нём вы играете полной колодой из <b>52 карт</b>.<br><br>Не забудьте включить его в <b>Настройках</b>.',
+  'quest.dev.markRandom': 'DEV: Выполнить случайный квест',
+  'quest.dev.allDone':    'Все квесты в текущем режиме выполнены!',
+  'quest.dev.doneMsg':    'Квест «{rank}» выполнен (DEV)',
 };
