@@ -1427,9 +1427,7 @@ body.is-mobile .card--stack-sub {
 }
 
 #main-menu,
-#pause-overlay,
-.msg-overlay,
-.loading-overlay {
+#pause-overlay {
   position: absolute;
   inset: 0;
   z-index: 500;

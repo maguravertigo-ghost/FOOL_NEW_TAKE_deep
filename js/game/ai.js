@@ -131,6 +131,14 @@ export class AI {
     if (this.defSize === 0) return { type: 'pass' };
 	if (r.table.length >= 6) return { type: 'pass' };
 
+if (this.s._devForceAIAdd) {
+  const tR = tableRanks(r.table);
+  const cands = this.hand.filter(c => canAddToTable(c, tR));
+  if (!cands.length) return { type: 'pass' };
+  cands.sort((a, b) => this.attackValue(a) - this.attackValue(b));
+  return { type: 'attack', card: cands[0], dump: false };
+}
+
     const tR = tableRanks(r.table);
     const cands = this.hand.filter(c => canAddToTable(c, tR));
     if (!cands.length) return { type: 'pass' };

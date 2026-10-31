@@ -115,7 +115,7 @@ export class YandexSDK {
 	  const host = location.hostname;
 	  return p.has('noads') || p.has('dev') ||
 			 host === 'localhost' || host === '127.0.0.1' || host === '' ||
-			 host.endsWith('github.io');
+			 host.endsWith('.github.io');
 	}
 
 
@@ -223,7 +223,7 @@ export class YandexSDK {
 	  setTimeout(() => {
 		try { onReward?.(); } catch {}
 		try { onClose?.();  } catch {}
-	  }, 600);
+	  }, 800);
 	  return;
 	}
 	  

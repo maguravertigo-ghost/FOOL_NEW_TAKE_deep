@@ -126,18 +126,28 @@ export class GameSession {
    * ================================================================ */
 
   async start() {
-    if (this.skipAnimation) {
-      this._skipAll();
-    } else {
-      await this._createDeckVisual();
-      await sleep(350);
-      await this._shuffleAnimation();
-      await this._initialDeal();
-      await this._moveDeckToHolder();
-      await this._buildDeckDepth();
-      await this._showTrump();
-      await this._flipPlayerCards();
-    }
+	  if (window.__devScenario) {
+		const sc = window.__devScenario;
+		window.__devScenario = null;
+		await this._devStartScenario(sc);
+	  } else if (this.skipAnimation) {
+		this._skipAll();
+	  } else {
+		// ... как было
+		if (this.skipAnimation) {
+		  this._skipAll();
+		} else {
+		  await this._createDeckVisual();
+		  await sleep(350);
+		  await this._shuffleAnimation();
+		  await this._initialDeal();
+		  await this._moveDeckToHolder();
+		  await this._buildDeckDepth();
+		  await this._showTrump();
+		  await this._flipPlayerCards();
+		}
+	  }
+
 
     this._setupSlotUIs();
     this._setupActionButton();
@@ -152,6 +162,39 @@ export class GameSession {
 	this.ready = true;
 // кадр уже выставлен в _startRound()
   }
+  
+  async _devStartScenario(sc) {
+  this.deck = new Deck('36');
+  this.deck.cards = [];
+
+  const playerCards = sc.player.map(d => {
+    const c = this._spawnCard(d, { x: 0, y: 0 });
+    c.setFaceUp(true);
+    return c;
+  });
+  const cpuCards = sc.cpu.map(d => {
+    const c = this._spawnCard(d, { x: 0, y: 0 });
+    c.setFaceUp(false);
+    return c;
+  });
+
+  this.app.accordionPlayer.setCards(playerCards);
+  this.app.accordionCpu.setCards(cpuCards);
+
+  this.trump = sc.trump;
+  const tc = new Card({ rank: '6', suit: sc.trump });
+  tc.setFaceUp(true);
+  tc.marker = this.markers.get('trump');
+  tc.relayout(this.scene);
+  this.trumpCard = tc;
+  this.trumpTaken = true;
+
+  this.round.firstMove = sc.firstMove;
+  this.round.attack = sc.firstMove;
+  this.round.move = sc.firstMove;
+
+  if (sc.forceAIAdd) this._devForceAIAdd = true;
+}
   
   destroy() {
     this._destroyed = true;
@@ -1271,93 +1314,83 @@ else                           this._jokerFrame('five');  // ничья
 	  }
 	});
 
-	el.querySelector('[data-action="ad"]').addEventListener('click', async () => {
-	  audio.playSfx('tap');
-	  const btn = el.querySelector('[data-action="ad"]');
-	  if (btn.disabled) return;
+el.querySelector('[data-action="ad"]').addEventListener('click', async () => {
+  audio.playSfx('tap');
+  const btn = el.querySelector('[data-action="ad"]');
+  if (btn.disabled) return;
 
-	  // 1. Проверка интернета ДО затемнения
-	  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-	    showMessage(
-	      'Нет соединения с интернетом.<br><br>' +
-	      'Подключите интернет и попробуйте снова.',
-	      { title: 'Соединение потеряно' }
-	    );
-	    return;
-	  }
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    showMessage(
+      'Нет соединения с интернетом.<br><br>' +
+      'Подключите интернет и попробуйте снова.',
+      { title: 'Соединение потеряно' }
+    );
+    return;
+  }
 
-	  btn.disabled = true;
-	  btn.textContent = '⏳ Загружаем рекламу…';
+  btn.disabled = true;
+  btn.textContent = '⏳ Загружаем рекламу…';
 
-	  // 2. Fade to black
-	  await this.app.fade.toBlack(280);
+  await this.app.fade.toBlack(280);
 
-	  const { ysdk } = await import('../sdk/yandex_sdk.js');
+  const { ysdk } = await import('../sdk/yandex_sdk.js');
 
-	  // 3. Показ с таймаутом 15с
-	  const result = await new Promise(resolve => {
-	    let rewarded = false;
-	    let done = false;
-	    const finish = (r) => {
-	      if (done) return;
-	      done = true;
-	      clearTimeout(tid);
-	      resolve(r);
-	    };
-	    const tid = setTimeout(() => {
-	      console.warn('[ad] timeout — forcing close');
-	      finish({ timeout: true });
-	    }, 2000);
+  const result = await new Promise(resolve => {
+    let rewarded = false;
+    let done = false;
+    const finish = (r) => { if (done) return; done = true; clearTimeout(tid); resolve(r); };
+    const timeoutMs = ysdk.isMock ? 1500 : 8000;
+    const tid = setTimeout(() => {
+      console.warn('[ad] timeout — forcing close');
+      finish({ timeout: true });
+    }, timeoutMs);
 
-	    ysdk.showRewarded({
-	      onReward: () => { rewarded = true; },
-	      onClose:  () => finish({ rewarded }),
-	      onError:  () => finish({ error: true }),
-	    });
-	  });
+    ysdk.showRewarded({
+      onReward: () => { rewarded = true; },
+      onClose:  () => finish({ rewarded }),
+      onError:  () => finish({ error: true }),
+    });
+  });
 
-	  // 4. Обработка результата
-	  if (result.rewarded) {
-	    addStylePoints(500);
-	    btn.textContent = '✓ +500 получено';
-	    btn.classList.add('pause-btn--ad-done');
+  // Всегда снимаем затемнение — независимо от результата
+  this.app.fade.toClear(280);
 
-	    const replayBtn = el.querySelector('[data-action="replay"]');
-	    const replayIdx = this._gameOverButtons.indexOf(replayBtn);
-	    if (replayIdx >= 0) {
-	      this._gameOverButtons.forEach((b, i) =>
-	        b.classList.toggle('kbd-focus', i === replayIdx)
-	      );
-	      this._gameOverNavIdx = replayIdx;
-	    }
+  if (result.rewarded) {
+    addStylePoints(500);
+    btn.textContent = '✓ +500 получено';
+    btn.classList.add('pause-btn--ad-done');
 
-	    showMessage('+500 очков стиля!', {
-	      title: 'Награда',
-	      onClose: () => this.app.fade.toClear(280),
-	    });
-	    return;
-	  }
+    const replayBtn = el.querySelector('[data-action="replay"]');
+    const replayIdx = this._gameOverButtons.indexOf(replayBtn);
+    if (replayIdx >= 0) {
+      this._gameOverButtons.forEach((b, i) => b.classList.toggle('kbd-focus', i === replayIdx));
+      this._gameOverNavIdx = replayIdx;
+    }
 
-	  // Ошибка / offline / timeout
-	  this.app.fade.toClear(280);
-	  btn.disabled = false;
-	  btn.textContent = '📺 +500 очков за рекламу';
+    // Сообщение — ТОЛЬКО для реальной рекламы (награда за жест)
+    // В мок-режиме ничего не показываем — просто вернулись в окно.
+    if (!ysdk.isMock) {
+      showMessage('+500 очков стиля!', { title: 'Награда' });
+    }
+    return;
+  }
 
-	  if (result.timeout) {
-	    showMessage(
-	      'Соединение потеряно.<br><br>' +
-	      'Подключите интернет и перезапустите игру.',
-	      { title: 'Соединение потеряно' }
-	    );
-	  } else if (result.error) {
-	    showMessage(
-	      'Реклама недоступна.<br><br>' +
-	      'Проверьте интернет-соединение.',
-	      { title: 'Реклама' }
-	    );
-	  }
-	  // если просто result.rewarded === false (закрыл до конца) — ничего не пишем
-	});
+  // Провал — возвращаем кнопку и объясняем
+  btn.disabled = false;
+  btn.textContent = '📺 +500 очков за рекламу';
+
+  if (result.timeout) {
+    showMessage(
+      'Соединение потеряно.<br><br>Подключите интернет и перезапустите игру.',
+      { title: 'Соединение потеряно' }
+    );
+  } else if (result.error) {
+    showMessage(
+      'Реклама недоступна.<br><br>Проверьте интернет-соединение.',
+      { title: 'Реклама' }
+    );
+  }
+});
 
     console.log('[game over]', winner, { points, epaulettes, questRank });
     

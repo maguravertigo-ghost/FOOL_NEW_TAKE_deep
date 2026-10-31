@@ -488,6 +488,36 @@ _createDevTools() {
     this.session._gameOverShown = false;
     this.session._showGameOver('draw');
   }));
+  
+  wrap.appendChild(mkBtn('MATCH 6-ATK', '#1565c0', '#42a5f5', () => {
+  if (!this.session || !this.session.ready) {
+    showMessage('Начните матч для теста сценария', { title: 'DEV' });
+    return;
+  }
+  window.__devScenario = {
+    player: [
+      { rank: '7', suit: 'diamonds' },
+      { rank: '8', suit: 'hearts' },
+      { rank: '8', suit: 'clubs' },
+      { rank: '8', suit: 'spades' },
+      { rank: '9', suit: 'hearts' },
+      { rank: '9', suit: 'clubs' },
+    ],
+    cpu: [
+      { rank: '6', suit: 'hearts' },
+      { rank: '6', suit: 'clubs' },
+      { rank: '6', suit: 'diamonds' },
+      { rank: '6', suit: 'spades' },
+      { rank: '7', suit: 'hearts' },
+      { rank: '7', suit: 'clubs' },
+    ],
+    trump: 'spades',
+    firstMove: 'cpu',
+    forceAIAdd: true,
+  };
+  this._playAgain(this._lastMode || 'podkidnoy');
+}));
+  
   document.body.appendChild(wrap);
   this.devToolsEl = wrap;
   
