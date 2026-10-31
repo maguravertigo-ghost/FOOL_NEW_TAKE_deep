@@ -86,6 +86,14 @@ class App {
       if (k === 'Backspace')  this.session.cancelSelection?.();
     });
 
+	// --- ТВ-браузеры: страховка для получения keydown-событий ---
+	setTimeout(() => {
+	  try { document.body.setAttribute('tabindex', '-1'); document.body.focus(); } catch {}
+	}, 0);
+	window.addEventListener('pointerdown', () => {
+	  try { document.body.focus(); } catch {}
+	}, { passive: true });
+
     // Escape / BrowserBack / Backspace: закрыть оверлей / пауза. Требование 1.6.3.3
     window.addEventListener('keydown', (e) => {
       if (e.key !== 'Escape' && e.key !== 'BrowserBack' && e.key !== 'Backspace') return;

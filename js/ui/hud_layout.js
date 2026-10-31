@@ -163,18 +163,18 @@ export class HudLayout {
   }
 
   /** Кнопка «КАК ИГРАТЬ» — под блоком очков стиля, по правому краю. */
-  rectHelpButton() {
-    const sp = this.rectStylePoints();
-    const gap = this.s(this.isMobile ? 10 : 16);
-    const h   = this.s(this.isMobile ? 50 : 64);
-    const w   = this.s(200);
-    return {
-      left:   sp.left + sp.width - w,
-      top:    sp.top + sp.height + gap,
-      width:  w,
-      height: h,
-    };
-  }
+	rectHelpButton() {
+	  const sp = this.rectStylePoints();
+	  const gap = this.s(this.isMobile ? 10 : 16);
+	  const h   = this.s(this.isMobile ? 80 : 64);    // ← было 50 / 64
+	  const w   = this.s(this.isMobile ? 280 : 200);  // ← было 200 / 200
+	  return {
+		left:   sp.left + sp.width - w,
+		top:    sp.top + sp.height + gap,
+		width:  w,
+		height: h,
+	  };
+	}
 
   rectLeftButtons(count = 2) {
     return this._sideButtons(count, true);

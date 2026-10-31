@@ -736,7 +736,15 @@ body.is-mobile .card--stack-sub {
   min-width: 0;
 }
 .mm-style-points__label { opacity: 0.8; letter-spacing: 1px; }
-.mm-style-points__value { color: #ff9800; font-weight: 700; }
+.mm-style-points__value {
+  color: #ff9800;
+  font-weight: 800;
+  font-size: 1.8em;
+  line-height: 1;
+}
+body.is-mobile .mm-style-points__value {
+  font-size: 2.2em;
+}
 
 .mm-logo {
   width: min(70vw, calc(520px * var(--ui)));
@@ -1823,10 +1831,19 @@ body.is-mobile .card--stack-sub {
   line-height: 1;
 }
 body.is-mobile .help-nav__btn {
-  min-width: calc(64px * var(--ui));
+  min-width: calc(96px * var(--ui));              /* шире по X */
   min-height: calc(44px * var(--ui));
-  padding: calc(12px * var(--ui)) calc(16px * var(--ui)) !important;
+  padding: calc(12px * var(--ui)) calc(20px * var(--ui)) !important;
   font-size: calc(28px * var(--ui)) !important;
+}
+/* «В МЕНЮ» — по высоте как ↑/↓, ширина по содержимому */
+body.is-mobile .help-nav > .mm-btn:not(.help-nav__btn) {
+  min-height: calc(44px * var(--ui));
+  padding: calc(12px * var(--ui)) calc(20px * var(--ui)) !important;
+  font-size: calc(22px * var(--ui)) !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ==================================================================
