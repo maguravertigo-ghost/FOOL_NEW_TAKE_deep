@@ -21,7 +21,7 @@ function defaultState() {
 	purchases: {
 	  shirt:  [0],
 	  design: [0],
-	  suits:  [0],   // default открыт
+	  suits:  [0, 3],   // default и gradient открыты
 	  table:  [0],
 	  decor:  [],
 	},
@@ -290,7 +290,7 @@ export function resetAll() {
   Progress.purchases = {
     shirt:  [0],
     design: [0],
-    suits:  [0],
+    suits:  [0, 3],
     table:  [0],
     decor:  [],
   };

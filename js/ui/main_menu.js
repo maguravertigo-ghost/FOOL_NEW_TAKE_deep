@@ -1989,7 +1989,14 @@ _renderStyleTiles(root) {
   tiles.innerHTML = '';
 
   const items = this._styleItemsFor(cat);
-  const selected = this._selectedStyle[cat] ?? 0;
+  
+  // Страховка: если текущий выбранный стиль больше не куплен (например, истек подарок),
+  // сбрасываем выбор на дефолтный (0)
+  let selected = this._selectedStyle[cat] ?? 0;
+  if (!isPurchased(cat, selected) && cat !== 'decor') {
+    selected = 0;
+    this._selectedStyle[cat] = 0;
+  }
 
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
