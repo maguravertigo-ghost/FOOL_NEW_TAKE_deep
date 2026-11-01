@@ -2305,12 +2305,40 @@ _confirmSlot(slot) {
     const ranks = new Set(hand.map(c => c.data.rank));
     if (ranks.size === 1) return 'pogony';
 
-    // 2. ВСЁ — оппонент не может побить ни одну из наших карт
+    // 2. ВСЁ — строгая последовательность козырей, которую ИИ не может побить
     const oppHand = opp.cards;
-    const allUnbeatable = hand.every(c =>
-      !oppHand.some(a => canBeat(a, c, this.trump))
-    );
-    if (allUnbeatable) return 'vsyo';
+    
+    // Проверяем, что все карты — козыри
+    const allTrumps = hand.every(c => c.data.suit === this.trump);
+    
+    if (allTrumps) {
+      // Сортируем по рангу по убыванию (от старшей к младшей)
+      const sortedHand = [...hand].sort((a, b) => RANK_VALUE[b.data.rank] - RANK_VALUE[a.data.rank]);
+      
+      // Проверяем, что ранги идут строго по порядку без пропусков
+      let isSequence = true;
+      for (let i = 0; i < sortedHand.length - 1; i++) {
+        const curr = RANK_VALUE[sortedHand[i].data.rank];
+        const next = RANK_VALUE[sortedHand[i+1].data.rank];
+        if (curr - next !== 1) {
+          isSequence = false;
+          break;
+        }
+      }
+      
+      if (isSequence) {
+        // Берем самую младшую карту в последовательности
+        const lowestCard = sortedHand[sortedHand.length - 1];
+        
+        // Проверяем, может ли ИИ побить эту младшую карту.
+        // Если не может побить младшую, значит не может побить и все остальные (т.к. они старше).
+        const oppCanBeatLowest = oppHand.some(a => canBeat(a, lowestCard, this.trump));
+        
+        if (!oppCanBeatLowest) {
+          return 'vsyo';
+        }
+      }
+    }
 
     return null;
   }
@@ -2318,8 +2346,16 @@ _confirmSlot(slot) {
   async _playFinishMove(side, kind) {
     const r = this.round;
     const acc = side === 'player' ? this.app.accordionPlayer : this.app.accordionCpu;
-    const cards = [...acc.cards];
+    
+    // Копируем массив, чтобы не менять оригинал до нужного момента
+    let cards = [...acc.cards];
     if (!cards.length) return;
+
+    // Для "ВСЁ!" сортируем карты от старшей к младшей (Туз -> Король -> ...)
+    // Для "ПОГОНЫ!" порядок не важен, но сортировка не повредит.
+    if (kind === 'vsyo') {
+      cards.sort((a, b) => RANK_VALUE[b.data.rank] - RANK_VALUE[a.data.rank]);
+    }
 
     // Запоминаем: это финиш через кнопку ПОГОНЫ! (иначе — просто финиш обычным ходом)
     this._finishedViaPogony = (kind === 'pogony');

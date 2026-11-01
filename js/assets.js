@@ -86,6 +86,16 @@ shirts: [
   `${BASE}/card_shirt/default/shirt_N2.svg`,
   `${BASE}/card_shirt/default/shirt_N3.svg`,
   `${BASE}/card_shirt/default/shirt_N4.svg`,
+  
+  `${BASE}/card_shirt/default/shirt_K1.svg`,
+  `${BASE}/card_shirt/default/shirt_K2.svg`,
+  `${BASE}/card_shirt/default/shirt_K3.svg`,
+  `${BASE}/card_shirt/default/shirt_K4.svg`,
+  
+  `${BASE}/card_shirt/default/shirt_M1.svg`,
+  `${BASE}/card_shirt/default/shirt_M2.svg`,
+  `${BASE}/card_shirt/default/shirt_M3.svg`,
+  `${BASE}/card_shirt/default/shirt_M4.svg`,
 ],
   designs: [
     `${BASE}/card_body/body/default/card_body.svg`,

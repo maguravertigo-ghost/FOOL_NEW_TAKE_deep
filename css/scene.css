@@ -177,23 +177,21 @@ body.is-mobile .card--stack-sub {
   border-color: #4caf50;
   background: rgba(76, 175, 80, 0.20);
   box-shadow: 0 0 22px rgba(76, 175, 80, 0.7);
-  animation: slot-active-pulse 1.8s ease-in-out infinite;
+  animation: slot-active-pulse 2s ease-in-out infinite;
 }
 
-/* Пульсация: текущий зелёный → светлый → текущий → тёмный → текущий.
-   Никакой обводки — только собственный цвет рамки + мягкое свечение. */
 @keyframes slot-active-pulse {
-  0%, 50%, 100% {
-    border-color: #4caf50;                     /* текущий зелёный */
+  0%, 100% {
+    border-color: #4caf50; /* Нормальный */
     box-shadow: 0 0 22px rgba(76, 175, 80, 0.7);
   }
   25% {
-    border-color: #81c784;                     /* светло-зелёный */
-    box-shadow: 0 0 28px rgba(129, 199, 132, 0.9);
+    border-color: #2e7d32; /* Тёмный */
+    box-shadow: 0 0 16px rgba(46, 125, 50, 0.85);
   }
   75% {
-    border-color: #2e7d32;                     /* тёмно-зелёный */
-    box-shadow: 0 0 18px rgba(46, 125, 50, 0.85);
+    border-color: #81c784; /* Яркий */
+    box-shadow: 0 0 28px rgba(129, 199, 132, 0.95);
   }
 }
 /* Слот с клавиатурным фокусом (когда карта выбрана и можно переключать) */

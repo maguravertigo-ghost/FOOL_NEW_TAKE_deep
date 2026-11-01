@@ -34,6 +34,9 @@ const PIP = {
   large:  { w: 137, h: 145 },
 };
 
+// ↓ НОВАЯ КОНСТАНТА (размер подбирай под свой дизайн, 160x160 — очень крупно)
+const HUGE_PIP = { w: 160, h: 160 };
+
 const CENTER_PIP = { w: 78, h: 82 };
 const CENTER_RANK = { w: 74, h: 90 };
 
@@ -192,6 +195,13 @@ function renderCenterStyle(grid, rank, suit, suitStyle) {
   placePip(grid, COL.B, ROW['3'], CENTER_PIP, suitSrc);
 }
 
+function renderBigSuitStyle(grid, rank, suit, suitStyle) {
+  const suitSrc = ASSETS.suit(suitStyle, suit);
+  // Ставим масть ровно по центру (ROW['3'] — это вертикальная середина).
+  // Она будет одинаково крупной для всех карт: от 6 до Туза, включая Валета, Даму и Короля.
+  placePip(grid, COL.B, ROW['3'], HUGE_PIP, suitSrc);
+}
+
 function renderRankStyle(grid, rank, suit, suitStyle) {
   const rankSrc = ASSETS.rank(rank);
   const suitSrc = ASSETS.suit(suitStyle, suit);
@@ -274,8 +284,10 @@ export function buildCard(rank, suit, styleId = 'grid',
       renderCenterStyle(grid, rank, suit, suitStyle);
       break;
     case 'rank':
-    case 'rank-no-corners':
       renderRankStyle(grid, rank, suit, suitStyle);
+      break;
+    case 'rank-no-corners':
+      renderBigSuitStyle(grid, rank, suit, suitStyle);
       break;
     default:
       throw new Error(`Unknown style: ${styleId}`);
@@ -287,13 +299,12 @@ export function buildCard(rank, suit, styleId = 'grid',
     renderCourtPips(card, suit, suitStyle);
   }
 
-  if (styleId !== 'rank-no-corners') {
-    const lt = el('div', 'card__corner-layer card__corner-layer--lt', card);
-    lt.appendChild(buildCorner(rank, suit, suitStyle));
+  // Теперь углы рисуются ВСЕГДА (и для rank-no-corners тоже)
+  const lt = el('div', 'card__corner-layer card__corner-layer--lt', card);
+  lt.appendChild(buildCorner(rank, suit, suitStyle));
 
-    const rb = el('div', 'card__corner-layer card__corner-layer--rb', card);
-    rb.appendChild(buildCorner(rank, suit, suitStyle));
-  }
+  const rb = el('div', 'card__corner-layer card__corner-layer--rb', card);
+  rb.appendChild(buildCorner(rank, suit, suitStyle));
 
   return card;
 }

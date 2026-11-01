@@ -69,7 +69,7 @@ export const RU = {
   'shop.item.design.grid':           'Сетка',
   'shop.item.design.center':         'Центр',
   'shop.item.design.rank':           'Ранг+масть',
-  'shop.item.design.rankNoCorners':  'Только центр',
+  'shop.item.design.rankNoCorners': 'Крупная масть',
   'shop.buy.title':       'Покупка',
   'shop.buy.question':    'Вы желаете приобрести:<br><b>{label}</b><br>за <b class="mm-stat-value--accent">{price}</b> очков стиля?',
   'shop.buy.noMoney':     'Недостаточно очков стиля.',

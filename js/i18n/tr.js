@@ -69,7 +69,7 @@ export const TR = {
   'shop.item.design.grid':           'Izgara',
   'shop.item.design.center':         'Merkez',
   'shop.item.design.rank':           'Değer+Renk',
-  'shop.item.design.rankNoCorners':  'Sadece merkez',
+  'shop.item.design.rankNoCorners':  'Büyük Sembol',
   'shop.buy.title':       'Satın Alma',
   'shop.buy.question':    '<b>{label}</b> öğesini <b class="mm-stat-value--accent">{price}</b> stil puanına satın almak istiyor musunuz?',
   'shop.buy.noMoney':     'Yeterli stil puanı yok.',

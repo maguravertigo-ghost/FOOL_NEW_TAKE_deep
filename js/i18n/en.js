@@ -64,7 +64,7 @@ export const EN = {
   'shop.item.design.grid':          'Grid',
   'shop.item.design.center':        'Center',
   'shop.item.design.rank':          'Rank+Suit',
-  'shop.item.design.rankNoCorners': 'Center only',
+  'shop.item.design.rankNoCorners': 'Big Suit',
   'shop.buy.title':       'Purchase',
   'shop.buy.question':    'Buy <b>{label}</b> for <b class="mm-stat-value--accent">{price}</b> style points?',
   'shop.buy.noMoney':     'Not enough style points.',
