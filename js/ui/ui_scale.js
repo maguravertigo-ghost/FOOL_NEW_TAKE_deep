@@ -17,7 +17,6 @@ export class UIScale {
 
     this._handlers = new Set();
     this._pending = false;
-	this._resizeTimer = null;
     this._onResize = this._onResize.bind(this);
 
     window.addEventListener('resize', this._onResize);
@@ -36,15 +35,11 @@ export class UIScale {
   _onResize() {
     if (this._pending) return;
     this._pending = true;
-    
-    // Задержка нужна, чтобы дождаться анимации скрытия/появления 
-    // адресной строки в мобильных браузерах (Chrome/Safari).
-    clearTimeout(this._resizeTimer);
-    this._resizeTimer = setTimeout(() => {
+    requestAnimationFrame(() => {
       this._pending = false;
       this._recalculate();
       for (const h of this._handlers) h(this);
-    }, 250); // 250мс — безопасная задержка
+    });
   }
 
 _recalculate() {

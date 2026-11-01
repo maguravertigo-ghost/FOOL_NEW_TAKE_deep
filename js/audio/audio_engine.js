@@ -63,6 +63,12 @@ export class AudioEngine {
 	this._sfxPaused = false;
 	this._audioCtx = null; // Контекст для Web Audio API
     this._sfxBuffers = {}; // Кеш загруженных звуков
+	    // Глобальное возобновление AudioContext при любом тапе (для iOS)
+    document.addEventListener('pointerdown', () => {
+      if (this._audioCtx && this._audioCtx.state === 'suspended') {
+        this._audioCtx.resume().catch(() => {});
+      }
+    }, { capture: true });
   }
 
   /* ---------- громкость ---------- */

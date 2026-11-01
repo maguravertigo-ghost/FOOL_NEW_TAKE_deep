@@ -44,6 +44,13 @@ export class Scene {
     return () => this._handlers.delete(fn);
   }
 
+  // НОВЫЙ МЕТОД
+  forceMeasure() {
+    this._measure();
+    for (const h of this._handlers) h(this);
+  }
+
+
   /** Преобразование маркера в пиксели сцены */
   resolve(marker) {
     return {

@@ -592,6 +592,7 @@ async _startGameFromMenu(mode) {
     }
 
     // ---- Жеребьёвка / показ жетона ----
+    this.scene.forceMeasure(); // <-- Страховка перед броском монеты
     this.coinToss = new CoinToss(this);
     let firstMove;
     if (Progress.foolToken === null) {
@@ -862,6 +863,7 @@ async _startGameFromMenu(mode) {
     this.scene.onResize(() => this._relayoutAll());
     uiScale.onChange(() => {
       this._applyScenePreset();
+      this.scene.forceMeasure(); // <-- Принудительно синхронизируем размеры
       this._relayoutAll();
     });
   }
