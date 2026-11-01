@@ -230,6 +230,11 @@ _onTrackEnded(isFirst) {
     const url = SFX_LIST[name];
     if (!url) return;
 
+    // Разбудить AudioContext, если он заснул (Chrome)
+    if (this._audioCtx && this._audioCtx.state === 'suspended') {
+      this._audioCtx.resume().catch(() => {});
+    }
+
     // Если Web Audio API доступен и буфер загружен — играем через него (мобилки)
     if (this._audioCtx && this._sfxBuffers[url]) {
       try {

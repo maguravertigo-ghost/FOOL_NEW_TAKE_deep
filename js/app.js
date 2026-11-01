@@ -68,6 +68,7 @@ class App {
     this._paused = false;
     this._transitioning = false;
     this._lastAdAt = 0;
+	this._inAd = false;
 
 	this.debug = DEV_MODE
 	? new DebugOverlay(this.scene, this.markers, () => this.cards, this.debugLayer)
@@ -197,7 +198,11 @@ class App {
     };
     const onShow = () => {
       audio._sfxPaused = false;
-      audio.resumeMusic();
+      // Не включаем музыку, если сейчас идет реклама
+      if (!this._inAd) {
+        audio.resumeMusic();
+        audio.resumeAllSfx();
+      }
     };
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) onHide(); else onShow();
@@ -280,6 +285,7 @@ class App {
    * ================================================================ */
 
   pauseForAd() {
+	this._inAd = true;
     audio.pauseAllSfx();
     audio.pauseMusic();
     if (this.interp) this.interp.pause();
@@ -288,6 +294,7 @@ class App {
   }
 
   resumeFromAd() {
+	this._inAd = false;
     if (this.interp) this.interp.resume();
     audio.resumeAllSfx();
     audio.resumeMusic();
@@ -769,6 +776,10 @@ async _startGameFromMenu(mode) {
     this._paused = false;
     this.interp.resume();
     audio.resumeMusic();
+    audio.resumeAllSfx();
+    if (audio._audioCtx && audio._audioCtx.state === 'suspended') {
+      audio._audioCtx.resume().catch(() => {});
+    }
     if (this.session) this.session.onResume?.();
     this.pauseOverlay.hide();
     ysdk.gameplayStart?.();
