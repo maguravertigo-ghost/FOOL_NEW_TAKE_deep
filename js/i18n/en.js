@@ -257,4 +257,8 @@ export const EN = {
   'auth.mockTitle':       'Authorization',
   'auth.mockText':        'Local mode — authorization is unavailable.',
   'auth.already':         'Already signed in',
+
+  'shop.buy.adTitle':     'Reward for watching ad',
+  'shop.buy.adQuestion':  'Get <b>{label}</b> by watching an ad?',
+  'shop.buy.adSuccess':   'Item successfully unlocked!',
 };

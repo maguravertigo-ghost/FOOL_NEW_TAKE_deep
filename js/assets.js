@@ -31,6 +31,7 @@ export const ASSETS = {
     suits:  `${BASE}/hud/icons/suits.svg`,
     table:  `${BASE}/hud/icons/table.svg`,
     decor:  `${BASE}/hud/icons/decor.svg`,
+    movie:  `${BASE}/hud/icons/movie.svg`, // <-- ДОБАВИТЬ ЭТО
   },
 	pokerChip: `${BASE}/hud/icons/poker_chip.svg`,
 	newOneIcon: `${BASE}/hud/icons/new_one.svg`,

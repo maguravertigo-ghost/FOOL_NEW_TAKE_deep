@@ -2646,6 +2646,10 @@ body.is-mobile .temp-badge {
   color: #fff;
   font-size: calc(22px * var(--ui));
 }
+/* На ПК: галочка съезжает вниз, если есть бейдж подарка */
+.mm-tile__check--below-badge {
+  top: calc(6px * var(--ui) + 22px * var(--ui) + 6px * var(--ui)) !important;
+}
 
 body.is-mobile .mm-tile__check--below-badge {
   top: calc(10px * var(--ui) + 44px * var(--ui) + 10px * var(--ui)) !important;

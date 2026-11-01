@@ -267,4 +267,8 @@ export const RU = {
   'auth.mockTitle':       'Авторизация',
   'auth.mockText':        'Локальный режим — авторизация недоступна.',
   'auth.already':         'Вы уже авторизованы',
+
+  'shop.buy.adTitle':     'Награда за рекламу',
+  'shop.buy.adQuestion':  'Получить <b>{label}</b> за просмотр рекламы?',
+  'shop.buy.adSuccess':   'Элемент успешно разблокирован!',
 };

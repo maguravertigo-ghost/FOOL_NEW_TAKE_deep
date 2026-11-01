@@ -1630,7 +1630,10 @@ _buildShopItems(cat) {
   for (const item of items) {
     const permanent = (Progress.purchases[cat] || []).includes(item.index);
     const tempLeft = permanent ? 0 : getTempMatchesLeft(cat, item.index);
-    const affordable = !permanent && item.price <= Progress.stylePoints;
+    const isAd = item.isAd && !permanent && !tempLeft;
+    
+    // Доступно за очки, если это не подарок, не реклама и хватает денег
+    const affordable = !permanent && !tempLeft && !isAd && item.price <= Progress.stylePoints;
 
     const tile = document.createElement('div');
     tile.className = 'shop-item' + (permanent ? ' shop-item--bought' : '');
@@ -1641,8 +1644,7 @@ _buildShopItems(cat) {
     const prev = this._makePreview(item, cat);
     if (prev) tile.appendChild(prev);
 
-    // Счётчик подарка добавляем ПЕРВЫМ — тогда в DOM он идёт до галочки.
-    // CSS-селектор `.temp-badge + .mm-tile__check` сдвинет галочку вниз.
+    // Счётчик подарка
     if (tempLeft > 0) {
       const tb = document.createElement('div');
       tb.className = 'temp-badge';
@@ -1650,24 +1652,39 @@ _buildShopItems(cat) {
       tile.appendChild(tb);
     }
 
+    // Логика бейджей (фикс багов исчезновения и залоченности)
     if (permanent) {
       const ck = document.createElement('div');
       ck.className = 'mm-tile__check';
       if (tempLeft > 0) ck.classList.add('mm-tile__check--below-badge');
       ck.textContent = '✓';
       tile.appendChild(ck);
+    } else if (tempLeft > 0) {
+      // Подаренный предмет: не блокируем, не показываем цену. 
+      // Просто оставляем бейдж tempLeft.
     } else {
-      const lock = document.createElement('img');
-      lock.className = 'mm-tile__lock';
-      lock.src = ASSETS.lockIcon;
-      lock.alt = '';
-      lock.draggable = false;
-      tile.appendChild(lock);
+      // Обычная покупка или реклама
+      if (isAd) {
+        const adIcon = document.createElement('img');
+        adIcon.className = 'shop-item__ad';
+        adIcon.src = ASSETS.shopIcons.movie;
+        adIcon.alt = 'Ad';
+        adIcon.draggable = false;
+        adIcon.style.cssText = 'position:absolute;left:6px;bottom:6px;width:24px;height:24px;opacity:0.9;filter:drop-shadow(0 0 2px #000);';
+        tile.appendChild(adIcon);
+      } else {
+        const lock = document.createElement('img');
+        lock.className = 'mm-tile__lock';
+        lock.src = ASSETS.lockIcon;
+        lock.alt = '';
+        lock.draggable = false;
+        tile.appendChild(lock);
 
-      const pr = document.createElement('div');
-      pr.className = 'shop-item__price';
-      pr.textContent = item.price;
-      tile.appendChild(pr);
+        const pr = document.createElement('div');
+        pr.className = 'shop-item__price';
+        pr.textContent = item.price;
+        tile.appendChild(pr);
+      }
     }
 
     tile.addEventListener('click', () => this._confirmBuy(this._overlays.shop, `${cat}:${item.index}`));
@@ -1783,16 +1800,19 @@ _shopItemsFor(cat) {
   if (cat === 'table') {
     return ASSETS.tables.map((src, i) => ({
       src, price: PRICES.table, index: i, label: t('shop.item.table') + ' ' + (i + 1),
+      isAd: i === ASSETS.tables.length - 1
     }));
   }
   if (cat === 'decor') {
     return ASSETS.decorations.map((src, i) => ({
       src, price: PRICES.decor, index: i, label: t('shop.item.decor') + ' ' + (i + 1),
+      isAd: i === ASSETS.decorations.length - 1
     }));
   }
   if (cat === 'shirt') {
     return ASSETS.shirts.map((src, i) => ({
       src, price: PRICES.shirt, index: i, label: t('shop.item.shirt') + ' ' + (i + 1),
+      isAd: i === ASSETS.shirts.length - 1
     }));
   }
   if (cat === 'design') {
@@ -1801,11 +1821,11 @@ _shopItemsFor(cat) {
       { cardStyle: 'center',          label: t('shop.item.design.center') },
       { cardStyle: 'rank',            label: t('shop.item.design.rank') },
       { cardStyle: 'rank-no-corners', label: t('shop.item.design.rankNoCorners') },
-    ].map((it, i) => ({ ...it, index: i, price: PRICES.design }));
+    ].map((it, i) => ({ ...it, index: i, price: PRICES.design, isAd: i === 3 }));
   }
   if (cat === 'suits') {
     return ['default','paper','barhat','gradient','ruby','golden']
-      .map((s, i) => ({ suitStyle: s, label: s, index: i, price: PRICES.suits }));
+      .map((s, i) => ({ suitStyle: s, label: s, index: i, price: PRICES.suits, isAd: i === 5 }));
   }
   return [];
 }
@@ -1818,8 +1838,46 @@ _confirmBuy(root, key) {
   const item = items[index];
   if (!item) return;
 
-  // Блокируем только перманентную покупку. Временный подарок можно купить.
+  // Блокируем только перманентную покупку.
   if ((Progress.purchases[cat] || []).includes(index)) return;
+
+  // ЕСЛИ ЭТО РЕКЛАМНЫЙ ПРЕДМЕТ
+  if (item.isAd && !getTempMatchesLeft(cat, index)) {
+    this._shopPendingFocus = { cat, index };
+    showConfirm(
+      t('shop.buy.adQuestion', { label: item.label }),
+      {
+        title: t('shop.buy.adTitle'),
+        onConfirm: async () => {
+          const { ysdk } = await import('../sdk/yandex_sdk.js');
+          
+          const result = await new Promise(resolve => {
+            ysdk.showRewarded({
+              onReward: () => resolve(true),
+              onClose:  () => resolve(false),
+              onError:  () => resolve(false)
+            });
+          });
+
+          if (result) {
+            if (!Progress.purchases[cat]) Progress.purchases[cat] = [];
+            Progress.purchases[cat].push(index);
+            saveProgress();
+            
+            audio.playSfx('buy');
+            this._applyStyleItem(cat, item);
+            this._refreshStats();
+            this._renderShop(root, this._shopCategory);
+            showMessage(t('shop.buy.adSuccess'), { title: t('shop.buy.adTitle') });
+          } else {
+            this._shopPendingFocus = null;
+          }
+        },
+        onCancel: () => { this._shopPendingFocus = null; }
+      }
+    );
+    return;
+  }
 
   // Запоминаем плитку, чтобы восстановить фокус после закрытия диалога
   this._shopPendingFocus = { cat, index };
@@ -1951,7 +2009,7 @@ _renderStyleTiles(root) {
     const permanent = (Progress.purchases[cat] || []).includes(i);
     const tempLeft = permanent ? 0 : getTempMatchesLeft(cat, i);
 
-    // Счётчик подарка — ПЕРВЫМ в DOM, чтобы галочка (если есть) встала под ним
+    // Счётчик подарка — ПЕРВЫМ в DOM
     if (tempLeft > 0) {
       const tb = document.createElement('div');
       tb.className = 'temp-badge';
@@ -1960,6 +2018,7 @@ _renderStyleTiles(root) {
     }
 
     if (!bought) {
+      // Замок (если не куплено и не подарено)
       const lock = document.createElement('img');
       lock.className = 'mm-tile__lock';
       lock.src = ASSETS.lockIcon;
@@ -1967,12 +2026,14 @@ _renderStyleTiles(root) {
       lock.draggable = false;
       tile.appendChild(lock);
     } else if (i === selected) {
+      // Галочка (если выбрано в данный момент)
       const ck = document.createElement('div');
       ck.className = 'mm-tile__check';
       if (tempLeft > 0) ck.classList.add('mm-tile__check--below-badge');
       ck.textContent = '✓';
       tile.appendChild(ck);
     } else if (isNew) {
+      // NEW (если куплено, но не просмотрено)
       const nb = document.createElement('img');
       nb.className = 'new-indicator';
       nb.src = ASSETS.newOneIcon;

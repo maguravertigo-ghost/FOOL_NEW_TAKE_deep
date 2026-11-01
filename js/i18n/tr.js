@@ -265,4 +265,8 @@ export const TR = {
   'auth.mockTitle':       'Yetkilendirme',
   'auth.mockText':        'Yerel mod — yetkilendirme kullanılamıyor.',
   'auth.already':         'Zaten giriş yapılmış',
+
+  'shop.buy.adTitle':     'Reklam ödülü',
+  'shop.buy.adQuestion':  '<b>{label}</b> öğesini reklam izleyerek almak ister misiniz?',
+  'shop.buy.adSuccess':   'Öğe başarıyla açıldı!',
 };
