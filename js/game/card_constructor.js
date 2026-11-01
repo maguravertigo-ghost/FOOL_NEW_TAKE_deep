@@ -3,6 +3,8 @@
    Публичный API: buildCard(rank, suit, styleId, opts).
    Кеш/прогрев — в card_cache.js, чтобы не было циклов. */
 
+import { getLang } from '../i18n/index.js';
+
 /* ===================== DESIGN CONSTANTS ===================== */
 const DESIGN = {
   CARD_W: 219, CARD_H: 340,
@@ -79,10 +81,14 @@ const ACE_RANK   = 'A';
 
 const ROOT = 'assets/card_body';
 
+// Определяем язык один раз при загрузке модуля
+const rankLang = (getLang() === 'ru') ? 'ru' : 'en';
+
 const ASSETS = {
   shadow: `${ROOT}/shadow/card_shadow.svg`,
   body:   `${ROOT}/body/default/card_body.svg`,
-  rank:   r => `${ROOT}/ranks/pixel/${r}.png`,
+  // Меняем путь, добавляя папку языка:
+  rank:   r => `${ROOT}/ranks/pixel/${rankLang}/${r}.png`, 
   suit:   (style, s) => {
     const st = SUIT_STYLES.find(x => x.id === style) ?? SUIT_STYLES[0];
     return `${ROOT}/suits/${st.id}/${s}.${st.ext}`;

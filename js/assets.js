@@ -144,7 +144,7 @@ function collectUrls() {
     ...ASSETS.shirts,
     ASSETS.body, ASSETS.shadow, ASSETS.overlay,
     ASSETS.settingsIcon,
-    ...Object.values(ASSETS.ranks),
+    /*...Object.values(ASSETS.ranks),*/
     ...Object.values(ASSETS.suits),
   ];
 }
