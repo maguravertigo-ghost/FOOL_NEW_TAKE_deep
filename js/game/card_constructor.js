@@ -88,7 +88,7 @@ const ASSETS = {
   shadow: `${ROOT}/shadow/card_shadow.svg`,
   body:   `${ROOT}/body/default/card_body.svg`,
   // Меняем путь, добавляя папку языка:
-  rank:   r => `${ROOT}/ranks/pixel/${rankLang}/${r}.png`, 
+  rank:   r => `${ROOT}/ranks/default/${rankLang}/${r}.svg`, 
   suit:   (style, s) => {
     const st = SUIT_STYLES.find(x => x.id === style) ?? SUIT_STYLES[0];
     return `${ROOT}/suits/${st.id}/${s}.${st.ext}`;

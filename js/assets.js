@@ -1,3 +1,5 @@
+import { getLang } from './i18n/index.js';
+
 const BASE = 'assets';
 
 export const ASSETS = {
@@ -111,21 +113,24 @@ shirts: [
     `${BASE}/table_texture/black_table.svg`,
   ],
 
-  ranks: {
-    '2':  `${BASE}/card_body/ranks/default/2.svg`,
-    '3':  `${BASE}/card_body/ranks/default/3.svg`,
-    '4':  `${BASE}/card_body/ranks/default/4.svg`,
-    '5':  `${BASE}/card_body/ranks/default/5.svg`,
-    '6':  `${BASE}/card_body/ranks/default/6.svg`,
-    '7':  `${BASE}/card_body/ranks/default/7.svg`,
-    '8':  `${BASE}/card_body/ranks/default/8.svg`,
-    '9':  `${BASE}/card_body/ranks/default/9.svg`,
-    '10': `${BASE}/card_body/ranks/default/10.svg`,
-    'J':  `${BASE}/card_body/ranks/default/J.svg`,
-    'Q':  `${BASE}/card_body/ranks/default/Q.svg`,
-    'K':  `${BASE}/card_body/ranks/default/K.svg`,
-    'A':  `${BASE}/card_body/ranks/default/A.svg`,
-  },
+  ranks: (() => {
+    const rankLang = (getLang() === 'ru') ? 'ru' : 'en';
+    return {
+      '2':  `${BASE}/card_body/ranks/default/${rankLang}/2.svg`,
+      '3':  `${BASE}/card_body/ranks/default/${rankLang}/3.svg`,
+      '4':  `${BASE}/card_body/ranks/default/${rankLang}/4.svg`,
+      '5':  `${BASE}/card_body/ranks/default/${rankLang}/5.svg`,
+      '6':  `${BASE}/card_body/ranks/default/${rankLang}/6.svg`,
+      '7':  `${BASE}/card_body/ranks/default/${rankLang}/7.svg`,
+      '8':  `${BASE}/card_body/ranks/default/${rankLang}/8.svg`,
+      '9':  `${BASE}/card_body/ranks/default/${rankLang}/9.svg`,
+      '10': `${BASE}/card_body/ranks/default/${rankLang}/10.svg`,
+      'J':  `${BASE}/card_body/ranks/default/${rankLang}/J.svg`,
+      'Q':  `${BASE}/card_body/ranks/default/${rankLang}/Q.svg`,
+      'K':  `${BASE}/card_body/ranks/default/${rankLang}/K.svg`,
+      'A':  `${BASE}/card_body/ranks/default/${rankLang}/A.svg`,
+    };
+  })(),
 
   suits: {
     diamonds: `${BASE}/card_body/suits/default/diamonds.svg`,
@@ -144,7 +149,7 @@ function collectUrls() {
     ...ASSETS.shirts,
     ASSETS.body, ASSETS.shadow, ASSETS.overlay,
     ASSETS.settingsIcon,
-    /*...Object.values(ASSETS.ranks),*/
+    ...Object.values(ASSETS.ranks),
     ...Object.values(ASSETS.suits),
   ];
 }
