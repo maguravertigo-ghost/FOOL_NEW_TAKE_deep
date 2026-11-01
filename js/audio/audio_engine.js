@@ -61,6 +61,8 @@ export class AudioEngine {
 	
 	this._sfxPool = new Set();   // ← активные SFX, чтобы их не съел GC
 	this._sfxPaused = false;
+	this._audioCtx = null; // Контекст для Web Audio API
+    this._sfxBuffers = {}; // Кеш загруженных звуков
   }
 
   /* ---------- громкость ---------- */
@@ -75,12 +77,44 @@ export class AudioEngine {
 
 /* ---------- запуск с первого клика (autoplay policy) ---------- */
 
-ensureStarted() {
-  if (this._started) return;
-  this._started = true;
-  console.log('[audio] ensureStarted, musicEnabled =', this.musicEnabled);
-  if (this.musicEnabled) this.startMusic();
-}
+  ensureStarted() {
+    if (this._started) return;
+    this._started = true;
+    console.log('[audio] ensureStarted, musicEnabled =', this.musicEnabled);
+    
+    // Инициализация Web Audio API для мобилок
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) {
+        this._audioCtx = new AudioCtx();
+        // Разблокировка контекста (iOS)
+        if (this._audioCtx.state === 'suspended') {
+          this._audioCtx.resume();
+        }
+        // Предзагрузка всех SFX в буферы
+        this._preloadSfxBuffers();
+      }
+    } catch (e) {
+      console.warn('[audio] Web Audio API failed:', e);
+    }
+
+    if (this.musicEnabled) this.startMusic();
+  }
+  
+  async _preloadSfxBuffers() {
+    if (!this._audioCtx) return;
+    const urls = Object.values(SFX_LIST);
+    for (const url of urls) {
+      try {
+        const res = await fetch(url);
+        const arr = await res.arrayBuffer();
+        const buf = await this._audioCtx.decodeAudioData(arr);
+        this._sfxBuffers[url] = buf;
+      } catch (e) {
+        console.warn('[audio] SFX preload failed:', url);
+      }
+    }
+  }
 
 /* ---------- музыка ---------- */
 
@@ -184,41 +218,84 @@ _onTrackEnded(isFirst) {
 
   /* ---------- SFX ---------- */
 
-playSfx(name) {
-  if (!this.sfxEnabled) return;
-  if (this._sfxPaused) return;            // ← не запускаем новые во время паузы
-  const url = SFX_LIST[name];
-  if (!url) return;
+  playSfx(name) {
+    if (!this.sfxEnabled) return;
+    if (this._sfxPaused) return;
+    const url = SFX_LIST[name];
+    if (!url) return;
 
-  const el = new Audio(url);
-  el.volume = this.masterVolume;
+    // Если Web Audio API доступен и буфер загружен — играем через него (мобилки)
+    if (this._audioCtx && this._sfxBuffers[url]) {
+      try {
+        const source = this._audioCtx.createBufferSource();
+        source.buffer = this._sfxBuffers[url];
+        
+        // Громкость
+        const gainNode = this._audioCtx.createGain();
+        gainNode.gain.value = this.masterVolume;
+        
+        source.connect(gainNode);
+        gainNode.connect(this._audioCtx.destination);
+        source.start(0);
+        return;
+      } catch (e) {
+        console.warn('[audio] WebAudio play failed:', e);
+      }
+    }
 
-  this._sfxPool.add(el);
-  const release = () => this._sfxPool.delete(el);
-  el.addEventListener('ended', release);
-  el.addEventListener('error', release);
+    // Фолбэк на старый метод (Десктоп или если Web Audio не загрузился)
+    const el = new Audio(url);
+    el.volume = this.masterVolume;
 
-  el.play().catch(release);
-}
+    this._sfxPool.add(el);
+    const release = () => this._sfxPool.delete(el);
+    el.addEventListener('ended', release);
+    el.addEventListener('error', release);
+
+    el.play().catch(release);
+  }
 
   /** Жёсткая остановка всех SFX с очисткой пула. */
   stopAllSfx() {
-    if (!this._sfxPool) return;
-    for (const el of this._sfxPool) {
-      try {
-        el.pause();
-        el.currentTime = 0;
-      } catch { /* noop */ }
-    }
-    this._sfxPool.clear();
     this._sfxPaused = true;
+    if (this._sfxPool) {
+      for (const el of this._sfxPool) {
+        try {
+          el.pause();
+          el.currentTime = 0;
+        } catch { /* noop */ }
+      }
+      this._sfxPool.clear();
+    }
+    // Web Audio останавливать не нужно, он проигрывает короткие буферы сам
   }
 
 pauseAllSfx() {
   this._sfxPaused = true;
+  // Останавливаем HTML5 Audio
+  if (this._sfxPool) {
+    for (const el of this._sfxPool) {
+      try { el.pause(); } catch { /* noop */ }
+    }
+  }
+  // Приостанавливаем Web Audio (если активен)
+  if (this._audioCtx && this._audioCtx.state === 'running') {
+    this._audioCtx.suspend();
+  }
+}
+
+resumeAllSfx() {
+  this._sfxPaused = false;
+  // Восстанавливаем HTML5 Audio
   if (!this._sfxPool) return;
   for (const el of this._sfxPool) {
-    try { el.pause(); } catch { /* noop */ }
+    if (el.paused && el.currentTime > 0 && el.currentTime < (el.duration || Infinity)) {
+      try { el.play().catch(() => {}); } catch { /* noop */ }
+    }
+  }
+  // Восстанавливаем Web Audio
+  if (this._audioCtx && this._audioCtx.state === 'suspended') {
+    this._audioCtx.resume();
   }
 }
 

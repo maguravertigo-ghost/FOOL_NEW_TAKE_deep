@@ -210,7 +210,11 @@ class App {
     this._setupTable();
     this._setupMarkers();
     this._setupInput();
-
+    // Страховка для мобильных: принудительно пересчитываем 
+    // и перерисовываем всё через 500мс после старта
+    setTimeout(() => {
+      this._relayoutAll();
+    }, 500);
     // ---- kickoff музыки навешивается ДО _boot ----
     const kickoff = () => {
       audio.ensureStarted();
