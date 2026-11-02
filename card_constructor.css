@@ -92,15 +92,6 @@
 }
 
 /* [data-suit] не пересекается с нашими классами — оставляем без префикса */
-[data-suit="hearts"]   .corner__rank-img,
-[data-suit="diamonds"] .corner__rank-img,
-[data-suit="hearts"]   .center-rank__rank-img,
-[data-suit="diamonds"] .center-rank__rank-img { --rank-color: #d40000; }
-
-[data-suit="clubs"]    .corner__rank-img,
-[data-suit="spades"]   .corner__rank-img,
-[data-suit="clubs"]    .center-rank__rank-img,
-[data-suit="spades"]   .center-rank__rank-img { --rank-color: #111; }
 
 .card__face .corner__suit-img {
   position: absolute;

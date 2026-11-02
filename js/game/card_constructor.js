@@ -76,6 +76,15 @@ const SUIT_STYLES = [
   { id: 'default',  ext: 'svg' },
 ];
 
+const RANK_COLORS = {
+  default:  { red: '#d32f2f', black: '#1a1a1aff' },
+  barhat:   { red: '#ff0007ff', black: '#34183cff' },
+  gradient: { red: '#ae0b1efe', black: '#26122eff' },
+  paper:    { red: '#ff0017ff', black: '#442a52ff' },
+  ruby:     { red: '#ff1018ff', black: '#291b29ff' },
+  golden:   { red: '#ff0000ff', black: '#241c1cff' },
+};
+
 const FACE_RANKS = new Set(['J','Q','K']);
 const ACE_RANK   = 'A';
 
@@ -282,6 +291,11 @@ export function buildCard(rank, suit, styleId = 'grid',
   card.dataset.rank  = rank;
   card.dataset.suit  = suit;
   card.dataset.style = styleId;
+
+  // Применяем цвет ранга в зависимости от стиля мастей
+  const col = RANK_COLORS[suitStyle] || RANK_COLORS.default;
+  const isRed = (suit === 'hearts' || suit === 'diamonds');
+  card.style.setProperty('--rank-color', isRed ? col.red : col.black);
 
   card.appendChild(img(ASSETS.shadow, 'card__shadow'));
   card.appendChild(img(ASSETS.body,   'card__body'));
