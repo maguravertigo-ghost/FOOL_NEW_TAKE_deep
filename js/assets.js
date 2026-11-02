@@ -132,6 +132,25 @@ shirts: [
     };
   })(),
 
+  ranks_wide: (() => {
+    const rankLang = (getLang() === 'ru') ? 'ru' : 'en';
+    return {
+      '2':  `${BASE}/card_body/ranks/wide/${rankLang}/2.svg`,
+      '3':  `${BASE}/card_body/ranks/wide/${rankLang}/3.svg`,
+      '4':  `${BASE}/card_body/ranks/wide/${rankLang}/4.svg`,
+      '5':  `${BASE}/card_body/ranks/wide/${rankLang}/5.svg`,
+      '6':  `${BASE}/card_body/ranks/wide/${rankLang}/6.svg`,
+      '7':  `${BASE}/card_body/ranks/wide/${rankLang}/7.svg`,
+      '8':  `${BASE}/card_body/ranks/wide/${rankLang}/8.svg`,
+      '9':  `${BASE}/card_body/ranks/wide/${rankLang}/9.svg`,
+      '10': `${BASE}/card_body/ranks/wide/${rankLang}/10.svg`,
+      'J':  `${BASE}/card_body/ranks/wide/${rankLang}/J.svg`,
+      'Q':  `${BASE}/card_body/ranks/wide/${rankLang}/Q.svg`,
+      'K':  `${BASE}/card_body/ranks/wide/${rankLang}/K.svg`,
+      'A':  `${BASE}/card_body/ranks/wide/${rankLang}/A.svg`,
+    };
+  })(),
+
   suits: {
     diamonds: `${BASE}/card_body/suits/default/diamonds.svg`,
     hearts:   `${BASE}/card_body/suits/default/hearts.svg`,
@@ -150,6 +169,7 @@ function collectUrls() {
     ASSETS.body, ASSETS.shadow, ASSETS.overlay,
     ASSETS.settingsIcon,
     ...Object.values(ASSETS.ranks),
+	...Object.values(ASSETS.ranks_wide), // <-- ДОБАВИТЬ
     ...Object.values(ASSETS.suits),
   ];
 }

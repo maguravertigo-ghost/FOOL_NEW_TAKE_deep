@@ -82,13 +82,17 @@ const ACE_RANK   = 'A';
 const ROOT = 'assets/card_body';
 
 // Определяем язык один раз при загрузке модуля
-const rankLang = (getLang() === 'ru') ? 'ru' : 'en';
+const getRankLang = (styleId) => {
+  const lang = (getLang() === 'ru') ? 'ru' : 'en';
+  const folder = styleId.startsWith('wide') ? 'wide' : 'default';
+  return `${folder}/${lang}`;
+};
 
 const ASSETS = {
   shadow: `${ROOT}/shadow/card_shadow.svg`,
   body:   `${ROOT}/body/default/card_body.svg`,
   // Меняем путь, добавляя папку языка:
-  rank:   r => `${ROOT}/ranks/default/${rankLang}/${r}.svg`, 
+  rank:   r => `${ROOT}/ranks/default/${(getLang() === 'ru') ? 'ru' : 'en'}/${r}.svg`,
   suit:   (style, s) => {
     const st = SUIT_STYLES.find(x => x.id === style) ?? SUIT_STYLES[0];
     return `${ROOT}/suits/${st.id}/${s}.${st.ext}`;
@@ -146,10 +150,12 @@ function rankMask(src, cls) {
   return n;
 }
 
-function buildCorner(rank, suit, suitStyle) {
+function buildCorner(rank, suit, suitStyle, rankFolder) {
   const corner = el('div', 'corner');
   corner.dataset.suit = suit;
-  corner.appendChild(rankMask(ASSETS.rank(rank), 'corner__rank-img'));
+  // Меняем путь:
+  const rankSrc = `${ROOT}/ranks/${rankFolder}/${(getLang() === 'ru') ? 'ru' : 'en'}/${rank}.svg`;
+  corner.appendChild(rankMask(rankSrc, 'corner__rank-img'));
   corner.appendChild(img(ASSETS.suit(suitStyle, suit), 'corner__suit-img'));
   return corner;
 }
@@ -282,21 +288,16 @@ export function buildCard(rank, suit, styleId = 'grid',
 
   const grid = el('div', 'card__grid', card);
 
-  switch (styleId) {
-    case 'grid':
-      renderGridStyle(grid, rank, suit, suitStyle);
-      break;
-    case 'center':
-      renderCenterStyle(grid, rank, suit, suitStyle);
-      break;
-    case 'rank':
-      renderRankStyle(grid, rank, suit, suitStyle);
-      break;
-    case 'rank-no-corners':
-      renderBigSuitStyle(grid, rank, suit, suitStyle);
-      break;
-    default:
-      throw new Error(`Unknown style: ${styleId}`);
+  // Заменяем switch на обработку префикса wide-
+  const isWide = styleId.startsWith('wide-');
+  const baseStyle = isWide ? styleId.replace('wide-', '') : styleId;
+
+  switch (baseStyle) {
+    case 'grid':            renderGridStyle(grid, rank, suit, suitStyle); break;
+    case 'center':          renderCenterStyle(grid, rank, suit, suitStyle); break;
+    case 'rank':            renderRankStyle(grid, rank, suit, suitStyle); break;
+    case 'rank-no-corners': renderBigSuitStyle(grid, rank, suit, suitStyle); break;
+    default: throw new Error(`Unknown style: ${styleId}`);
   }
 
   buildGridOverlay(grid);
@@ -306,11 +307,12 @@ export function buildCard(rank, suit, styleId = 'grid',
   }
 
   // Теперь углы рисуются ВСЕГДА (и для rank-no-corners тоже)
+  const rankFolder = isWide ? 'wide' : 'default';
   const lt = el('div', 'card__corner-layer card__corner-layer--lt', card);
-  lt.appendChild(buildCorner(rank, suit, suitStyle));
-
+  lt.appendChild(buildCorner(rank, suit, suitStyle, rankFolder)); // передаем папку
+  
   const rb = el('div', 'card__corner-layer card__corner-layer--rb', card);
-  rb.appendChild(buildCorner(rank, suit, suitStyle));
+  rb.appendChild(buildCorner(rank, suit, suitStyle, rankFolder));
 
   return card;
 }

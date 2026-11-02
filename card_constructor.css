@@ -178,3 +178,12 @@
   width:  calc(29 * var(--u));
   height: calc(30 * var(--u));
 }
+
+.card__face .corner__rank-img,
+.card__face .center-rank__rank-img {
+  /* ... */
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+}

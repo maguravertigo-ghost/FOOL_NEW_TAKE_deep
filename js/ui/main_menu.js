@@ -217,7 +217,11 @@ if (isIOS) {
 		  { title: t('fullscreen.enter') }
 		);
     }
-    setTimeout(updateIcon, 150);
+    setTimeout(() => {
+      updateIcon();
+      this._layoutAll(); // <-- ДОБАВИТЬ ЭТО
+      if (window.__app && window.__app._relayoutAll) window.__app._relayoutAll(); // <-- И ЭТО
+    }, 300);
   });
 }
 
@@ -1821,7 +1825,12 @@ _shopItemsFor(cat) {
       { cardStyle: 'center',          label: t('shop.item.design.center') },
       { cardStyle: 'rank',            label: t('shop.item.design.rank') },
       { cardStyle: 'rank-no-corners', label: t('shop.item.design.rankNoCorners') },
-    ].map((it, i) => ({ ...it, index: i, price: PRICES.design, isAd: i === 3 }));
+      // Новые 4:
+      { cardStyle: 'wide-grid',            label: 'Сетка (Wide)' },
+      { cardStyle: 'wide-center',          label: 'Центр (Wide)' },
+      { cardStyle: 'wide-rank',            label: 'Ранг+масть (Wide)' },
+      { cardStyle: 'wide-rank-no-corners', label: 'Крупная масть (Wide)' },
+    ].map((it, i) => ({ ...it, index: i, price: PRICES.design, isAd: i === 7 })); // isAd на последний
   }
   if (cat === 'suits') {
     return ['default','paper','barhat','gradient','ruby','golden']
@@ -1931,7 +1940,10 @@ _openStyle() {
   }
 
   // подтянуть выбранное из сохранённых настроек
-  const designIds = ['grid', 'center', 'rank', 'rank-no-corners'];
+  const designIds = [
+    'grid', 'center', 'rank', 'rank-no-corners',
+    'wide-grid', 'wide-center', 'wide-rank', 'wide-rank-no-corners'
+  ];
   const suitIds   = ['default', 'paper', 'barhat', 'gradient', 'ruby', 'golden'];
 
   this._selectedStyle.table  = GameSettings.tableStyle ?? 0;
@@ -2138,6 +2150,11 @@ _styleItemsFor(cat) {
       { cardStyle: 'center',          label: t('shop.item.design.center') },
       { cardStyle: 'rank',            label: t('shop.item.design.rank') },
       { cardStyle: 'rank-no-corners', label: t('shop.item.design.rankNoCorners') },
+      // Новые 4:
+      { cardStyle: 'wide-grid',            label: 'Сетка (Wide)' },
+      { cardStyle: 'wide-center',          label: 'Центр (Wide)' },
+      { cardStyle: 'wide-rank',            label: 'Ранг+масть (Wide)' },
+      { cardStyle: 'wide-rank-no-corners', label: 'Крупная масть (Wide)' },
     ].map((it, i) => ({ ...it, index: i }));
   }
   if (cat === 'suits') {
