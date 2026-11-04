@@ -178,3 +178,38 @@
   -webkit-backface-visibility: hidden;
   transform: translateZ(0);
 }
+/* Контейнер рубашки */
+.card__shirt {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  /* Мы не ставим overflow: hidden, так как SVG-подложка сама задаёт форму */
+}
+
+/* Картинка-паттерн (верхний слой) */
+.card__shirt-img {
+  position: absolute;
+  /* Отступ от краев (в процентах, чтобы масштабировалось с картой). 
+     Подбери значения: 3%, 4% или 5% — в зависимости от толщины рамки в твоем SVG. */
+  top: 4%; 
+  bottom: 4%;
+  left: 4%;
+  right: 4%;
+  width: 92%;
+  height: 92%;
+  
+  /* object-fit: cover — заполняет область, обрезая лишнее, 
+     object-fit: fill — растягивает (если пропорции 394x636 и 220x340 немного не совпадают, лучше cover) */
+  object-fit: cover; 
+  
+  /* Опционально: скругление, если внутри подложки есть прямые углы */
+  border-radius: calc(6px * var(--u));
+  
+  z-index: 2;
+  pointer-events: none;
+  
+  /* Небольшая внутренняя тень, чтобы паттерн не выглядел плоским на фоне */
+  box-shadow: inset 0 0 calc(4px * var(--u)) rgba(0,0,0,0.15);
+}

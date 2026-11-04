@@ -1740,16 +1740,27 @@ _makePreview(item, cat) {
     return wrap;
   }
 
-  // ---- Стол / рубашка / декор — просто картинка ----
-  if (item.src) {
-    const im = document.createElement('img');
-    im.src = item.src;
-    im.alt = '';
-    im.draggable = false;
-    return im;
+  // ---- Рубашка (два слоя) ----
+  if (cat === 'shirt' && item.src) {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;';
+
+    // Подложка
+    const bodySvg = svgInstance(ASSETS.body);
+    if (bodySvg) {
+      bodySvg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;';
+      wrap.appendChild(bodySvg);
+    }
+
+    // Картинка (паттерн)
+    const img = document.createElement('img');
+    img.src = item.src;
+    img.alt = '';
+    img.className = 'card__shirt-img';
+    wrap.appendChild(img);
+    
+    return wrap;
   }
-  return null;
-}
 
 _buildShopCategories() {
 const CATS = [

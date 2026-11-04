@@ -80,25 +80,25 @@ export const ASSETS = {
 
   // Shop previews — реальные файлы
 shirts: [
-  `${BASE}/card_shirt/default/card_shirt.svg`,
-  `${BASE}/card_shirt/default/gray_shirt.svg`,
-  `${BASE}/card_shirt/default/red_shirt.svg`,
-  `${BASE}/card_shirt/default/yellow_shirt.svg`,
+  `${BASE}/card_shirt/default/card_shirt.webp`,
+  `${BASE}/card_shirt/default/gray_shirt.webp`,
+  `${BASE}/card_shirt/default/red_shirt.webp`,
+  `${BASE}/card_shirt/default/yellow_shirt.webp`,
   
-  `${BASE}/card_shirt/default/shirt_N1.svg`,
-  `${BASE}/card_shirt/default/shirt_N2.svg`,
-  `${BASE}/card_shirt/default/shirt_N3.svg`,
-  `${BASE}/card_shirt/default/shirt_N4.svg`,
+  `${BASE}/card_shirt/default/shirt_N1.webp`,
+  `${BASE}/card_shirt/default/shirt_N2.webp`,
+  `${BASE}/card_shirt/default/shirt_N3.webp`,
+  `${BASE}/card_shirt/default/shirt_N4.webp`,
   
-  `${BASE}/card_shirt/default/shirt_K1.svg`,
-  `${BASE}/card_shirt/default/shirt_K2.svg`,
-  `${BASE}/card_shirt/default/shirt_K3.svg`,
-  `${BASE}/card_shirt/default/shirt_K4.svg`,
+  `${BASE}/card_shirt/default/shirt_K1.webp`,
+  `${BASE}/card_shirt/default/shirt_K2.webp`,
+  `${BASE}/card_shirt/default/shirt_K3.webp`,
+  `${BASE}/card_shirt/default/shirt_K4.webp`,
   
-  `${BASE}/card_shirt/default/shirt_M1.svg`,
-  `${BASE}/card_shirt/default/shirt_M2.svg`,
-  `${BASE}/card_shirt/default/shirt_M3.svg`,
-  `${BASE}/card_shirt/default/shirt_M4.svg`,
+  `${BASE}/card_shirt/default/shirt_M1.webp`,
+  `${BASE}/card_shirt/default/shirt_M2.webp`,
+  `${BASE}/card_shirt/default/shirt_M3.webp`,
+  `${BASE}/card_shirt/default/shirt_M4.webp`,
 ],
   designs: [
     `${BASE}/card_body/body/default/card_body.svg`,

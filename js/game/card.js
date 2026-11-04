@@ -143,23 +143,25 @@ _rebuildFace() {
    * ================================================================ */
 
   _fillShirt() {
+    this.shirtEl.innerHTML = '';
     const url = Card.defaultShirtUrl || ASSETS.shirt;
-    const svg = svgInstance(url);
-    if (svg) {
-      svg.classList.add('card__shirt-svg');
-      svg.setAttribute('width', '100%');
-      svg.setAttribute('height', '100%');
-      svg.setAttribute('preserveAspectRatio', 'none');
-      svg.style.cssText = 'width:100%;height:100%;display:block;';
-      this.shirtEl.innerHTML = '';
-      this.shirtEl.appendChild(svg);
-      return;
+
+    // 1. Слой 1 (НИЗ): SVG-подложка (рамка карты)
+    const bodySvg = svgInstance(ASSETS.body);
+    if (bodySvg) {
+      bodySvg.setAttribute('width', '100%');
+      bodySvg.setAttribute('height', '100%');
+      bodySvg.setAttribute('preserveAspectRatio', 'none');
+      bodySvg.style.cssText = 'position:absolute; inset:0; width:100%; height:100%; display:block; pointer-events:none; z-index:1;';
+      this.shirtEl.appendChild(bodySvg);
     }
+
+    // 2. Слой 2 (ВЕРХ): WebP-паттерн
     const img = document.createElement('img');
     img.src = url;
     img.alt = '';
-    img.style.cssText = 'width:100%;height:100%;display:block;object-fit:cover;';
-    this.shirtEl.innerHTML = '';
+    // Класс card__shirt-img задаст нужный отступ в CSS
+    img.className = 'card__shirt-img';
     this.shirtEl.appendChild(img);
   }
 
