@@ -244,6 +244,8 @@ if (isIOS) {
 	});
 	this._ro.observe(sceneEl);
 	
+
+	
     // после создания DOM:
     this._cacheRefs();
     this._layoutAll();
@@ -1752,6 +1754,7 @@ _makePreview(item, cat) {
     // z-index:0 — создаёт свой stacking context: SVG(1) и img(2) остаются
     // ЛОКАЛЬНО внутри wrapper, не перекрывают ценник/замок плитки.
     // pointer-events:none — клики проходят до .shop-item.
+	wrap.className = 'mm-tile__preview';
     wrap.style.cssText =
       'position:relative;width:100%;height:100%;' +
       'display:flex;align-items:center;justify-content:center;' +
@@ -2058,6 +2061,7 @@ _renderStyleTiles(root) {
     const isNew = bought && i > 0 && !isStyleItemSeen(cat, i);
 
     const tile = document.createElement('div');
+	tile.style.position = 'relative';
     tile.className = 'mm-tile' + (i === selected ? ' mm-tile--active' : '');
     tile.classList.toggle('mm-tile--locked', !bought);
     if (cat === 'decor') tile.classList.add('mm-tile--decor');
@@ -2074,6 +2078,7 @@ _renderStyleTiles(root) {
       tb.className = 'temp-badge';
       tb.textContent = String(tempLeft);
       tile.appendChild(tb);
+	  tb.style.zIndex = '5';
     }
 
     if (!bought) {
@@ -2084,6 +2089,7 @@ _renderStyleTiles(root) {
       lock.alt = '';
       lock.draggable = false;
       tile.appendChild(lock);
+	  lock.style.zIndex = '5';
     } else if (i === selected) {
       // Галочка (если выбрано в данный момент)
       const ck = document.createElement('div');
@@ -2091,6 +2097,7 @@ _renderStyleTiles(root) {
       if (tempLeft > 0) ck.classList.add('mm-tile__check--below-badge');
       ck.textContent = '✓';
       tile.appendChild(ck);
+	  ck.style.zIndex = '5';
     } else if (isNew) {
       // NEW (если куплено, но не просмотрено)
       const nb = document.createElement('img');
@@ -2099,6 +2106,7 @@ _renderStyleTiles(root) {
       nb.alt = '';
       nb.draggable = false;
       tile.appendChild(nb);
+	  nb.style.zIndex = '5';
     }
 
     tile.addEventListener('click', () => {

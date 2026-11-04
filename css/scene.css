@@ -1040,7 +1040,8 @@ body.is-mobile .mm-style-points__value {
 .mm-tile:hover { background: rgba(255,255,255,0.10); }
 .mm-tile--locked { cursor: not-allowed; color: #666; }
 .mm-tile--locked .card__face,
-.mm-tile--locked > img:not(.mm-tile__lock) {
+.mm-tile--locked > img:not(.mm-tile__lock),
+.mm-tile--locked .mm-tile__preview {
   opacity: 0.25;
   filter: grayscale(0.7);
 }
