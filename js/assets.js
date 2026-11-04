@@ -232,6 +232,42 @@ export function preloadShirts() {
   })));
 }
 
+export function preloadFaces() {
+  const faces = [];
+  for (const r of ['J','Q','K']) {
+    for (const s of ['clubs','diamonds','hearts','spades']) {
+      faces.push(`${BASE}/card_body/family/${r}_${s}.webp`);
+    }
+  }
+  return Promise.all(faces.map(url => new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      if (img.decode) img.decode().then(resolve).catch(resolve);
+      else resolve();
+    };
+    img.onerror = resolve;
+    img.src = url;
+  })));
+}
+
+export function preloadSuits() {
+  const urls = [];
+  for (const st of ['paper', 'barhat', 'gradient', 'ruby', 'golden']) {
+    for (const s of ['clubs', 'diamonds', 'hearts', 'spades']) {
+      urls.push(`${BASE}/card_body/suits/${st}/${s}.webp`);
+    }
+  }
+  return Promise.all(urls.map(url => new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      if (img.decode) img.decode().then(resolve).catch(resolve);
+      else resolve();
+    };
+    img.onerror = resolve;
+    img.src = url;
+  })));
+}
+
 /** Получить клон инлайн-SVG для заданного url (или null, если не загрузилось) */
 export function svgInstance(url) {
   const root = SVG_CACHE.get(url);

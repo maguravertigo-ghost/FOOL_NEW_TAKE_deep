@@ -68,12 +68,12 @@ const STYLES = [
 ];
 
 const SUIT_STYLES = [
-  { id: 'paper',    ext: 'png' },
-  { id: 'barhat',   ext: 'png' },
-  { id: 'gradient', ext: 'png' },
-  { id: 'ruby',     ext: 'png' },
-  { id: 'golden',   ext: 'png' },
-  { id: 'default',  ext: 'svg' },
+  { id: 'paper',    ext: 'webp' },
+  { id: 'barhat',   ext: 'webp' },
+  { id: 'gradient', ext: 'webp' },
+  { id: 'ruby',     ext: 'webp' },
+  { id: 'golden',   ext: 'webp' },
+  { id: 'default',  ext: 'svg'  },   // ← остаётся SVG (база)
 ];
 
 const RANK_COLORS = {
@@ -106,7 +106,7 @@ const ASSETS = {
     const st = SUIT_STYLES.find(x => x.id === style) ?? SUIT_STYLES[0];
     return `${ROOT}/suits/${st.id}/${s}.${st.ext}`;
   },
-  face:   (r, s) => `${ROOT}/family/${r}_${s}.png`,
+  face:   (r, s) => `${ROOT}/family/${r}_${s}.webp`,
 };
 
 const { A, B, C } = COL;
