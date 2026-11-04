@@ -19,7 +19,7 @@ export const ASSETS = {
     tr: `${BASE}/hud/buttons/transfer_bttn_TR.png`,
   },
   table:  `${BASE}/table_texture/default_table.svg`,
-  shirt:  `${BASE}/card_shirt/default/card_shirt.svg`,
+  shirt:  `${BASE}/card_shirt/default/card_shirt.webp`,
   body:   `${BASE}/card_body/body/default/card_body.svg`,
   shadow: `${BASE}/card_body/shadow/card_shadow.svg`,
   overlay: `${BASE}/card_overlay/deprecated_to_click.svg`,
@@ -165,7 +165,6 @@ const SVG_CACHE = new Map();
 
 function collectUrls() {
   return [
-    ...ASSETS.shirts,
     ASSETS.body, ASSETS.shadow, ASSETS.overlay,
     ASSETS.settingsIcon,
     ...Object.values(ASSETS.ranks),
@@ -215,6 +214,22 @@ export async function preloadSvgs() {
   });
 
   return results;
+}
+
+// Не блокирует boot, грузится в фоне
+export function preloadShirts() {
+  return Promise.all(ASSETS.shirts.map(url => new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      // decode() гарантирует, что браузер уже готов РИСОВАТЬ,
+      // а не только «загрузил файл» — без этого первая карта в матче
+      // показывает SVG-подложку, а WebP подъезжает на следующем кадре.
+      if (img.decode) img.decode().then(resolve).catch(resolve);
+      else resolve();
+    };
+    img.onerror = resolve;
+    img.src = url;
+  })));
 }
 
 /** Получить клон инлайн-SVG для заданного url (или null, если не загрузилось) */

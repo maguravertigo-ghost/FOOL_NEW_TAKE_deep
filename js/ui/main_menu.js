@@ -2,7 +2,7 @@ import { ysdk } from '../sdk/yandex_sdk.js';
 import { DEV_MODE } from '../game/constants.js';
 import { audio } from '../audio/audio_engine.js';
 import { withLoading } from './loading_overlay.js';
-import { ASSETS } from '../assets.js';
+import { ASSETS, svgInstance } from '../assets.js';
 import { GameSettings, saveSettings } from '../game/settings.js';
   import {
     Progress, saveProgress, claimQuestReward, resetQuests,
@@ -1641,6 +1641,7 @@ _buildShopItems(cat) {
 
     const tile = document.createElement('div');
     tile.className = 'shop-item' + (permanent ? ' shop-item--bought' : '');
+	tile.style.position = 'relative';   // страховка: ценник/замок позиционируются от плитки
     if (cat === 'decor') tile.classList.add('shop-item--decor');
     if (affordable) tile.classList.add('shop-item--affordable');
 
@@ -1654,6 +1655,7 @@ _buildShopItems(cat) {
       tb.className = 'temp-badge';
       tb.textContent = String(tempLeft);
       tile.appendChild(tb);
+	  tb.style.zIndex = '5';
     }
 
     // Логика бейджей (фикс багов исчезновения и залоченности)
@@ -1663,6 +1665,7 @@ _buildShopItems(cat) {
       if (tempLeft > 0) ck.classList.add('mm-tile__check--below-badge');
       ck.textContent = '✓';
       tile.appendChild(ck);
+	  ck.style.zIndex = '5';
     } else if (tempLeft > 0) {
       // Подаренный предмет: не блокируем, не показываем цену. 
       // Просто оставляем бейдж tempLeft.
@@ -1676,6 +1679,7 @@ _buildShopItems(cat) {
         adIcon.draggable = false;
         adIcon.style.cssText = 'position:absolute;left:6px;bottom:6px;width:24px;height:24px;opacity:0.9;filter:drop-shadow(0 0 2px #000);';
         tile.appendChild(adIcon);
+		adIcon.style.zIndex = '5';
       } else {
         const lock = document.createElement('img');
         lock.className = 'mm-tile__lock';
@@ -1683,11 +1687,13 @@ _buildShopItems(cat) {
         lock.alt = '';
         lock.draggable = false;
         tile.appendChild(lock);
+		lock.style.zIndex = '5';
 
         const pr = document.createElement('div');
         pr.className = 'shop-item__price';
         pr.textContent = item.price;
         tile.appendChild(pr);
+		pr.style.zIndex = '5';
       }
     }
 
@@ -1740,27 +1746,50 @@ _makePreview(item, cat) {
     return wrap;
   }
 
-  // ---- Рубашка (два слоя) ----
+  // ---- Рубашка: SVG-подложка снизу + WebP сверху (как в матче) ----
   if (cat === 'shirt' && item.src) {
     const wrap = document.createElement('div');
-    wrap.style.cssText = 'position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;';
+    // z-index:0 — создаёт свой stacking context: SVG(1) и img(2) остаются
+    // ЛОКАЛЬНО внутри wrapper, не перекрывают ценник/замок плитки.
+    // pointer-events:none — клики проходят до .shop-item.
+    wrap.style.cssText =
+      'position:relative;width:100%;height:100%;' +
+      'display:flex;align-items:center;justify-content:center;' +
+      'overflow:hidden;z-index:0;pointer-events:none;';
 
-    // Подложка
     const bodySvg = svgInstance(ASSETS.body);
     if (bodySvg) {
-      bodySvg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;';
+      bodySvg.style.cssText =
+        'position:absolute;inset:0;width:100%;height:100%;' +
+        'pointer-events:none;z-index:1;';
       wrap.appendChild(bodySvg);
     }
 
-    // Картинка (паттерн)
     const img = document.createElement('img');
     img.src = item.src;
     img.alt = '';
-    img.className = 'card__shirt-img';
+    img.style.cssText =
+      'position:absolute;top:3.256%;left:5.229%;' +
+      'width:89.542%;height:93.488%;' +
+      'object-fit:cover;pointer-events:none;z-index:2;';
     wrap.appendChild(img);
-    
+
     return wrap;
   }
+
+  // ---- Стол / декорации — просто <img> в плитку ----
+  if (item.src) {
+    const im = document.createElement('img');
+    im.src = item.src;
+    im.alt = '';
+    im.draggable = false;
+    im.style.cssText =
+      'display:block;width:100%;height:100%;' +
+      'object-fit:cover;pointer-events:none;';
+    return im;
+  }
+  return null;
+}
 
 _buildShopCategories() {
 const CATS = [
@@ -2268,7 +2297,7 @@ _buildPreviewField(container) {
 
   const addShirt = (xPct, yPct, angle, z) => {
     const wrap = document.createElement('div');
-    const h = Math.round(cardW * 340 / 219);
+    const h = Math.round(cardW * 340 / 220);
     wrap.style.cssText = `
       position:absolute;
       left:${xPct}%; top:${yPct}%;
@@ -2278,11 +2307,26 @@ _buildPreviewField(container) {
       pointer-events:none;
       filter: drop-shadow(2px 3px 4px rgba(0,0,0,0.45));
     `;
+
+    // Слой 1 (НИЗ): SVG-подложка
+    const bodySvg = svgInstance(ASSETS.body);
+    if (bodySvg) {
+      bodySvg.style.cssText =
+        'position:absolute;inset:0;width:100%;height:100%;' +
+        'pointer-events:none;z-index:1;';
+      wrap.appendChild(bodySvg);
+    }
+
+    // Слой 2 (ВЕРХ): WebP с теми же отступами, что и в матче
     const im = document.createElement('img');
     im.src = ASSETS.shirts[GameSettings.shirtStyle ?? 0] || ASSETS.shirt;
     im.alt = '';
-    im.style.cssText = 'display:block;width:100%;height:100%;object-fit:cover;';
+    im.style.cssText =
+      'position:absolute;top:3.256%;left:5.229%;' +
+      'width:89.542%;height:93.488%;' +
+      'object-fit:cover;pointer-events:none;z-index:2;';
     wrap.appendChild(im);
+
     field.appendChild(wrap);
   };
 

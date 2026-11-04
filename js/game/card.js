@@ -26,6 +26,7 @@ export class Card {
     this.el.dataset.uid = String(this.uid);
     this.el.style.width  = REAL.w + 'px';
     this.el.style.height = REAL.h + 'px';
+	this.el.style.setProperty('--card-w', REAL.w + 'px');   // ← добавить
     this.el.style.zIndex = '1';
 
     /* ---------- рубашка ---------- */
@@ -103,6 +104,7 @@ applyScale() {
 
   this.el.style.width  = w + 'px';
   this.el.style.height = h + 'px';
+  this.el.style.setProperty('--card-w', w + 'px');        // ← добавить
 
   if (bigChange) {
     // существенное изменение — пересобираем лицо, чтобы все внутренние
@@ -152,17 +154,34 @@ _rebuildFace() {
       bodySvg.setAttribute('width', '100%');
       bodySvg.setAttribute('height', '100%');
       bodySvg.setAttribute('preserveAspectRatio', 'none');
-      bodySvg.style.cssText = 'position:absolute; inset:0; width:100%; height:100%; display:block; pointer-events:none; z-index:1;';
+      bodySvg.style.cssText =
+        'position:absolute;inset:0;width:100%;height:100%;' +
+        'display:block;pointer-events:none;z-index:1;';
       this.shirtEl.appendChild(bodySvg);
     }
 
-    // 2. Слой 2 (ВЕРХ): WebP-паттерн
-    const img = document.createElement('img');
-    img.src = url;
-    img.alt = '';
-    // Класс card__shirt-img задаст нужный отступ в CSS
-    img.className = 'card__shirt-img';
-    this.shirtEl.appendChild(img);
+    // 2. Слой 2 (ВЕРХ): WebP через background-image, НЕ через <img>.
+    // Причина: каждый новый <img> проходит отдельный цикл decode → GPU-текстура
+    // → первый paint. SVG-подложка (inline DOM) уже нарисована — и получается
+    // флеш «пустая рамка → паттерн». background-image растеризуется сразу
+    // вместе с элементом; при предзагруженном и декодированном WebP —
+    // в том же кадре, что и карта.
+    // Размеры/отступы inline — из макета Inkscape:
+    //   подложка 220.007×340.151, паттерн 197×318
+    //   → inset X 5.229 %, inset Y 3.256 %; size 89.542 % × 93.488 %.
+    const pattern = document.createElement('div');
+    pattern.className = 'card__shirt-img';
+    pattern.style.cssText =
+      'position:absolute;' +
+      'top:3.256%;left:5.229%;' +
+      'width:89.542%;height:93.488%;' +
+      `background-image:url("${url}");` +
+      'background-size:cover;' +
+      'background-position:center;' +
+      'background-repeat:no-repeat;' +
+      'pointer-events:none;z-index:2;' +
+      'border-radius:0;box-shadow:none;margin:0;padding:0;';
+    this.shirtEl.appendChild(pattern);
   }
 
   /* ================================================================
