@@ -4,19 +4,19 @@ const BASE = 'assets';
 
 export const ASSETS = {
   logos: {
-    ru: `${BASE}/hud/logo/logo_main_RU.png`,
-    en: `${BASE}/hud/logo/logo_main_EN.png`,
-    tr: `${BASE}/hud/logo/logo_main_TR.png`,
+    ru: `${BASE}/hud/logo/logo_main_RU.webp`,
+    en: `${BASE}/hud/logo/logo_main_EN.webp`,
+    tr: `${BASE}/hud/logo/logo_main_TR.webp`,
   },
   btnPodkidnoy: {
-    ru: `${BASE}/hud/buttons/straight_bttn_RU.png`,
-    en: `${BASE}/hud/buttons/straight_bttn_EN.png`,
-    tr: `${BASE}/hud/buttons/straight_bttn_TR.png`,
+    ru: `${BASE}/hud/buttons/straight_bttn_RU.webp`,
+    en: `${BASE}/hud/buttons/straight_bttn_EN.webp`,
+    tr: `${BASE}/hud/buttons/straight_bttn_TR.webp`,
   },
   btnPerevodnoy: {
-    ru: `${BASE}/hud/buttons/transfer_bttn_RU.png`,
-    en: `${BASE}/hud/buttons/transfer_bttn_EN.png`,
-    tr: `${BASE}/hud/buttons/transfer_bttn_TR.png`,
+    ru: `${BASE}/hud/buttons/transfer_bttn_RU.webp`,
+    en: `${BASE}/hud/buttons/transfer_bttn_EN.webp`,
+    tr: `${BASE}/hud/buttons/transfer_bttn_TR.webp`,
   },
   table:  `${BASE}/table_texture/default_table.svg`,
   shirt:  `${BASE}/card_shirt/default/card_shirt.webp`,
@@ -57,15 +57,15 @@ export const ASSETS = {
 	pogon:        `${BASE}/hud/joker/pogon.webp`,
 	galstuk:      `${BASE}/hud/joker/galstuk.webp`,
 	jokerFaceSmiling: `${BASE}/hud/joker/joker_face_smiling.webp`,
-   coinFrames: [
-    `${BASE}/hud/joker/coin_0.png`,
-    `${BASE}/hud/joker/coin_1.png`,
-    `${BASE}/hud/joker/coin_2.png`,
-    `${BASE}/hud/joker/coin_3.png`,
-    `${BASE}/hud/joker/coin_4.png`,
-    `${BASE}/hud/joker/coin_5.png`,
-    `${BASE}/hud/joker/coin_6.png`,
-    `${BASE}/hud/joker/coin_7.png`,
+  coinFrames: [
+    `${BASE}/hud/joker/coin_0.webp`,
+    `${BASE}/hud/joker/coin_1.webp`,
+    `${BASE}/hud/joker/coin_2.webp`,
+    `${BASE}/hud/joker/coin_3.webp`,
+    `${BASE}/hud/joker/coin_4.webp`,
+    `${BASE}/hud/joker/coin_5.webp`,
+    `${BASE}/hud/joker/coin_6.webp`,
+    `${BASE}/hud/joker/coin_7.webp`,
   ],
   // Decorations
 decorations: [
@@ -299,6 +299,30 @@ export function preloadJokers() {
     img.onerror = resolve;
     img.src = url;
   })));
+}
+
+export function preloadCoin() {
+  return Promise.all(ASSETS.coinFrames.map(url => new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      if (img.decode) img.decode().then(resolve).catch(resolve);
+      else resolve();
+    };
+    img.onerror = resolve;
+    img.src = url;
+  })));
+}
+
+export function preloadFoolToken() {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      if (img.decode) img.decode().then(resolve).catch(resolve);
+      else resolve();
+    };
+    img.onerror = resolve;
+    img.src = ASSETS.foolToken;
+  });
 }
 
 /** Получить клон инлайн-SVG для заданного url (или null, если не загрузилось) */

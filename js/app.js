@@ -7,8 +7,12 @@ import { SceneLayout, PRESETS } from './game/scene_layout.js';
 import { MarkerRegistry } from './core/marker.js';
 import { MouseCapture } from './core/mouse_capture.js';
 import { Interpolator } from './core/interpolator.js';
-import { ASSETS, preloadSvgs, svgInstance, preloadShirts, 
-		preloadFaces, preloadSuits, preloadDecorations, preloadJokers } from './assets.js';
+import {
+  ASSETS, preloadSvgs, svgInstance,
+  preloadShirts, preloadFaces, preloadSuits,
+  preloadDecorations, preloadJokers,
+  preloadCoin, preloadFoolToken,     // ← добавить
+} from './assets.js';
 import { Card } from './game/card.js';
 import { Accordion } from './game/accordion.js';
 import { GameSession } from './game/game_session.js';
@@ -376,7 +380,9 @@ setLang(savedLang || sdkLang, { persist: false });
       preloadFaces(),
       preloadSuits(),
       preloadDecorations(),
-      preloadJokers(),          // ← добавить
+      preloadJokers(),
+      preloadCoin(),          // ← добавить
+      preloadFoolToken(),     // ← добавить
     ]);
     this._applySettings();
 
