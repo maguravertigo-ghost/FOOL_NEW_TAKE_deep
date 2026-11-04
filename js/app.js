@@ -9,9 +9,7 @@ import { MouseCapture } from './core/mouse_capture.js';
 import { Interpolator } from './core/interpolator.js';
 import {
   ASSETS, preloadSvgs, svgInstance,
-  preloadShirts, preloadFaces, preloadSuits,
-  preloadDecorations, preloadJokers,
-  preloadCoin, preloadFoolToken,     // ← добавить
+  preloadMenuAssets, preloadGameAssets, preloadDeepAssets,
 } from './assets.js';
 import { Card } from './game/card.js';
 import { Accordion } from './game/accordion.js';
@@ -374,27 +372,17 @@ if (!savedLang && sdkLang && sdkLang !== 'ru') {
 setLang(savedLang || sdkLang, { persist: false });
 
     // 2. Ресурсы игры
-    await preloadSvgs();
-    await Promise.all([
-      preloadShirts(),
-      preloadFaces(),
-      preloadSuits(),
-      preloadDecorations(),
-      preloadJokers(),
-      preloadCoin(),          // ← добавить
-      preloadFoolToken(),     // ← добавить
-    ]);
+    await preloadSvgs();              // SVG — быстрые, нужны в любом случае
+    await preloadMenuAssets();        // жетон + эмоция для диалога подарка
     this._applySettings();
 
     Card.defaultCardStyle = GameSettings.cardStyle || 'grid';
     Card.defaultSuitStyle = GameSettings.suitStyle || 'gradient';
     warmUpDeck(Card.defaultCardStyle, Card.defaultSuitStyle);
 
-    console.log('[boot] done');
-
     this._createAccordions();
 
-    // 3. Загрузка прогресса с сервера Яндекс Игр (если авторизован)
+    // 3. Прогресс с сервера
     const remote = await ysdk.loadProgress();
     if (remote && typeof remote.stylePoints === 'number') {
       Object.assign(Progress, remote);
@@ -405,15 +393,27 @@ setLang(savedLang || sdkLang, { persist: false });
     this._positionSettingsButton();
     if (this.settingsBtn) this.settingsBtn.style.display = 'none';
 
-    // 4. Показать меню
+    // 4. Меню на экране
     await this.fade.toClear(700);
 
-    // 5. Дать браузеру отрисовать кадр, затем сообщить платформе.
-    //    Требование 1.19.2: LoadingAPI.ready() в момент, когда игрок
-    //    может приступить к игре.
-    // Прогрев рендера — иначе первый матч идёт с лагами
-    await this._warmupRender();
+    // 4a. Фоновые загрузки — НЕ блокируют boot
+    this._gameAssetsPromise = preloadGameAssets({
+      shirtStyle: GameSettings.shirtStyle,
+      suitStyle:  GameSettings.suitStyle,
+      decorStyle: GameSettings.decorStyle,
+      hasToken:   Progress.foolToken !== null,
+    });
+    this._deepAssetsPromise = this._gameAssetsPromise.then(() =>
+      preloadDeepAssets({
+        shirtStyle: GameSettings.shirtStyle,
+        suitStyle:  GameSettings.suitStyle,
+        decorStyle: GameSettings.decorStyle,
+        hasToken:   Progress.foolToken !== null,
+      })
+    );
 
+    // 5. Прогрев рендера + gameReady
+    await this._warmupRender();
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
     ysdk.gameReady();
   }
@@ -591,6 +591,11 @@ async _startGameFromMenu(mode) {
   this._lastMode = mode;
 
   try {
+    // Дождаться game-ассетов (если уже готовы — мгновенно)
+    if (this._gameAssetsPromise) {
+      await this._gameAssetsPromise;
+    }
+
     await this.fade.toBlack(380);
 
     // ---- First-run gift: пока экран чёрный, применяем стили ----

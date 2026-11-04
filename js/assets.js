@@ -330,3 +330,96 @@ export function svgInstance(url) {
   const root = SVG_CACHE.get(url);
   return root ? root.cloneNode(true) : null;
 }
+
+// ---- Хелпер: прелоад одного URL ----
+function preloadImage(url) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      if (img.decode) img.decode().then(resolve).catch(resolve);
+      else resolve();
+    };
+    img.onerror = resolve;
+    img.src = url;
+  });
+}
+
+function preloadUrls(urls) {
+  return Promise.all(urls.filter(Boolean).map(preloadImage));
+}
+
+// ---- Фаза 1: только критичное для меню ----
+export function preloadMenuAssets() {
+  return preloadUrls([
+    ASSETS.foolToken,
+    ASSETS.jokerFaceSmiling,
+  ]);
+}
+
+// ---- Фаза 2: всё критичное для матча ----
+export function preloadGameAssets({ shirtStyle, suitStyle, decorStyle, hasToken }) {
+  const urls = [
+    // рубашка — только текущая
+    ASSETS.shirts[shirtStyle ?? 0] || ASSETS.shirts[0],
+
+    // лица J/Q/K — все 12 нужны в любом матче
+    ...['J','Q','K'].flatMap(r =>
+      ['clubs','diamonds','hearts','spades'].map(s =>
+        `${BASE}/card_body/family/${r}_${s}.webp`
+      )
+    ),
+
+    // масти — только текущий стиль
+    ...(() => {
+      const style = suitStyle || 'gradient';
+      const ext = style === 'default' ? 'svg' : 'webp';
+      return ['clubs','diamonds','hearts','spades'].map(s =>
+        `${BASE}/card_body/suits/${style}/${s}.${ext}`
+      );
+    })(),
+
+    // текущая декорация
+    ASSETS.decorations[decorStyle ?? 0] || ASSETS.decorations[0],
+
+    // джокеры, которые могут появиться в первом матче
+    ASSETS.jokerSuit,
+  ];
+
+  // Монета — только если у игрока нет жетона (значит будет жеребьёвка)
+  if (!hasToken) {
+    urls.push(...ASSETS.coinFrames);
+  }
+
+  return preloadUrls(urls);
+}
+
+// ---- Фаза 3: остальное — всё, что может понадобиться в оверлеях ----
+export function preloadDeepAssets({ shirtStyle, suitStyle, decorStyle, hasToken }) {
+  const urls = [
+    // все рубашки кроме текущей
+    ...ASSETS.shirts.filter((_, i) => i !== (shirtStyle ?? 0)),
+
+    // все масти кроме текущего стиля
+    ...['paper','barhat','gradient','ruby','golden']
+      .filter(st => st !== suitStyle)
+      .flatMap(st => ['clubs','diamonds','hearts','spades'].map(s =>
+        `${BASE}/card_body/suits/${st}/${s}.webp`
+      )),
+
+    // все декорации кроме текущей
+    ...ASSETS.decorations.filter((_, i) => i !== (decorStyle ?? 0)),
+
+    // остальные джокеры
+    ASSETS.jokerWin, ASSETS.jokerLose, ASSETS.jokerDraw,
+    ASSETS.jokerShop, ASSETS.jokerLies,
+    ASSETS.jokerSetOk, ASSETS.jokerSetNice,
+    ASSETS.jokerSetFive, ASSETS.jokerSetSad,
+  ];
+
+  // Монета — если не в фазе 2 (значит жетон есть)
+  if (hasToken) {
+    urls.push(...ASSETS.coinFrames);
+  }
+
+  return preloadUrls(urls);
+}
