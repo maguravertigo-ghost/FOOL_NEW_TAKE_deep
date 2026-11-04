@@ -218,7 +218,7 @@ body.is-mobile .card--stack-sub {
   bottom: calc(-10px * var(--ui));
   width: calc(40px * var(--ui));
   height: calc(40px * var(--ui));
-  background: url('assets/hud/icons/move_arrows.svg') center / contain no-repeat;
+  /*background: url('assets/hud/icons/move_arrows.svg') center / contain no-repeat;*/
   animation: arrow-pulse 1.2s ease-in-out infinite;
   pointer-events: none;
   filter: drop-shadow(0 0 6px rgba(255,213,79,0.9));

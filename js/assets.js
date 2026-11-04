@@ -39,24 +39,24 @@ export const ASSETS = {
 	newOneIcon: `${BASE}/hud/icons/new_one.svg`,
 	lockIcon:   `${BASE}/hud/icons/lock.svg`,
   
-  mainMenuBg: `${BASE}/hud/main_menu_bg.png`,
+  mainMenuBg: `${BASE}/hud/main_menu_bg.webp`,
   
     // Joker
-  jokerWin:     `${BASE}/hud/joker/joker_wins.png`,
-  jokerLose:    `${BASE}/hud/joker/joker_losing.png`,
-  jokerDraw:    `${BASE}/hud/joker/joker_draw.png`,
-  jokerShop:    `${BASE}/hud/joker/joker_trading.png`,
-  jokerLies:    `${BASE}/hud/joker/joker_lies.png`,
+  jokerWin:     `${BASE}/hud/joker/joker_wins.webp`,
+  jokerLose:    `${BASE}/hud/joker/joker_losing.webp`,
+  jokerDraw:    `${BASE}/hud/joker/joker_draw.webp`,
+  jokerShop:    `${BASE}/hud/joker/joker_trading.webp`,
+  jokerLies:    `${BASE}/hud/joker/joker_lies.webp`,
   // Joker — эмоции
-	jokerSetOk:   `${BASE}/hud/joker/joker_set_ok.png`,
-	jokerSetNice: `${BASE}/hud/joker/joker_set_nice.png`,
-	jokerSetFive: `${BASE}/hud/joker/joker_set_give_five.png`,
-	jokerSetSad:  `${BASE}/hud/joker/joker_set_sad.png`,
-	foolToken:    `${BASE}/hud/joker/fool_token.png`,
-	jokerSuit:    `${BASE}/hud/joker/joker_suit.png`,
-	pogon:        `${BASE}/hud/joker/pogon.png`,
-	galstuk:      `${BASE}/hud/joker/galstuk.png`,
-	jokerFaceSmiling: `${BASE}/hud/joker/joker_face_smiling.png`,
+	jokerSetOk:   `${BASE}/hud/joker/joker_set_ok.webp`,
+	jokerSetNice: `${BASE}/hud/joker/joker_set_nice.webp`,
+	jokerSetFive: `${BASE}/hud/joker/joker_set_give_five.webp`,
+	jokerSetSad:  `${BASE}/hud/joker/joker_set_sad.webp`,
+	foolToken:    `${BASE}/hud/joker/fool_token.webp`,
+	jokerSuit:    `${BASE}/hud/joker/joker_suit.webp`,
+	pogon:        `${BASE}/hud/joker/pogon.webp`,
+	galstuk:      `${BASE}/hud/joker/galstuk.webp`,
+	jokerFaceSmiling: `${BASE}/hud/joker/joker_face_smiling.webp`,
    coinFrames: [
     `${BASE}/hud/joker/coin_0.png`,
     `${BASE}/hud/joker/coin_1.png`,
@@ -68,15 +68,15 @@ export const ASSETS = {
     `${BASE}/hud/joker/coin_7.png`,
   ],
   // Decorations
-  decorations: [
-    `${BASE}/decoration/frame.png`,
-    `${BASE}/decoration/collage.png`,
-    `${BASE}/decoration/parket.png`,
-    `${BASE}/decoration/bricks.png`,
-    `${BASE}/decoration/marble.png`,
-    `${BASE}/decoration/wood.png`,
-    `${BASE}/decoration/nebula.png`,
-  ],
+decorations: [
+  `${BASE}/decoration/frame.webp`,
+  `${BASE}/decoration/collage.webp`,
+  `${BASE}/decoration/parket.webp`,
+  `${BASE}/decoration/bricks.webp`,
+  `${BASE}/decoration/marble.webp`,
+  `${BASE}/decoration/wood.webp`,
+  `${BASE}/decoration/nebula.webp`,
+],
 
   // Shop previews — реальные файлы
 shirts: [
@@ -257,6 +257,39 @@ export function preloadSuits() {
       urls.push(`${BASE}/card_body/suits/${st}/${s}.webp`);
     }
   }
+  return Promise.all(urls.map(url => new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      if (img.decode) img.decode().then(resolve).catch(resolve);
+      else resolve();
+    };
+    img.onerror = resolve;
+    img.src = url;
+  })));
+}
+
+export function preloadDecorations() {
+  return Promise.all(ASSETS.decorations.map(url => new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      if (img.decode) img.decode().then(resolve).catch(resolve);
+      else resolve();
+    };
+    img.onerror = resolve;
+    img.src = url;
+  })));
+}
+
+export function preloadJokers() {
+  const urls = [
+    ASSETS.foolToken, ASSETS.jokerFaceSmiling,
+    ASSETS.jokerSuit,
+    ASSETS.jokerWin, ASSETS.jokerLose, ASSETS.jokerDraw,
+    ASSETS.jokerShop,
+    ASSETS.jokerLies,
+    ASSETS.jokerSetOk, ASSETS.jokerSetNice,
+    ASSETS.jokerSetFive, ASSETS.jokerSetSad,
+  ];
   return Promise.all(urls.map(url => new Promise(resolve => {
     const img = new Image();
     img.onload = () => {

@@ -7,7 +7,8 @@ import { SceneLayout, PRESETS } from './game/scene_layout.js';
 import { MarkerRegistry } from './core/marker.js';
 import { MouseCapture } from './core/mouse_capture.js';
 import { Interpolator } from './core/interpolator.js';
-import { ASSETS, preloadSvgs, svgInstance, preloadShirts, preloadFaces, preloadSuits } from './assets.js';
+import { ASSETS, preloadSvgs, svgInstance, preloadShirts, 
+		preloadFaces, preloadSuits, preloadDecorations, preloadJokers } from './assets.js';
 import { Card } from './game/card.js';
 import { Accordion } from './game/accordion.js';
 import { GameSession } from './game/game_session.js';
@@ -370,7 +371,13 @@ setLang(savedLang || sdkLang, { persist: false });
 
     // 2. Ресурсы игры
     await preloadSvgs();
-	await Promise.all([preloadShirts(), preloadFaces(), preloadSuits()]);
+    await Promise.all([
+      preloadShirts(),
+      preloadFaces(),
+      preloadSuits(),
+      preloadDecorations(),
+      preloadJokers(),          // ← добавить
+    ]);
     this._applySettings();
 
     Card.defaultCardStyle = GameSettings.cardStyle || 'grid';
