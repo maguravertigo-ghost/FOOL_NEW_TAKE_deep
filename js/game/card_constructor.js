@@ -1,61 +1,69 @@
-/* card_constructor.js — Design-px. Карта 219×340.
-   1 unit = --card-w / 219, все размеры в calc(N * var(--u)).
-   Публичный API: buildCard(rank, suit, styleId, opts).
-   Кеш/прогрев — в card_cache.js, чтобы не было циклов. */
+/* card_constructor.js — Design-px. Карта 219×340. */
 
 import { getLang } from '../i18n/index.js';
 
 /* ===================== DESIGN CONSTANTS ===================== */
 const DESIGN = {
   CARD_W: 219, CARD_H: 340,
-  CORNER_X: 6, CORNER_Y: 9,
-  RANK_W: 38,  RANK_H: 44,
-  SUIT_W: 38,  SUIT_H: 30,
-  INNER_W: 89, INNER_H: 203,
+  
+  // Углы (из layer10)
+  CORNER_X: 12, CORNER_Y: 10.8,
+  RANK_W: 33.09,  RANK_H: 44.14,
+  SUIT_W: 26.11,  SUIT_H: 27.09,
+  
+  // Внутренняя сетка (из layer1)
+  INNER_W: 128.75, INNER_H: 243.75,
 };
 
-const COL = { A: 0, B: DESIGN.INNER_W / 2, C: DESIGN.INNER_W };
+const MID_X = 109.5; // Центр карты по X
+const MID_Y = 169.9; // Центр карты по Y
 
-const ROW = {
-  '0':  0,
-  '0a': (0 + 51) / 2,
-  '1':  35,
-  '1a': 51,
-  '2':  69,
-  '3':  DESIGN.INNER_H / 2,
-  '4':  DESIGN.INNER_H - 69,
-  '4a': DESIGN.INNER_H - 51,
-  '5':  DESIGN.INNER_H - 35,
-  '5a': (DESIGN.INNER_H - 51 + DESIGN.INNER_H) / 2,
-  '6':  DESIGN.INNER_H,
+// Точная сетка пипов (высчитано из SVG × 3.77586)
+const G = {
+  // Колонки (X центров)
+  L: 66.6,   // Левая
+  C: 109.5,  // Центральная
+  R: 152.4,  // Правая
+  // Ряды (Y центров)
+  R1: 69.5,   // Верхний
+  R2: 136.5,  // Второй
+  R3: 203.4,  // Третий
+  R4: 270.4,  // Нижний
+  // Центральные элементы
+  CM: 169.9, // Центр (3, 5, 6, 9)
+  CT: 103.0, // Верх (10)
+  CB: 236.9, // Низ (10)
+  CET: 119.7, // Центр-верх (7, 8)
+  CEB: 220.1  // Центр-низ (8)
 };
 
 const PIP = {
-  medium: { w: 39,  h: 41  },
-  small:  { w: 25,  h: 26  },
-  large:  { w: 137, h: 145 },
+  medium: { w: 42.96, h: 42.96 },
+  small:  { w: 24,  h: 24  },
+  large:  { w: 92.25, h: 95.69 }, // Тузы
 };
 
-// ↓ НОВАЯ КОНСТАНТА (размер подбирай под свой дизайн, 160x160 — очень крупно)
-const HUGE_PIP = { w: 160, h: 160 };
+const HUGE_PIP = { w: 140, h: 140 };
 
-const CENTER_PIP = { w: 78, h: 82 };
-const CENTER_RANK = { w: 74, h: 90 };
+// Центры (стили 'center' и 'rank')
+const CENTER_PIP = { w: 92.25, h: 92.25 };
+const CENTER_RANK = { w: 90, h: 110 };
+const CENTER_RANK_GAP = 6;
 
 const _RANK_SUIT_RATIO = PIP.medium.w / PIP.medium.h;
 const CENTER_RANK_SUIT = {
   w: CENTER_RANK.h * 0.85 * _RANK_SUIT_RATIO,
   h: CENTER_RANK.h * 0.85,
 };
-const CENTER_RANK_GAP = 6;
 
+// Портреты J/Q/K (из layer11)
 const FACE = {
   SRC_W: 305, SRC_H: 250,
-  TARGET_H: 161,
-  get TARGET_W() { return this.TARGET_H * this.SRC_W / this.SRC_H; },
-  COURT_PIP_OFFSET_X: 9,
-  COURT_PIP_ROW_RT: '0a',
-  COURT_PIP_ROW_LB: '5a',
+  TARGET_W: 194.93, // Точная ширина из SVG
+  TARGET_H: 159.06, // Точная высота из SVG
+  X: 12.03,
+  Y_TOP: 10.85,
+  Y_BOTTOM: 169.91,
 };
 
 const RANKS  = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
@@ -73,7 +81,7 @@ const SUIT_STYLES = [
   { id: 'gradient', ext: 'webp' },
   { id: 'ruby',     ext: 'webp' },
   { id: 'golden',   ext: 'webp' },
-  { id: 'default',  ext: 'svg'  },   // ← остаётся SVG (база)
+  { id: 'default',  ext: 'svg'  },
 ];
 
 const RANK_COLORS = {
@@ -90,7 +98,6 @@ const ACE_RANK   = 'A';
 
 const ROOT = 'assets/card_body';
 
-// Определяем язык один раз при загрузке модуля
 const getRankLang = (styleId) => {
   const lang = (getLang() === 'ru') ? 'ru' : 'en';
   const folder = styleId.startsWith('wide') ? 'wide' : 'default';
@@ -100,7 +107,6 @@ const getRankLang = (styleId) => {
 const ASSETS = {
   shadow: `${ROOT}/shadow/card_shadow.svg`,
   body:   `${ROOT}/body/default/card_body.svg`,
-  // Меняем путь, добавляя папку языка:
   rank:   r => `${ROOT}/ranks/default/${(getLang() === 'ru') ? 'ru' : 'en'}/${r}.svg`,
   suit:   (style, s) => {
     const st = SUIT_STYLES.find(x => x.id === style) ?? SUIT_STYLES[0];
@@ -109,21 +115,18 @@ const ASSETS = {
   face:   (r, s) => `${ROOT}/family/${r}_${s}.webp`,
 };
 
-const { A, B, C } = COL;
-const { '0': R0, '1': R1, '1a': R1a, '2': R2, '3': R3,
-        '4': R4, '4a': R4a, '5': R5, '6': R6 } = ROW;
-
+// ТОЧНЫЕ РАСКЛАДКИ ИЗ ТВОЕГО SVG
 const PIP_LAYOUTS = {
-  '2':  [[B,R0], [B,R6]],
-  '3':  [[B,R0], [B,R3], [B,R6]],
-  '4':  [[A,R0], [A,R6], [C,R0], [C,R6]],
-  '5':  [[A,R0], [A,R6], [B,R3], [C,R0], [C,R6]],
-  '6':  [[A,R0], [A,R3], [A,R6], [C,R0], [C,R3], [C,R6]],
-  '7':  [[A,R0], [A,R3], [A,R6], [B,R1a], [C,R0], [C,R3], [C,R6]],
-  '8':  [[A,R0], [A,R3], [A,R6], [B,R1a], [C,R0], [C,R3], [C,R6], [B,R4a]],
-  '9':  [[A,R0], [A,R2], [A,R4], [A,R6], [B,R3], [C,R0], [C,R2], [C,R4], [C,R6]],
-  '10': [[A,R0], [A,R2], [A,R4], [A,R6], [B,R1], [C,R0], [C,R2], [C,R4], [C,R6], [B,R5]],
-  'A':  [[B,R3]],
+  '2':  [[G.C, G.R1], [G.C, G.R4]],
+  '3':  [[G.C, G.R1], [G.C, G.CM], [G.C, G.R4]],
+  '4':  [[G.L, G.R1], [G.L, G.R4], [G.R, G.R1], [G.R, G.R4]],
+  '5':  [[G.L, G.R1], [G.L, G.R4], [G.C, G.CM], [G.R, G.R1], [G.R, G.R4]],
+  '6':  [[G.L, G.R1], [G.L, G.CM], [G.L, G.R4], [G.R, G.R1], [G.R, G.CM], [G.R, G.R4]],
+  '7':  [[G.L, G.R1], [G.L, G.CM], [G.L, G.R4], [G.C, G.CET], [G.R, G.R1], [G.R, G.CM], [G.R, G.R4]],
+  '8':  [[G.L, G.R1], [G.L, G.CM], [G.L, G.R4], [G.C, G.CET], [G.R, G.R1], [G.R, G.CM], [G.R, G.R4], [G.C, G.CEB]],
+  '9':  [[G.L, G.R1], [G.L, G.R2], [G.L, G.R3], [G.L, G.R4], [G.C, G.CM], [G.R, G.R1], [G.R, G.R2], [G.R, G.R3], [G.R, G.R4]],
+  '10': [[G.L, G.R1], [G.L, G.R2], [G.L, G.R3], [G.L, G.R4], [G.C, G.CT], [G.R, G.R1], [G.R, G.R2], [G.R, G.R3], [G.R, G.R4], [G.C, G.CB]],
+  'A':  [[G.C, G.CM]],
 };
 
 function el(tag, cls, parent) {
@@ -162,7 +165,6 @@ function rankMask(src, cls) {
 function buildCorner(rank, suit, suitStyle, rankFolder) {
   const corner = el('div', 'corner');
   corner.dataset.suit = suit;
-  // Меняем путь:
   const rankSrc = `${ROOT}/ranks/${rankFolder}/${(getLang() === 'ru') ? 'ru' : 'en'}/${rank}.svg`;
   corner.appendChild(rankMask(rankSrc, 'corner__rank-img'));
   corner.appendChild(img(ASSETS.suit(suitStyle, suit), 'corner__suit-img'));
@@ -171,24 +173,31 @@ function buildCorner(rank, suit, suitStyle, rankFolder) {
 
 function renderPortraits(grid, rank, suit) {
   const src = ASSETS.face(rank, suit);
-  const W = FACE.TARGET_W;
-  const H = FACE.TARGET_H;
-  const cx = COL.B;
-  const cy = ROW['3'];
-
+  
   const top = el('div', 'face face--top', grid);
-  top.style.width  = u(W);
-  top.style.height = u(H);
-  top.style.left   = u(cx - W / 2);
-  top.style.top    = u(cy - H);
+  top.style.width  = u(FACE.TARGET_W);
+  top.style.height = u(FACE.TARGET_H);
+  top.style.left   = u(FACE.X);
+  top.style.top    = u(FACE.Y_TOP);
   top.appendChild(img(src, 'face__img'));
 
   const bot = el('div', 'face face--bottom', grid);
-  bot.style.width  = u(W);
-  bot.style.height = u(H);
-  bot.style.left   = u(cx - W / 2);
-  bot.style.top    = u(cy);
+  bot.style.width  = u(FACE.TARGET_W);
+  bot.style.height = u(FACE.TARGET_H);
+  bot.style.left   = u(FACE.X);
+  bot.style.top    = u(FACE.Y_BOTTOM);
   bot.appendChild(img(src, 'face__img'));
+}
+
+function renderCourtPips(card, suit, suitStyle) {
+  const src  = ASSETS.suit(suitStyle, suit);
+  const p    = PIP.medium;
+  const layer = el('div', 'card__court-pips', card);
+
+  // RT (Правый верхний)
+  placePip(layer, 164.00 + p.w / 2, 48.04 + p.h / 2, p, src, 0);
+  // LB (Левый нижний)
+  placePip(layer, 12.03 + p.w / 2, 248.85 + p.h / 2, p, src, 180);
 }
 
 function renderGridStyle(grid, rank, suit, suitStyle) {
@@ -198,13 +207,17 @@ function renderGridStyle(grid, rank, suit, suitStyle) {
     return;
   }
   if (rank === ACE_RANK) {
-    const [x, y] = PIP_LAYOUTS['A'][0];
-    placePip(grid, x, y, PIP.large, suitSrc);
+    placePip(grid, MID_X, MID_Y, PIP.large, suitSrc);
     return;
   }
-  const layout = PIP_LAYOUTS[rank];
-  if (!layout) throw new Error(`Unknown rank: ${rank}`);
-  for (const [x, y] of layout) placePip(grid, x, y, PIP.medium, suitSrc);
+	const layout = PIP_LAYOUTS[rank];
+	if (!layout) throw new Error(`Unknown rank: ${rank}`);
+	for (const [x, y] of layout) {
+	  // Нижние пипы (ниже середины карты) переворачиваем на 180° —
+	  // классическая типографика игральных карт.
+	  const rot = y > MID_Y ? 180 : 0;
+	  placePip(grid, x, y, PIP.medium, suitSrc, rot);
+	}
 }
 
 function renderCenterStyle(grid, rank, suit, suitStyle) {
@@ -213,14 +226,12 @@ function renderCenterStyle(grid, rank, suit, suitStyle) {
     return;
   }
   const suitSrc = ASSETS.suit(suitStyle, suit);
-  placePip(grid, COL.B, ROW['3'], CENTER_PIP, suitSrc);
+  placePip(grid, MID_X, MID_Y, CENTER_PIP, suitSrc);
 }
 
 function renderBigSuitStyle(grid, rank, suit, suitStyle) {
   const suitSrc = ASSETS.suit(suitStyle, suit);
-  // Ставим масть ровно по центру (ROW['3'] — это вертикальная середина).
-  // Она будет одинаково крупной для всех карт: от 6 до Туза, включая Валета, Даму и Короля.
-  placePip(grid, COL.B, ROW['3'], HUGE_PIP, suitSrc);
+  placePip(grid, MID_X, MID_Y, HUGE_PIP, suitSrc);
 }
 
 function renderRankStyle(grid, rank, suit, suitStyle) {
@@ -234,53 +245,37 @@ function renderRankStyle(grid, rank, suit, suitStyle) {
   const gap = CENTER_RANK_GAP;
 
   const totalH = rh + gap + sh;
-  const cx = COL.B;
-  const topY = ROW['3'] - totalH / 2;
+  const topY = MID_Y - totalH / 2;
 
   const rankBox = el('div', 'center-rank__rank', grid);
   rankBox.style.width  = u(rw);
   rankBox.style.height = u(rh);
-  rankBox.style.left   = u(cx - rw / 2);
+  rankBox.style.left   = u(MID_X - rw / 2);
   rankBox.style.top    = u(topY);
   rankBox.appendChild(rankMask(rankSrc, 'center-rank__rank-img'));
 
   const suitBox = el('div', 'center-rank__suit', grid);
   suitBox.style.width  = u(sw);
   suitBox.style.height = u(sh);
-  suitBox.style.left   = u(cx - sw / 2);
+  suitBox.style.left   = u(MID_X - sw / 2);
   suitBox.style.top    = u(topY + rh + gap);
   suitBox.appendChild(img(suitSrc, 'center-rank__suit-img'));
-}
-
-function renderCourtPips(card, suit, suitStyle) {
-  const src  = ASSETS.suit(suitStyle, suit);
-  const p    = PIP.medium;
-  const offX = FACE.COURT_PIP_OFFSET_X;
-
-  const gridTopY = (DESIGN.CARD_H - DESIGN.INNER_H) / 2;
-  const yRT      = gridTopY + ROW[FACE.COURT_PIP_ROW_RT];
-  const yLB      = gridTopY + ROW[FACE.COURT_PIP_ROW_LB];
-
-  const layer = el('div', 'card__court-pips', card);
-
-  placePip(layer, DESIGN.CARD_W - offX - p.w / 2, yRT, p, src, 0);
-  placePip(layer, offX + p.w / 2, yLB, p, src, 180);
 }
 
 function buildGridOverlay(grid) {
   const ov = el('div', 'grid-overlay', grid);
   el('div', 'grid-overlay__frame', ov);
 
-  const cv = el('div', 'grid-overlay__cx', ov); cv.style.left = u(COL.B);
-  const ch = el('div', 'grid-overlay__cy', ov); ch.style.top  = u(ROW['3']);
+  const cv = el('div', 'grid-overlay__cx', ov); cv.style.left = u(MID_X);
+  const ch = el('div', 'grid-overlay__cy', ov); ch.style.top  = u(MID_Y);
 
-  for (const x of [COL.A, COL.B, COL.C]) {
+  for (const x of [G.L, G.C, G.R]) {
     const line = el('div', 'grid-overlay__v', ov);
     line.style.left = u(x);
   }
-  for (const key of ['0','1','1a','2','3','4','4a','5','6']) {
+  for (const y of [G.R1, G.R2, G.R3, G.R4]) {
     const line = el('div', 'grid-overlay__h', ov);
-    line.style.top = u(ROW[key]);
+    line.style.top = u(y);
   }
 }
 
@@ -292,7 +287,6 @@ export function buildCard(rank, suit, styleId = 'grid',
   card.dataset.suit  = suit;
   card.dataset.style = styleId;
 
-  // Применяем цвет ранга в зависимости от стиля мастей
   const col = RANK_COLORS[suitStyle] || RANK_COLORS.default;
   const isRed = (suit === 'hearts' || suit === 'diamonds');
   card.style.setProperty('--rank-color', isRed ? col.red : col.black);
@@ -302,7 +296,6 @@ export function buildCard(rank, suit, styleId = 'grid',
 
   const grid = el('div', 'card__grid', card);
 
-  // Заменяем switch на обработку префикса wide-
   const isWide = styleId.startsWith('wide-');
   const baseStyle = isWide ? styleId.replace('wide-', '') : styleId;
 
@@ -320,10 +313,9 @@ export function buildCard(rank, suit, styleId = 'grid',
     renderCourtPips(card, suit, suitStyle);
   }
 
-  // Теперь углы рисуются ВСЕГДА (и для rank-no-corners тоже)
   const rankFolder = isWide ? 'wide' : 'default';
   const lt = el('div', 'card__corner-layer card__corner-layer--lt', card);
-  lt.appendChild(buildCorner(rank, suit, suitStyle, rankFolder)); // передаем папку
+  lt.appendChild(buildCorner(rank, suit, suitStyle, rankFolder));
   
   const rb = el('div', 'card__corner-layer card__corner-layer--rb', card);
   rb.appendChild(buildCorner(rank, suit, suitStyle, rankFolder));
