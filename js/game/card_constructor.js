@@ -6,12 +6,11 @@ import { getLang } from '../i18n/index.js';
 const DESIGN = {
   CARD_W: 219, CARD_H: 340,
   
-  // Углы (из layer10)
-  CORNER_X: 12, CORNER_Y: 10.8,
+  // Углы сдвинуты ближе к центру
+  CORNER_X: 16, CORNER_Y: 14, 
   RANK_W: 33.09,  RANK_H: 44.14,
   SUIT_W: 26.11,  SUIT_H: 27.09,
   
-  // Внутренняя сетка (из layer1)
   INNER_W: 128.75, INNER_H: 243.75,
 };
 
@@ -69,10 +68,9 @@ const FACE = {
 const RANKS  = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
 const SUITS  = ['hearts','diamonds','clubs','spades'];
 const STYLES = [
-  { id: 'grid',            label: 'Сетка' },
-  { id: 'center',          label: 'Центр — масть' },
-  { id: 'rank',            label: 'Центр — ранг+масть' },
-  { id: 'rank-no-corners', label: 'Центр — ранг+масть (без углов)' },
+  { id: 'grid',            label: 'Атласные' },
+  { id: 'center',          label: 'Центр — Масть' },
+  { id: 'rank-no-corners', label: 'Мобильная (только масть)' },
 ];
 
 const SUIT_STYLES = [
@@ -107,7 +105,11 @@ const getRankLang = (styleId) => {
 const ASSETS = {
   shadow: `${ROOT}/shadow/card_shadow.svg`,
   body:   `${ROOT}/body/default/card_body.svg`,
-  rank:   r => `${ROOT}/ranks/default/${(getLang() === 'ru') ? 'ru' : 'en'}/${r}.svg`,
+  rank:   r => {
+    const base = `${ROOT}/ranks/default`;
+    if (/^\d+$/.test(r)) return `${base}/base/${r}.svg`;
+    return `${base}/${(getLang() === 'ru') ? 'ru' : 'en'}/${r}.svg`;
+  },
   suit:   (style, s) => {
     const st = SUIT_STYLES.find(x => x.id === style) ?? SUIT_STYLES[0];
     return `${ROOT}/suits/${st.id}/${s}.${st.ext}`;
@@ -162,13 +164,37 @@ function rankMask(src, cls) {
   return n;
 }
 
-function buildCorner(rank, suit, suitStyle, rankFolder) {
+function buildCorner(rank, suit, suitStyle, styleId) {
   const corner = el('div', 'corner');
   corner.dataset.suit = suit;
-  const rankSrc = `${ROOT}/ranks/${rankFolder}/${(getLang() === 'ru') ? 'ru' : 'en'}/${rank}.svg`;
+  
+  // Определяем папку для ранга
+  const layout = styleId.startsWith('wide-') ? 'wide' : 'default';
+  let langFolder;
+  if (/^\d+$/.test(rank)) {
+    langFolder = 'base'; // Для цифр 2-10
+  } else {
+    langFolder = (getLang() === 'ru') ? 'ru' : 'en'; // Для J,Q,K,A (и В,Д,К,Т)
+  }
+  
+  const rankSrc = `${ROOT}/ranks/${layout}/${langFolder}/${rank}.svg`;
   corner.appendChild(rankMask(rankSrc, 'corner__rank-img'));
   corner.appendChild(img(ASSETS.suit(suitStyle, suit), 'corner__suit-img'));
   return corner;
+}
+
+function renderSinglePortrait(grid, rank, suit) {
+  const src = ASSETS.face(rank, suit);
+  const W = FACE.TARGET_W;
+  const H = FACE.TARGET_H;
+
+  const node = el('div', 'face face--single', grid);
+  node.style.width  = u(W);
+  node.style.height = u(H);
+  // Центрируем ровно по середине карты
+  node.style.left   = u(MID_X - W / 2);
+  node.style.top    = u(MID_Y - H / 2);
+  node.appendChild(img(src, 'face__img'));
 }
 
 function renderPortraits(grid, rank, suit) {
@@ -220,9 +246,10 @@ function renderGridStyle(grid, rank, suit, suitStyle) {
 	}
 }
 
+// Стиль 2: Центр — Масть (с двумя портретами)
 function renderCenterStyle(grid, rank, suit, suitStyle) {
   if (FACE_RANKS.has(rank)) {
-    renderPortraits(grid, rank, suit);
+    renderPortraits(grid, rank, suit); // Два портрета верх/низ
     return;
   }
   const suitSrc = ASSETS.suit(suitStyle, suit);
@@ -230,10 +257,17 @@ function renderCenterStyle(grid, rank, suit, suitStyle) {
 }
 
 function renderBigSuitStyle(grid, rank, suit, suitStyle) {
+  // Для ВСЕХ карт (включая J/Q/K) — только одна огромная масть
   const suitSrc = ASSETS.suit(suitStyle, suit);
   placePip(grid, MID_X, MID_Y, HUGE_PIP, suitSrc);
 }
 
+// Стиль 4: Мобильная (только масть, без картинок)
+function renderMobileNoFace(grid, rank, suit, suitStyle) {
+  const suitSrc = ASSETS.suit(suitStyle, suit);
+  placePip(grid, MID_X, MID_Y, HUGE_PIP, suitSrc);
+}
+/*
 function renderRankStyle(grid, rank, suit, suitStyle) {
   const rankSrc = ASSETS.rank(rank);
   const suitSrc = ASSETS.suit(suitStyle, suit);
@@ -260,7 +294,7 @@ function renderRankStyle(grid, rank, suit, suitStyle) {
   suitBox.style.left   = u(MID_X - sw / 2);
   suitBox.style.top    = u(topY + rh + gap);
   suitBox.appendChild(img(suitSrc, 'center-rank__suit-img'));
-}
+}*/
 
 function buildGridOverlay(grid) {
   const ov = el('div', 'grid-overlay', grid);
@@ -299,26 +333,66 @@ export function buildCard(rank, suit, styleId = 'grid',
   const isWide = styleId.startsWith('wide-');
   const baseStyle = isWide ? styleId.replace('wide-', '') : styleId;
 
+  // Настраиваем размеры углов в зависимости от шрифта (узкий/широкий)
+  if (isWide) {
+    // ---- Wide (стили 4, 5, 6) ----
+    card.style.setProperty('--cx', '12');
+    card.style.setProperty('--cy', '12.8');
+    card.style.setProperty('--rw', '38');
+    card.style.setProperty('--rh', '44.14');
+    card.style.setProperty('--sx', '15');
+    card.style.setProperty('--sy', '55');
+    card.style.setProperty('--sw', '26.11');
+    card.style.setProperty('--sh', '27.09');
+    
+    // Стиль 6: wide + mobile — увеличенные углы
+    if (baseStyle === 'rank-no-corners') {
+      card.style.setProperty('--rw', '40');
+      card.style.setProperty('--rh', '48');
+      // sx = cx + (rw - sw)/2 = 12 + (40 - 30)/2 = 17
+      card.style.setProperty('--sx', '15');
+      card.style.setProperty('--sy', '61');        // 10.8 + 48 + ~2
+      card.style.setProperty('--sw', '30');        // было 27
+      card.style.setProperty('--sh', '31');        // было 28
+    }
+  } else {
+    // ---- Узкий (стили 1, 2, 3) ----
+    card.style.setProperty('--cx', '12');
+    card.style.setProperty('--cy', '12.8');
+    card.style.setProperty('--rw', '33.09');
+    card.style.setProperty('--rh', '44.14');
+    card.style.setProperty('--sx', '13.49');   // было 15.49
+    card.style.setProperty('--sy', '57');
+    card.style.setProperty('--sw', '26.11');
+    card.style.setProperty('--sh', '27.09');
+    
+    // Стиль 3: узкий + mobile — увеличенные углы
+    if (baseStyle === 'rank-no-corners') {
+      card.style.setProperty('--sx', '14.55');   // было 13.55 — сдвиг на 2 вправо
+      card.style.setProperty('--sw', '30');
+      card.style.setProperty('--sh', '31');
+    }
+  }
+
   switch (baseStyle) {
     case 'grid':            renderGridStyle(grid, rank, suit, suitStyle); break;
     case 'center':          renderCenterStyle(grid, rank, suit, suitStyle); break;
-    case 'rank':            renderRankStyle(grid, rank, suit, suitStyle); break;
     case 'rank-no-corners': renderBigSuitStyle(grid, rank, suit, suitStyle); break;
     default: throw new Error(`Unknown style: ${styleId}`);
   }
 
   buildGridOverlay(grid);
 
-  if (FACE_RANKS.has(rank) && styleId === 'grid') {
+  if (FACE_RANKS.has(rank) && baseStyle === 'grid') {
     renderCourtPips(card, suit, suitStyle);
   }
 
   const rankFolder = isWide ? 'wide' : 'default';
   const lt = el('div', 'card__corner-layer card__corner-layer--lt', card);
-  lt.appendChild(buildCorner(rank, suit, suitStyle, rankFolder));
+  lt.appendChild(buildCorner(rank, suit, suitStyle, styleId)); // <-- styleId вместо rankFolder
   
   const rb = el('div', 'card__corner-layer card__corner-layer--rb', card);
-  rb.appendChild(buildCorner(rank, suit, suitStyle, rankFolder));
+  rb.appendChild(buildCorner(rank, suit, suitStyle, styleId)); // <-- styleId вместо rankFolder
 
   return card;
 }

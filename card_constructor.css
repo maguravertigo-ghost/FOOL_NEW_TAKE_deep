@@ -76,10 +76,10 @@
 /* Угловой ранг */
 .card__face .corner__rank-img {
   position: absolute;
-  left:   calc(12 * var(--u));
-  top:    calc(10.8 * var(--u));
-  width:  calc(33 * var(--u));
-  height: calc(44 * var(--u));
+  left:   calc(var(--cx, 12) * var(--u));
+  top:    calc(var(--cy, 10.8) * var(--u));
+  width:  calc(var(--rw, 33.09) * var(--u));
+  height: calc(var(--rh, 44.14) * var(--u));
   
   background-color: var(--rank-color, #111);
   -webkit-mask-image:    var(--src);
@@ -95,10 +95,10 @@
 /* Угловая масть */
 .card__face .corner__suit-img {
   position: absolute;
-  left:   calc(15.5 * var(--u));
-  top:    calc(55 * var(--u));
-  width:  calc(26 * var(--u));
-  height: calc(27 * var(--u));
+  left:   calc(var(--sx, 15.49) * var(--u));
+  top:    calc(var(--sy, 57) * var(--u));
+  width:  calc(var(--sw, 26.11) * var(--u));
+  height: calc(var(--sh, 27.09) * var(--u));
   display: block;
   object-fit: contain;
 }
@@ -156,19 +156,8 @@
 /* ================================================================
    УВЕЛИЧЕННЫЕ УГЛЫ ДЛЯ 4-ГО СТИЛЯ (Крупная масть)
    ================================================================ */
-[data-style="rank-no-corners"] .corner__rank-img {
-  left:   calc(9.5 * var(--u));  /* Сдвинули влево (было 12) */
-  top:    calc(13 * var(--u));
-  width:  calc(42 * var(--u));
-  height: calc(51 * var(--u));
-}
 
-[data-style="rank-no-corners"] .corner__suit-img {
-  left:   calc(16 * var(--u));    /* Сдвинули влево (было 18.5) */
-  top:    calc(66 * var(--u));   /* Сдвинули вниз (было 64), чтобы был отступ от ранга */
-  width:  calc(29 * var(--u));
-  height: calc(30 * var(--u));
-}
+
 
 .card__face .corner__rank-img,
 .card__face .center-rank__rank-img {

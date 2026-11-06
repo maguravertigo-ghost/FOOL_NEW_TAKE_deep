@@ -1864,16 +1864,14 @@ _shopItemsFor(cat) {
   }
   if (cat === 'design') {
     return [
-      { cardStyle: 'grid',            label: t('shop.item.design.grid') },
-      { cardStyle: 'center',          label: t('shop.item.design.center') },
-      { cardStyle: 'rank',            label: t('shop.item.design.rank') },
-      { cardStyle: 'rank-no-corners', label: t('shop.item.design.rankNoCorners') },
-      // Новые 4:
-      { cardStyle: 'wide-grid',            label: 'Сетка (Wide)' },
-      { cardStyle: 'wide-center',          label: 'Центр (Wide)' },
-      { cardStyle: 'wide-rank',            label: 'Ранг+масть (Wide)' },
-      { cardStyle: 'wide-rank-no-corners', label: 'Крупная масть (Wide)' },
-    ].map((it, i) => ({ ...it, index: i, price: PRICES.design, isAd: i === 7 })); // isAd на последний
+      { cardStyle: 'grid',                 label: 'Атласные (Узкий)' },
+      { cardStyle: 'center',               label: 'Центр — Масть (Узкий)' },
+      { cardStyle: 'rank-no-corners',      label: 'Мобильная (Узкий)' },
+      
+      { cardStyle: 'wide-grid',            label: 'Атласные (Широкий)' },
+      { cardStyle: 'wide-center',          label: 'Центр — Масть (Широкий)' },
+      { cardStyle: 'wide-rank-no-corners', label: 'Мобильная (Широкий)' },
+    ].map((it, i) => ({ ...it, index: i, price: PRICES.design, isAd: i === 5 })); // isAd на последний
   }
   if (cat === 'suits') {
     return ['default','paper','barhat','gradient','ruby','golden']
@@ -1984,8 +1982,8 @@ _openStyle() {
 
   // подтянуть выбранное из сохранённых настроек
   const designIds = [
-    'grid', 'center', 'rank', 'rank-no-corners',
-    'wide-grid', 'wide-center', 'wide-rank', 'wide-rank-no-corners'
+    'grid', 'center', 'rank-no-corners',
+    'wide-grid', 'wide-center', 'wide-rank-no-corners'
   ];
   const suitIds   = ['default', 'paper', 'barhat', 'gradient', 'ruby', 'golden'];
 
@@ -2194,15 +2192,13 @@ _styleItemsFor(cat) {
   }
   if (cat === 'design') {
     return [
-      { cardStyle: 'grid',            label: t('shop.item.design.grid') },
-      { cardStyle: 'center',          label: t('shop.item.design.center') },
-      { cardStyle: 'rank',            label: t('shop.item.design.rank') },
-      { cardStyle: 'rank-no-corners', label: t('shop.item.design.rankNoCorners') },
-      // Новые 4:
-      { cardStyle: 'wide-grid',            label: 'Сетка (Wide)' },
-      { cardStyle: 'wide-center',          label: 'Центр (Wide)' },
-      { cardStyle: 'wide-rank',            label: 'Ранг+масть (Wide)' },
-      { cardStyle: 'wide-rank-no-corners', label: 'Крупная масть (Wide)' },
+      { cardStyle: 'grid',                 label: 'Атласные (Узкий)' },
+      { cardStyle: 'center',               label: 'Центр — Масть (Узкий)' },
+      { cardStyle: 'rank-no-corners',      label: 'Мобильная (Узкий)' },
+      
+      { cardStyle: 'wide-grid',            label: 'Атласные (Широкий)' },
+      { cardStyle: 'wide-center',          label: 'Центр — Масть (Широкий)' },
+      { cardStyle: 'wide-rank-no-corners', label: 'Мобильная (Широкий)' },
     ].map((it, i) => ({ ...it, index: i }));
   }
   if (cat === 'suits') {

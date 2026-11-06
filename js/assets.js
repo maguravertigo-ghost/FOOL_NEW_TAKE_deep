@@ -115,39 +115,41 @@ shirts: [
 
   ranks: (() => {
     const rankLang = (getLang() === 'ru') ? 'ru' : 'en';
+    const base = `${BASE}/card_body/ranks/default`;
     return {
-      '2':  `${BASE}/card_body/ranks/default/${rankLang}/2.svg`,
-      '3':  `${BASE}/card_body/ranks/default/${rankLang}/3.svg`,
-      '4':  `${BASE}/card_body/ranks/default/${rankLang}/4.svg`,
-      '5':  `${BASE}/card_body/ranks/default/${rankLang}/5.svg`,
-      '6':  `${BASE}/card_body/ranks/default/${rankLang}/6.svg`,
-      '7':  `${BASE}/card_body/ranks/default/${rankLang}/7.svg`,
-      '8':  `${BASE}/card_body/ranks/default/${rankLang}/8.svg`,
-      '9':  `${BASE}/card_body/ranks/default/${rankLang}/9.svg`,
-      '10': `${BASE}/card_body/ranks/default/${rankLang}/10.svg`,
-      'J':  `${BASE}/card_body/ranks/default/${rankLang}/J.svg`,
-      'Q':  `${BASE}/card_body/ranks/default/${rankLang}/Q.svg`,
-      'K':  `${BASE}/card_body/ranks/default/${rankLang}/K.svg`,
-      'A':  `${BASE}/card_body/ranks/default/${rankLang}/A.svg`,
+      '2':  `${base}/base/2.svg`,
+      '3':  `${base}/base/3.svg`,
+      '4':  `${base}/base/4.svg`,
+      '5':  `${base}/base/5.svg`,
+      '6':  `${base}/base/6.svg`,
+      '7':  `${base}/base/7.svg`,
+      '8':  `${base}/base/8.svg`,
+      '9':  `${base}/base/9.svg`,
+      '10': `${base}/base/10.svg`,
+      'J':  `${base}/${rankLang}/J.svg`,
+      'Q':  `${base}/${rankLang}/Q.svg`,
+      'K':  `${base}/${rankLang}/K.svg`,
+      'A':  `${base}/${rankLang}/A.svg`,
     };
   })(),
 
   ranks_wide: (() => {
     const rankLang = (getLang() === 'ru') ? 'ru' : 'en';
+    const base = `${BASE}/card_body/ranks/wide`;
     return {
-      '2':  `${BASE}/card_body/ranks/wide/${rankLang}/2.svg`,
-      '3':  `${BASE}/card_body/ranks/wide/${rankLang}/3.svg`,
-      '4':  `${BASE}/card_body/ranks/wide/${rankLang}/4.svg`,
-      '5':  `${BASE}/card_body/ranks/wide/${rankLang}/5.svg`,
-      '6':  `${BASE}/card_body/ranks/wide/${rankLang}/6.svg`,
-      '7':  `${BASE}/card_body/ranks/wide/${rankLang}/7.svg`,
-      '8':  `${BASE}/card_body/ranks/wide/${rankLang}/8.svg`,
-      '9':  `${BASE}/card_body/ranks/wide/${rankLang}/9.svg`,
-      '10': `${BASE}/card_body/ranks/wide/${rankLang}/10.svg`,
-      'J':  `${BASE}/card_body/ranks/wide/${rankLang}/J.svg`,
-      'Q':  `${BASE}/card_body/ranks/wide/${rankLang}/Q.svg`,
-      'K':  `${BASE}/card_body/ranks/wide/${rankLang}/K.svg`,
-      'A':  `${BASE}/card_body/ranks/wide/${rankLang}/A.svg`,
+      '2':  `${base}/base/2.svg`,
+      '3':  `${base}/base/3.svg`,
+      '4':  `${base}/base/4.svg`,
+      '5':  `${base}/base/5.svg`,
+      '6':  `${base}/base/6.svg`,
+      '7':  `${base}/base/7.svg`,
+      '8':  `${base}/base/8.svg`,
+      '9':  `${base}/base/9.svg`,
+      '10': `${base}/base/10.svg`,
+      'J':  `${base}/${rankLang}/J.svg`,
+      'Q':  `${base}/${rankLang}/Q.svg`,
+      'K':  `${base}/${rankLang}/K.svg`,
+      'A':  `${base}/${rankLang}/A.svg`,
     };
   })(),
 
