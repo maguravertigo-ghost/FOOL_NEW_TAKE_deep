@@ -1,4 +1,4 @@
-import { RANK_VALUE } from './constants.js';
+import { RANK_VALUE, SUITS, RANKS_36, RANKS_52 } from './constants.js';
 import { canBeat, canTranslate, canAddToTable, tableRanks } from './rules.js';
 
 export class AI {
@@ -24,6 +24,76 @@ export class AI {
     for (const c of this.hand) m[c.data.rank] = (m[c.data.rank] || 0) + 1;
     return m;
   }
+
+  /* ============================================================
+   * ЧЕСТНОЕ ВИДЕНИЕ (CARD COUNTING)
+   * ============================================================ */
+
+  _getSeenCards() {
+    const seen = new Set();
+    // 1. Моя рука
+    for (const c of this.hand) seen.add(c.data.rank + c.data.suit);
+    
+    // 2. Текущий стол
+    if (this.s.round && this.s.round.table) {
+      for (const p of this.s.round.table) {
+        if (p.atk) seen.add(p.atk.data.rank + p.atk.data.suit);
+        if (p.def) seen.add(p.def.data.rank + p.def.data.suit);
+      }
+    }
+    
+    // 3. Отбой (все, что ушло за игру)
+    // Ищем массив отбоя в сессии (обычно это this.s.discard или this.s.round.discard)
+    const discard = this.s.discard || this.s.round?.discard || [];
+    for (const c of discard) {
+      seen.add(c.data.rank + c.data.suit);
+    }
+    
+    // 4. Козырь (нижняя карта колоды)
+    if (this.s.trumpCard) {
+      seen.add(this.s.trumpCard.data.rank + this.s.trumpCard.data.suit);
+    }
+    
+    return seen;
+  }
+
+  _getUnseenCards() {
+    const seen = this._getSeenCards();
+    const deckType = this.s.app.deck?.type || '36';
+    const allRanks = deckType === '52' ? RANKS_52 : RANKS_36;
+    
+    const unseen = [];
+    for (const suit of SUITS) {
+      for (const rank of allRanks) {
+        if (!seen.has(rank + suit)) {
+          unseen.push({ rank, suit });
+        }
+      }
+    }
+    return unseen;
+  }
+
+  // Проверяет, может ли ИГРОК побить эту карту (в эндшпиле)
+  _isCardUnbeatable(card) {
+    if (this.deckLeft > 0) return false; // В колоде еще есть карты, гарантий нет
+    
+    const unseen = this._getUnseenCards();
+    // Если карт в "невидимых" больше, чем у игрока в руке + в колоде (должно быть 0, т.к. deckLeft === 0)
+    // Значит у игрока ровно `playerHandSize` карт.
+    
+    // Ищем, есть ли у игрока карта, которая побьет нашу
+    for (const u of unseen) {
+      const uCard = { data: u };
+      if (canBeat(uCard, card, this.trump)) {
+        return false; // Игрок МОЖЕТ побить
+      }
+    }
+    return true; // Игрок НЕ МОЖЕТ побить
+  }
+
+  /* ============================================================
+   * ЛОГИКА ПРИНЯТИЯ РЕШЕНИЙ
+   * ============================================================ */
 
   pickCheapestBeater(atk) {
     const cands = this.hand.filter(c => canBeat(c, atk, this.trump));
@@ -67,20 +137,27 @@ export class AI {
     const nonT = hand.filter(c => !this.isTrump(c));
     const pool = nonT.length ? nonT : hand;
 
-    // Level 1 — простая атака слабой картой
     if (this.level === 1) {
       const sorted = pool.slice().sort((a, b) => this.rank(a) - this.rank(b));
       return { type: 'attack', card: sorted[0] };
     }
 
-    // === ФИНАЛ: колода пуста ===
+    // === ФИНАЛ: колода пуста (ЭНДШПИЛЬ) ===
     if (this.deckLeft === 0) {
+      // 1. Ищем карты, которые игрок ТОЧНО не побьет (гарантированный удар)
+      const unbeatable = pool.filter(c => this._isCardUnbeatable(c));
+      if (unbeatable.length) {
+        // Атакуем самой сильной из них (или козырем, если это козырь)
+        unbeatable.sort((a, b) => this.attackValue(b) - this.attackValue(a));
+        return { type: 'attack', card: unbeatable[0] };
+      }
+      
+      // 2. Если таких нет, играем по классике (слабую)
       const sorted = pool.slice().sort((a, b) => this.rank(a) - this.rank(b));
       return { type: 'attack', card: sorted[0] };
     }
 
     // === ЭКСПЕРТ: серия (3+ карт одного ранга) ===
-    // Атакуем младшую карту группы — заставим соперника тратить карты/брать
     if (this.level >= 3) {
       const rankGroups = {};
       for (const c of pool) {
@@ -137,17 +214,14 @@ export class AI {
       pool = nonT.length ? nonT : cands;
     }
 
-    // === Базовый шанс подкидывания ===
     let chance = this.deckLeft === 0 ? 0.95 : (this.deckLeft < 6 ? 0.85 : 0.75);
 
-    // === ЭКСПЕРТ: агрессивное подкидывание при серии ===
     if (this.level >= 3) {
       const sameRankCount = pool.filter(c => tR.has(c.data.rank)).length;
-      if (sameRankCount >= 3) chance = 1.0;   // выкидываем всю группу
+      if (sameRankCount >= 3) chance = 1.0;
       else if (sameRankCount === 2) chance = 0.95;
     }
 
-    // Дожимаем если у врага мало карт
     if (this.playerHandSize <= 2) chance = 1.0;
 
     if (Math.random() > chance) return { type: 'pass' };
@@ -236,17 +310,17 @@ export class AI {
 
     // ============================================================
     // ЭНДШПИЛЬ (колода пуста): ЗАЩИЩАЕМСЯ ВСЕГДА
-    // Взятие в эндшпиле = получаем карты = отдаляемся от победы.
-    // Единственный случай для take — plan === null (обработано выше).
     // ============================================================
     if (this.deckLeft === 0) {
+      // На эндшпиле ИИ использует видение, чтобы выбрать ЛУЧШУЮ карту для защиты.
+      // Если он может побить карту, которая гарантированно оставит его в выигрыше — он это сделает.
       const first = plan[0];
       const pairIdx = r.table.findIndex(p => p.atk === first.atk);
       return { type: 'defense', card: first.def, pairIdx };
     }
 
     // ============================================================
-    // ФАЗА ДОБОРА (колода не пуста): тактические взятия
+    // ФАЗА ДОБОРА (колода не пуста)
     // ============================================================
     const trumpsInHand = this.hand.filter(c => this.isTrump(c)).length;
     const rankCounts = this.rankCountMap();
@@ -263,22 +337,17 @@ export class AI {
       totalRank += this.rank(def);
     }
 
-    // Сохраняем козыри
     if (trumpCost >= 2) return { type: 'take' };
     if (trumpCost === 1 && trumpsInHand < 3) return { type: 'take' };
 
-    // Сохраняем старшие карты
     if (highCost >= 2) return { type: 'take' };
     if (highCost === 1 && plan.length >= 2 && totalRank >= 22) return { type: 'take' };
 
-    // Не ломаем пары
     if (pairBreaking >= 2) return { type: 'take' };
     if (pairBreaking === 1 && this.level >= 3 && Math.random() < 0.3) return { type: 'take' };
 
-    // Слишком дорого
     if (plan.length >= 3) return { type: 'take' };
 
-    // Стратегический refresh (эксперт): 15% — взять одну карту и сменить роль
     if (this.level >= 3 && plan.length === 1 && trumpCost === 0 && Math.random() < 0.15) {
       return { type: 'take' };
     }
