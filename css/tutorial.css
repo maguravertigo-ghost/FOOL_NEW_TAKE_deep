@@ -160,63 +160,106 @@
   background: #4caf50;
   transform: scale(1.4);
 }
-
 /* ============================================================
-   МОБИЛКА — на весь вьюпорт, крупнее
+   МОБИЛКА — почти во весь вьюпорт, крупные шрифты и кнопки
    ============================================================ */
+
+body.is-mobile .tutorial-overlay {
+  background: rgba(0, 0, 0, 0.92);
+}
+
 body.is-mobile .tutorial__box {
-  width: calc(100% - calc(16px * var(--ui, 1)));
+  width: calc(100% - 8px);
+  height: calc(100% - 8px);
   max-width: none;
-  height: calc(100% - calc(16px * var(--ui, 1)));
   max-height: none;
-  padding: calc(16px * var(--ui, 1)) calc(16px * var(--ui, 1)) calc(12px * var(--ui, 1));
-  gap: calc(10px * var(--ui, 1));
+  padding: max(8px, calc(10px * var(--ui, 1))) max(10px, calc(12px * var(--ui, 1))) max(6px, calc(8px * var(--ui, 1)));
+  gap: max(6px, calc(8px * var(--ui, 1)));
+  border-radius: calc(10px * var(--ui, 1));
+  border-width: 1px;
 }
 
+/* Кнопка ПРОПУСТИТЬ — компактная, но крупнее десктопной */
 body.is-mobile .tutorial__skip {
-  font-size: calc(18px * var(--ui, 1)) !important;
-  padding: calc(10px * var(--ui, 1)) calc(16px * var(--ui, 1)) !important;
+  top: max(10px, calc(12px * var(--ui, 1)));
+  right: max(10px, calc(12px * var(--ui, 1)));
+  font-size: max(16px, calc(18px * var(--ui, 1))) !important;
+  padding: max(8px, calc(10px * var(--ui, 1))) max(14px, calc(18px * var(--ui, 1))) !important;
+  letter-spacing: 1px;
 }
 
+/* Контент слайда */
 body.is-mobile .tutorial__slide {
-  gap: calc(6px * var(--ui, 1));
-  padding-top: calc(52px * var(--ui, 1));
+  padding-top: max(38px, calc(46px * var(--ui, 1)));
+  gap: max(6px, calc(8px * var(--ui, 1)));
+  justify-content: flex-start;
 }
 
-/* На мобилке картинка может занять ~40% от высоты экрана */
+/* Картинка — растёт с экраном, но не съедает текст на низких экранах */
 body.is-mobile .tutorial__img-wrap {
-  height: calc(240px * var(--ui, 1));
+  height: clamp(120px, 35vh, 300px);
+  min-height: 120px;
+  flex-shrink: 0;
+  width: 100%;
 }
 
+/* Счётчик "3 / 8" — крупнее и заметнее */
 body.is-mobile .tutorial__counter {
-  font-size: calc(22px * var(--ui, 1));
+  font-size: max(18px, calc(22px * var(--ui, 1)));
+  letter-spacing: 2px;
+  margin-top: max(2px, calc(4px * var(--ui, 1)));
+  font-weight: 700;
 }
 
+/* Заголовок слайда */
 body.is-mobile .tutorial__title {
-  font-size: calc(32px * var(--ui, 1));
+  font-size: max(24px, calc(34px * var(--ui, 1)));
+  line-height: 1.15;
 }
 
+/* Основной текст — читаемый на любом телефоне */
 body.is-mobile .tutorial__body {
-  font-size: calc(20px * var(--ui, 1));
+  font-size: max(18px, calc(22px * var(--ui, 1)));
   line-height: 1.5;
+  max-width: 100%;
+  padding: 0 max(4px, calc(8px * var(--ui, 1)));
 }
 
+/* Полоса CTA — фикс. высота, чтобы вёрстка не дёргалась */
 body.is-mobile .tutorial__cta-wrap {
-  height: calc(60px * var(--ui, 1));
+  height: max(56px, calc(72px * var(--ui, 1)));
 }
 
 body.is-mobile .tutorial__cta {
-  padding: calc(14px * var(--ui, 1)) calc(44px * var(--ui, 1));
-  font-size: calc(22px * var(--ui, 1)) !important;
+  padding: max(12px, calc(16px * var(--ui, 1))) max(32px, calc(48px * var(--ui, 1)));
+  font-size: max(20px, calc(24px * var(--ui, 1))) !important;
+  min-width: max(200px, calc(260px * var(--ui, 1)));
+  letter-spacing: 2px;
+}
+
+/* Навигация: стрелки + точки */
+body.is-mobile .tutorial__nav {
+  padding-top: max(6px, calc(10px * var(--ui, 1)));
+  gap: max(8px, calc(10px * var(--ui, 1)));
 }
 
 body.is-mobile .tutorial__arrow {
-  min-width: calc(80px * var(--ui, 1));
-  height: calc(60px * var(--ui, 1));
-  font-size: calc(28px * var(--ui, 1)) !important;
+  min-width: max(76px, calc(90px * var(--ui, 1)));
+  height: max(52px, calc(64px * var(--ui, 1)));
+  font-size: max(26px, calc(32px * var(--ui, 1))) !important;
+  padding: 0 max(12px, calc(20px * var(--ui, 1))) !important;
+  line-height: 1;
+}
+
+body.is-mobile .tutorial__dots {
+  gap: max(6px, calc(8px * var(--ui, 1)));
 }
 
 body.is-mobile .tutorial__dot {
-  width: calc(12px * var(--ui, 1));
-  height: calc(12px * var(--ui, 1));
+  width: max(10px, calc(12px * var(--ui, 1)));
+  height: max(10px, calc(12px * var(--ui, 1)));
+}
+
+body.is-mobile .tutorial__dot--active {
+  transform: scale(1.5);
 }
