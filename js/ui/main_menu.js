@@ -1724,17 +1724,18 @@ _makePreview(item, cat) {
       let cardStyle, suitStyle, rank, suit;
 
       if (cat === 'design') {
-        // Оформление: выбранный стиль лица + ТЕКУЩАЯ масть из настроек
+        // Оформление: выбранный стиль лица
         cardStyle = item.cardStyle;
         suitStyle = GameSettings.suitStyle || 'gradient';
-        rank = '10';              // 10 — самое «наглядное» для сетки
+        rank = '10';
         suit = 'hearts';
       } else {
-        // Масти: тело карты + большая масть по центру.
-        // 'grid' + 'A' даёт PIP.large = 137×145 — самый крупный пип.
-        cardStyle = 'grid';
+        // Масти: принудительно используем мобильную схему с огромной мастью
+        // Но сохраняем текущий шрифт (узкий или wide)
+        const isWide = (GameSettings.cardStyle || '').startsWith('wide-');
+        cardStyle = isWide ? 'wide-rank-no-corners' : 'rank-no-corners';
         suitStyle = item.suitStyle;
-        rank = 'A';
+        rank = 'A'; // Туз, чтобы масть была одна
         suit = 'hearts';
       }
 

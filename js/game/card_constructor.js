@@ -87,9 +87,10 @@ const RANK_COLORS = {
   barhat:   { red: '#ff0007ff', black: '#34183cff' },
   gradient: { red: '#ae0b1efe', black: '#26122eff' },
   paper:    { red: '#ff0017ff', black: '#442a52ff' },
-  ruby:     { red: '#ff1018ff', black: '#291b29ff' },
+  ruby:     { red: '#ae0b1efe', black: '#291b29ff' },  // ← было #ff1018ff
   golden:   { red: '#ff0000ff', black: '#241c1cff' },
 };
+
 
 const FACE_RANKS = new Set(['J','Q','K']);
 const ACE_RANK   = 'A';

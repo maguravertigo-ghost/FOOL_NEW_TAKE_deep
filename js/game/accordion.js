@@ -38,73 +38,88 @@ export class Accordion {
 
   _applyZ() { this.cards.forEach((c, i) => c.setZIndex(Z_BASE + i)); }
 
-_computeSlots(n) {
-  const C = SceneLayout.config;
-  const W_scene = this.scene.width;
-  const H_scene = this.scene.height;
-  const a = this.scene.resolve(this.anchorL);
-  const b = this.scene.resolve(this.anchorR);
-  const W_hand = Math.max(1, b.x - a.x);
-  const cx = (a.x + b.x) / 2;
-  const yBasePx = this.anchorL.y * H_scene;
+  _computeSlots(n) {
+    const C = SceneLayout.config;
+    const W_scene = this.scene.width;
+    const H_scene = this.scene.height;
+    const a = this.scene.resolve(this.anchorL);
+    const b = this.scene.resolve(this.anchorR);
+    
+    // W_hand — доступная ширина руки с учётом отступов от краёв.
+    // Эти отступы уже встроены в anchorL/anchorR (SceneLayout):
+    //   • ПК: 1×cardW слева, 1×cardW справа
+    //   • Мобилка: 1×cardW слева, 2×cardW справа
+    const W_hand = Math.max(1, b.x - a.x);
+    const cx = (a.x + b.x) / 2;
+    const yBasePx = this.anchorL.y * H_scene;
 
-  // Одна карта — вертикально
-  if (n === 1) {
-    return [new Marker(cx / W_scene, yBasePx / H_scene, 'slot_0', 0)];
-  }
-
-	// ширина руки
-	// ширина руки — с поправкой из пресета (мобилка плотнее)
-	const mul = C.accMinDistMul ?? 1;
-	const baseSpan = this.baseMinDist * mul * (n - 1);
-	const span = Math.min(baseSpan, W_hand);
-	const step = span / (n - 1);
-	const startX = cx - span / 2;
-
-  // ---- Режим «прямо» ----
-  if (GameSettings.handLayout === 'straight') {
-    const out = [];
-    for (let i = 0; i < n; i++) {
-      out.push(new Marker(
-        (startX + step * i) / W_scene,
-        yBasePx / H_scene,
-        `slot_${i}`,
-        0
-      ));
+    // Одна карта — вертикально
+    if (n === 1) {
+      return [new Marker(cx / W_scene, yBasePx / H_scene, 'slot_0', 0)];
     }
+
+    // Идеальный шаг между картами — ПЕРЕСЧИТЫВАЕТСЯ КАЖДЫЙ РАЗ
+    // из REAL.w (актуальный размер карты на текущий момент).
+    // REAL.w — геттер, возвращает uiScale.cardW, который обновляется при ресайзе.
+    const mul = C.accMinDistMul ?? 1;
+    const idealStep = REAL.w * 0.9 * mul;
+    
+    // Идеальный span для n карт (без сжатия)
+    const idealSpan = idealStep * (n - 1);
+    
+    // Фактический span: не больше W_hand — карты НИКОГДА не выходят за границы аккордеона
+    const span = Math.min(idealSpan, W_hand);
+    const step = span / (n - 1);
+    
+    const startX = cx - span / 2;
+
+    // ---- Режим «прямо» ----
+    if (GameSettings.handLayout === 'straight') {
+      const out = [];
+      for (let i = 0; i < n; i++) {
+        out.push(new Marker(
+          (startX + step * i) / W_scene,
+          yBasePx / H_scene,
+          `slot_${i}`,
+          0
+        ));
+      }
+      return out;
+    }
+
+    // ---- Режим веера (по умолчанию) ----
+    const Phi = (C.accFanAngle || 0) * Math.PI / 180;
+    if (Math.abs(Phi) < 1e-4) {
+      const out = [];
+      for (let i = 0; i < n; i++) {
+        out.push(new Marker(
+          (startX + step * i) / W_scene,
+          yBasePx / H_scene,
+          `slot_${i}`,
+          0
+        ));
+      }
+      return out;
+    }
+
+    // Радиус дуги — от фактического span (не от идеального)
+    const R = span / (2 * Math.sin(Phi));
+    const center = (n - 1) / 2;
+    const out = [];
+    
+    for (let i = 0; i < n; i++) {
+      const t   = (i - center) / center;
+      const phi = t * Phi;
+      const x     = cx + R * Math.sin(phi);
+      const yDrop = R * (1 - Math.cos(phi));
+      const y     = yBasePx + this.fanDir * yDrop;
+      const angleDeg = this.fanDir * phi * 180 / Math.PI;
+      
+      out.push(new Marker(x / W_scene, y / H_scene, `slot_${i}`, angleDeg));
+    }
+    
     return out;
   }
-
-  // ---- Режим веера (по умолчанию) ----
-  const Phi = (C.accFanAngle || 0) * Math.PI / 180;
-  if (Math.abs(Phi) < 1e-4) {
-    const out = [];
-    for (let i = 0; i < n; i++) {
-      out.push(new Marker(
-        (startX + step * i) / W_scene,
-        yBasePx / H_scene,
-        `slot_${i}`,
-        0
-      ));
-    }
-    return out;
-  }
-
-  // Радиус дуги
-  const R = span / (2 * Math.sin(Phi));
-  const center = (n - 1) / 2;
-  const out = [];
-  for (let i = 0; i < n; i++) {
-    const t   = (i - center) / center;
-    const phi = t * Phi;
-    const x     = cx + R * Math.sin(phi);
-    const yDrop = R * (1 - Math.cos(phi));
-    const y     = yBasePx + this.fanDir * yDrop;
-    const angleDeg = this.fanDir * phi * 180 / Math.PI;
-    out.push(new Marker(x / W_scene, y / H_scene, `slot_${i}`, angleDeg));
-  }
-  return out;
-}
 
   layoutInstant() {
     const slots = this._computeSlots(this.cards.length);

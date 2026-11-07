@@ -3017,3 +3017,10 @@ body.is-mobile .joker__img,
 body.is-mobile .shop-joker-wrap img {
   filter: none !important; /* Убираем drop-shadow */
 }
+
+/* Принудительно делаем активный таб зеленым на мобилке */
+body.is-mobile .mm-tab--active {
+  background: #2e7d32 !important;
+  border-color: #4caf50 !important;
+  color: #fff !important;
+}
