@@ -75,13 +75,13 @@ export class Tutorial {
           <div class="tutorial__title"></div>
           <div class="tutorial__body"></div>
         </div>
-        <div class="tutorial__cta-wrap">
-          <button class="tutorial__cta mm-btn mm-btn--primary" data-action="close">${ctaText}</button>
-        </div>
         <div class="tutorial__nav">
           <button class="tutorial__arrow mm-btn mm-btn--small" data-action="prev">←</button>
           <div class="tutorial__dots"></div>
-          <button class="tutorial__arrow mm-btn mm-btn--small" data-action="next">→</button>
+          <div class="tutorial__nav-end">
+            <button class="tutorial__arrow mm-btn mm-btn--small" data-action="next">→</button>
+            <button class="tutorial__cta mm-btn mm-btn--primary" data-action="close">${ctaText}</button>
+          </div>
         </div>
       </div>
     `;

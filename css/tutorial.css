@@ -49,11 +49,10 @@
   gap: calc(8px * var(--ui, 1));
   text-align: center;
   overflow-y: auto;
-  padding-top: calc(36px * var(--ui, 1));
-  
-  /* Скрываем системный скролл-бар во всех браузерах */
-  scrollbar-width: none;       /* Firefox */
-  -ms-overflow-style: none;    /* IE/Edge */
+  padding-top: max(14px, calc(18px * var(--ui, 1)));
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  justify-content: center;      /* <-- ДОБАВЛЕНО */
 }
 
 /* Скрываем для Chrome/Safari */
@@ -64,7 +63,7 @@
 /* Фиксированная область картинки — БЕЗ прыжков при разном аспекте SVG */
 .tutorial__img-wrap {
   width: 100%;
-  height: calc(260px * var(--ui, 1));
+  height: calc(320px * var(--ui, 1));   /* было 260 */
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -102,36 +101,30 @@
   line-height: 1.55;
   max-width: calc(540px * var(--ui, 1));
 }
-
-/* ---- CTA — фикс. обёртка, скрываем только видимость кнопки ---- */
-.tutorial__cta-wrap {
-  height: calc(52px * var(--ui, 1));
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.tutorial__cta {
-  padding: calc(12px * var(--ui, 1)) calc(36px * var(--ui, 1));
-  font-size: calc(18px * var(--ui, 1));
-  letter-spacing: calc(2px * var(--ui, 1));
-}
-
-/* ---- Нижняя полоса: ← точки → ---- */
+/* Нижняя полоса: ←, точки, [→ | CTA] */
 .tutorial__nav {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: calc(12px * var(--ui, 1));
+  gap: calc(8px * var(--ui, 1));
   padding-top: calc(10px * var(--ui, 1));
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   flex-shrink: 0;
 }
 
-/* Стрелки — прямоугольные кнопки в стиле help-nav__btn */
+/* Точки — растягиваются, центрируют всё */
+.tutorial__dots {
+  flex: 1 1 auto;
+  display: flex;
+  gap: calc(6px * var(--ui, 1));
+  align-items: center;
+  justify-content: center;
+}
+
+/* Левая ← — компактная */
+/* Левая ← — та же ширина, что и правая обёртка */
 .tutorial__arrow {
-  min-width: calc(64px * var(--ui, 1));
+  flex: 0 0 auto;
+  width: calc(170px * var(--ui, 1));      /* было min-width: 64px */
   height: calc(48px * var(--ui, 1));
   padding: 0 calc(16px * var(--ui, 1)) !important;
   font-size: calc(22px * var(--ui, 1)) !important;
@@ -141,12 +134,34 @@
   justify-content: center;
 }
 
-.tutorial__dots {
+/* Правая обёртка — фикс. ширина, relative для наложения → и CTA */
+.tutorial__nav-end {
+  position: relative;
+  flex: 0 0 auto;
+  width: calc(170px * var(--ui, 1));
+  height: calc(48px * var(--ui, 1));
+}
+
+/* → и CTA накладываются, заполняют всю обёртку */
+.tutorial__nav-end > * {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0 calc(8px * var(--ui, 1)) !important;
   display: flex;
-  gap: calc(6px * var(--ui, 1));
   align-items: center;
   justify-content: center;
-  flex: 1 1 auto;
+  font-size: calc(22px * var(--ui, 1)) !important;
+  letter-spacing: calc(1px * var(--ui, 1));
+}
+
+/* CTA — чуть меньше шрифт, чтобы «НАЧАТЬ ИГРУ» влезало в 170px */
+.tutorial__nav-end .tutorial__cta {
+  font-size: calc(15px * var(--ui, 1)) !important;
+  letter-spacing: calc(1px * var(--ui, 1));
 }
 
 .tutorial__dot {
@@ -156,6 +171,7 @@
   background: rgba(255, 255, 255, 0.25);
   transition: background 0.15s ease, transform 0.15s ease;
 }
+
 .tutorial__dot--active {
   background: #4caf50;
   transform: scale(1.4);
@@ -203,17 +219,19 @@ body.is-mobile .tutorial__slide {
   justify-content: flex-start;
 }
 
-/* Картинка: 22vh — компромисс между "не мелкая" и "тексту место остаётся" */
+/* Картинка — существенно крупнее (было 22vh) */
 body.is-mobile .tutorial__img-wrap {
   flex: 0 0 auto;
-  height: 22vh;
-  min-height: 60px;
-  max-height: 160px;
+  height: 38vh;
+  min-height: 100px;
+  max-height: 280px;
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
+
+
 
 body.is-mobile .tutorial__img {
   max-width: 100%;
@@ -256,33 +274,13 @@ body.is-mobile .tutorial__body::-webkit-scrollbar {
   display: none;
 }
 
-/* CTA-wrap — фикс. высота, не дёргается */
-body.is-mobile .tutorial__cta-wrap {
-  flex: 0 0 auto;
-  height: max(42px, calc(48px * var(--ui, 1)));
-}
-
-body.is-mobile .tutorial__cta {
-  padding: max(8px, calc(10px * var(--ui, 1))) max(20px, calc(32px * var(--ui, 1)));
-  font-size: max(15px, calc(18px * var(--ui, 1))) !important;
-  min-width: max(150px, calc(180px * var(--ui, 1)));
-  letter-spacing: 1.5px;
-}
 
 /* Нижняя панель: стрелки + точки */
+/* Нижняя панель на мобилке */
 body.is-mobile .tutorial__nav {
   flex: 0 0 auto;
   padding-top: max(4px, calc(6px * var(--ui, 1)));
   gap: max(6px, calc(8px * var(--ui, 1)));
-}
-
-/* Стрелки — как help-nav__btn на мобилке */
-body.is-mobile .tutorial__arrow {
-  min-width: max(72px, calc(96px * var(--ui, 1)));
-  height: max(40px, calc(44px * var(--ui, 1)));
-  font-size: max(22px, calc(28px * var(--ui, 1))) !important;
-  padding: 0 max(12px, calc(20px * var(--ui, 1))) !important;
-  line-height: 1;
 }
 
 body.is-mobile .tutorial__dots {
@@ -296,4 +294,31 @@ body.is-mobile .tutorial__dot {
 
 body.is-mobile .tutorial__dot--active {
   transform: scale(1.3);
+}
+
+/* Левая ← на мобилке — симметрично с правой */
+body.is-mobile .tutorial__arrow {
+  width: max(130px, calc(160px * var(--ui, 1)));   /* было min-width: max(72px, 96px) */
+  height: max(44px, calc(48px * var(--ui, 1)));
+  font-size: max(22px, calc(28px * var(--ui, 1))) !important;
+  padding: 0 max(12px, calc(20px * var(--ui, 1))) !important;
+}
+
+/* Правая обёртка на мобилке — фикс. ширина */
+body.is-mobile .tutorial__nav-end {
+  width: max(130px, calc(160px * var(--ui, 1)));
+  height: max(44px, calc(48px * var(--ui, 1)));
+}
+
+/* → и CTA на мобилке — заполняют обёртку */
+body.is-mobile .tutorial__nav-end > * {
+  font-size: max(22px, calc(28px * var(--ui, 1))) !important;
+  padding: 0 max(4px, calc(6px * var(--ui, 1))) !important;
+}
+
+/* CTA на мобилке — мельче шрифт, чтобы влезло */
+body.is-mobile .tutorial__nav-end .tutorial__cta {
+  font-size: max(13px, calc(15px * var(--ui, 1))) !important;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
 }
