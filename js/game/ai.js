@@ -60,38 +60,50 @@ export class AI {
     return null;
   }
 
-  /* ============ АТАКА (начало раунда) ============ */
   _decideAttackFirst() {
     const hand = this.hand;
     if (!hand.length) return { type: 'pass' };
 
     const nonT = hand.filter(c => !this.isTrump(c));
-    const counts = this.rankCountMap();
+    const pool = nonT.length ? nonT : hand;
 
-    // Level 1 — случайная слабая
+    // Level 1 — простая атака слабой картой
     if (this.level === 1) {
-      const pool = nonT.length ? nonT : hand;
       const sorted = pool.slice().sort((a, b) => this.rank(a) - this.rank(b));
       return { type: 'attack', card: sorted[0] };
     }
 
     // === ФИНАЛ: колода пуста ===
     if (this.deckLeft === 0) {
-      // Сначала сбрасываем слабые некозыри, потом козыри по возрастанию
-      const pool = nonT.length ? nonT : hand;
       const sorted = pool.slice().sort((a, b) => this.rank(a) - this.rank(b));
       return { type: 'attack', card: sorted[0] };
     }
 
-    // === СЕРЕДИНА: атакуем АБСОЛЮТНО младшей картой ===
-    // Не важно, пара это или одиночка — важна сама младшая карта.
-    const pool = nonT.length ? nonT : hand;
+    // === ЭКСПЕРТ: серия (3+ карт одного ранга) ===
+    // Атакуем младшую карту группы — заставим соперника тратить карты/брать
+    if (this.level >= 3) {
+      const rankGroups = {};
+      for (const c of pool) {
+        rankGroups[c.data.rank] = (rankGroups[c.data.rank] || 0) + 1;
+      }
+      const groups = Object.entries(rankGroups)
+        .filter(([_, n]) => n >= 3)
+        .sort(([r1], [r2]) => RANK_VALUE[r1] - RANK_VALUE[r2]);
+
+      if (groups.length) {
+        const [rank] = groups[0];
+        const groupCards = pool.filter(c => c.data.rank === rank);
+        groupCards.sort((a, b) => this.rank(a) - this.rank(b));
+        return { type: 'attack', card: groupCards[0] };
+      }
+    }
+
+    // === СЕРЕДИНА: самая слабая карта ===
     const lowest = pool.reduce((min, c) =>
       this.rank(c) < this.rank(min) ? c : min, pool[0]);
     return { type: 'attack', card: lowest };
   }
 
-  /* ============ ПОДКИДЫВАНИЕ (A_ADD) ============ */
   _decideAdd() {
     const r = this.s.round;
     if (this.defSize === 0) return { type: 'pass' };
@@ -125,10 +137,18 @@ export class AI {
       pool = nonT.length ? nonT : cands;
     }
 
-    let chance = this.deckLeft === 0 ? 0.95 : (this.deckLeft < 6 ? 0.8 : (this.level >= 3 ? 0.7 : 0.55));
-    
-    // Если у врага мало карт — дожимаем
-    if (this.playerHandSize <= 2) chance = 0.99;
+    // === Базовый шанс подкидывания ===
+    let chance = this.deckLeft === 0 ? 0.95 : (this.deckLeft < 6 ? 0.85 : 0.75);
+
+    // === ЭКСПЕРТ: агрессивное подкидывание при серии ===
+    if (this.level >= 3) {
+      const sameRankCount = pool.filter(c => tR.has(c.data.rank)).length;
+      if (sameRankCount >= 3) chance = 1.0;   // выкидываем всю группу
+      else if (sameRankCount === 2) chance = 0.95;
+    }
+
+    // Дожимаем если у врага мало карт
+    if (this.playerHandSize <= 2) chance = 1.0;
 
     if (Math.random() > chance) return { type: 'pass' };
 
@@ -136,7 +156,6 @@ export class AI {
     return { type: 'attack', card: pool[0], dump: false };
   }
 
-  /* ============ СБРОС (A_DUMP) ============ */
   _decideDump() {
     const r = this.s.round;
     if (this.defSize === 0) return { type: 'done' };
@@ -169,13 +188,11 @@ export class AI {
     return { type: 'attack', card: pool[0], dump: true };
   }
 
-  /* ============ ЗАЩИТА (D_ACT) — ГЛАВНЫЕ ИЗМЕНЕНИЯ ============ */
   _decideDefense() {
     const r = this.s.round;
     const unbeaten = r.table.filter(p => p.atk && !p.def);
     if (!unbeaten.length) return { type: 'take' };
 
-    // Level 1 — без изменений
     if (this.level === 1) {
       if (Math.random() < 0.25) return { type: 'take' };
       const atk = unbeaten[0].atk;
@@ -217,7 +234,20 @@ export class AI {
     const plan = this.planDefenseAll(unbeaten);
     if (!plan) return { type: 'take' };
 
-    // Анализируем стоимость защиты
+    // ============================================================
+    // ЭНДШПИЛЬ (колода пуста): ЗАЩИЩАЕМСЯ ВСЕГДА
+    // Взятие в эндшпиле = получаем карты = отдаляемся от победы.
+    // Единственный случай для take — plan === null (обработано выше).
+    // ============================================================
+    if (this.deckLeft === 0) {
+      const first = plan[0];
+      const pairIdx = r.table.findIndex(p => p.atk === first.atk);
+      return { type: 'defense', card: first.def, pairIdx };
+    }
+
+    // ============================================================
+    // ФАЗА ДОБОРА (колода не пуста): тактические взятия
+    // ============================================================
     const trumpsInHand = this.hand.filter(c => this.isTrump(c)).length;
     const rankCounts = this.rankCountMap();
 
@@ -233,35 +263,26 @@ export class AI {
       totalRank += this.rank(def);
     }
 
-    // === ФАЗА ДОБОРА (колода не пуста) — берём агрессивно ===
-    if (this.deckLeft > 0) {
-      // Сохраняем козыри
-      if (trumpCost >= 2) return { type: 'take' };
-      if (trumpCost === 1 && trumpsInHand < 3) return { type: 'take' };
+    // Сохраняем козыри
+    if (trumpCost >= 2) return { type: 'take' };
+    if (trumpCost === 1 && trumpsInHand < 3) return { type: 'take' };
 
-      // Сохраняем старшие карты
-      if (highCost >= 2) return { type: 'take' };
-      if (highCost === 1 && plan.length >= 2 && totalRank >= 22) return { type: 'take' };
+    // Сохраняем старшие карты
+    if (highCost >= 2) return { type: 'take' };
+    if (highCost === 1 && plan.length >= 2 && totalRank >= 22) return { type: 'take' };
 
-      // Не ломаем пары ради защиты
-      if (pairBreaking >= 2) return { type: 'take' };
-      if (pairBreaking === 1 && this.level >= 3 && Math.random() < 0.35) return { type: 'take' };
+    // Не ломаем пары
+    if (pairBreaking >= 2) return { type: 'take' };
+    if (pairBreaking === 1 && this.level >= 3 && Math.random() < 0.3) return { type: 'take' };
 
-      // Слишком дорого
-      if (plan.length >= 3) return { type: 'take' };
+    // Слишком дорого
+    if (plan.length >= 3) return { type: 'take' };
 
-      // Стратегическое refresh (эксперт)
-      if (this.level >= 3 && Math.random() < 0.2) return { type: 'take' };
-    } else {
-      // === ЭНДШПИЛЬ (колода пуста) — защищаемся изо всех сил ===
-      // В эндшпиле «взять» = проиграть, поэтому защищаемся, если вообще можем.
-      // Единственное исключение — если защита требует последнего козыря,
-      // а у нас ещё есть чем атаковать.
-      if (trumpCost === 1 && trumpsInHand < 1) return { type: 'take' };
-      if (trumpsInHand === 0 && highCost >= 1 && plan.length >= 2) return { type: 'take' };
+    // Стратегический refresh (эксперт): 15% — взять одну карту и сменить роль
+    if (this.level >= 3 && plan.length === 1 && trumpCost === 0 && Math.random() < 0.15) {
+      return { type: 'take' };
     }
 
-    // Играем первую карту плана
     const first = plan[0];
     const pairIdx = r.table.findIndex(p => p.atk === first.atk);
     return { type: 'defense', card: first.def, pairIdx };
