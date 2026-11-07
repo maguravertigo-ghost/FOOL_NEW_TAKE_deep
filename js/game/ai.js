@@ -1,19 +1,11 @@
 import { RANK_VALUE } from './constants.js';
 import { canBeat, canTranslate, canAddToTable, tableRanks } from './rules.js';
 
-/**
- * Уровни сложности:
- *   1 — базовый
- *   2 — умный (по умолчанию): бережёт козыри, копит пары, аккуратно защищается
- *   3 — эксперт: активно планирует концовку, играет лестницей козырей
- */
 export class AI {
   constructor(session, { level = 2 } = {}) {
     this.s = session;
     this.level = level;
   }
-
-  /* ---------- доступ к состоянию ---------- */
 
   get hand()     { return this.s.app.accordionCpu.cards; }
   get trump()    { return this.s.trump; }
@@ -25,23 +17,14 @@ export class AI {
   isTrump(c) { return c.data.suit === this.trump; }
   rank(c)    { return RANK_VALUE[c.data.rank]; }
 
-  /* ---------- оценка карт ---------- */
+  attackValue(c) { return this.isTrump(c) ? 100 + this.rank(c) : this.rank(c); }
 
-  /** Чем меньше — тем охотнее сбрасываем. Козырь = 100+. */
-  attackValue(c) {
-    return this.isTrump(c) ? 100 + this.rank(c) : this.rank(c);
-  }
-
-  /** Сколько у меня карт этого ранга (для сохранения пар). */
   rankCountMap() {
     const m = {};
     for (const c of this.hand) m[c.data.rank] = (m[c.data.rank] || 0) + 1;
     return m;
   }
 
-  /* ---------- защита ---------- */
-
-  /** Минимальная по цене карта, которая бьёт `atk`. null — если нет. */
   pickCheapestBeater(atk) {
     const cands = this.hand.filter(c => canBeat(c, atk, this.trump));
     if (!cands.length) return null;
@@ -49,19 +32,10 @@ export class AI {
     return cands[0];
   }
 
-  /**
-   * План полной защиты. Возвращает список { atk, def } или null,
-   * если хотя бы одну карту побить нечем.
-   */
   planDefenseAll(unbeaten) {
     const hand = this.hand.slice();
     const plan = [];
-
-    // Сложные (более дорогие в атаке) карты разбираем первыми,
-    // чтобы сохранить дешёвые биттеры на остальное.
-    const sorted = unbeaten
-      .slice()
-      .sort((a, b) => this.attackValue(b.atk) - this.attackValue(a.atk));
+    const sorted = unbeaten.slice().sort((a, b) => this.attackValue(b.atk) - this.attackValue(a.atk));
 
     for (const pair of sorted) {
       const beaters = hand
@@ -75,8 +49,6 @@ export class AI {
     return plan;
   }
 
-  /* ---------- DECIDE ---------- */
-
   decide() {
     const r = this.s.round;
     switch (r.phase) {
@@ -88,56 +60,50 @@ export class AI {
     return null;
   }
 
+  /* ============ АТАКА (начало раунда) ============ */
   _decideAttackFirst() {
     const hand = this.hand;
     if (!hand.length) return { type: 'pass' };
-	// Level 1 — «новичок»: без оптимизации, просто первая некозырная
+
+    const nonT = hand.filter(c => !this.isTrump(c));
+    const counts = this.rankCountMap();
+
+    // Level 1 — случайная слабая
     if (this.level === 1) {
-      const nonT = hand.filter(c => !this.isTrump(c));
-          // Если колода не пуста, козырями не ходим (если есть чем ходить)
-		let pool = nonT.length ? nonT : hand;
-		if (this.deckLeft > 0 && nonT.length > 0) {
-		  pool = nonT;
-		}
-      return { type: 'attack', card: pool[0] };
+      const pool = nonT.length ? nonT : hand;
+      const sorted = pool.slice().sort((a, b) => this.rank(a) - this.rank(b));
+      return { type: 'attack', card: sorted[0] };
     }
-    const trumps   = hand.filter(c => this.isTrump(c));
-    const nonT     = hand.filter(c => !this.isTrump(c));
-    const counts   = this.rankCountMap();
 
-    // --- ФИНАЛ: колода пуста, играем лестницу козырей ---
+    // === ФИНАЛ: колода пуста ===
     if (this.deckLeft === 0) {
-      // Если у нас большинство козырей — играем младшим козырем
-      const sortedTrumps = trumps.slice().sort((a, b) => this.rank(a) - this.rank(b));
-      if (sortedTrumps.length >= 2 && nonT.length <= 2) {
-        return { type: 'attack', card: sortedTrumps[0] };
-      }
+      // Сначала сбрасываем слабые некозыри, потом козыри по возрастанию
+      const pool = nonT.length ? nonT : hand;
+      const sorted = pool.slice().sort((a, b) => this.rank(a) - this.rank(b));
+      return { type: 'attack', card: sorted[0] };
     }
 
-    // --- Иначе: приоритет низким некозырям-одиночкам ---
+    // === СЕРЕДИНА: атакуем АБСОЛЮТНО младшей картой ===
+    // Не важно, пара это или одиночка — важна сама младшая карта.
     const pool = nonT.length ? nonT : hand;
-    // Сначала — одиночки (не парные), потом парные
-    const singles = pool.filter(c => counts[c.data.rank] === 1)
-                        .sort((a, b) => this.rank(a) - this.rank(b));
-    if (singles.length) return { type: 'attack', card: singles[0] };
-
-    // Только пары — начинаем с младшей пары (создаём «шлейф»)
-    const sorted = pool.slice().sort((a, b) => this.rank(a) - this.rank(b));
-    return { type: 'attack', card: sorted[0] };
+    const lowest = pool.reduce((min, c) =>
+      this.rank(c) < this.rank(min) ? c : min, pool[0]);
+    return { type: 'attack', card: lowest };
   }
 
+  /* ============ ПОДКИДЫВАНИЕ (A_ADD) ============ */
   _decideAdd() {
     const r = this.s.round;
     if (this.defSize === 0) return { type: 'pass' };
-	if (r.table.length >= 6) return { type: 'pass' };
+    if (r.table.length >= 6) return { type: 'pass' };
 
-if (this.s._devForceAIAdd) {
-  const tR = tableRanks(r.table);
-  const cands = this.hand.filter(c => canAddToTable(c, tR));
-  if (!cands.length) return { type: 'pass' };
-  cands.sort((a, b) => this.attackValue(a) - this.attackValue(b));
-  return { type: 'attack', card: cands[0], dump: false };
-}
+    if (this.s._devForceAIAdd) {
+      const tR = tableRanks(r.table);
+      const cands = this.hand.filter(c => canAddToTable(c, tR));
+      if (!cands.length) return { type: 'pass' };
+      cands.sort((a, b) => this.attackValue(a) - this.attackValue(b));
+      return { type: 'attack', card: cands[0], dump: false };
+    }
 
     const tR = tableRanks(r.table);
     const cands = this.hand.filter(c => canAddToTable(c, tR));
@@ -145,34 +111,32 @@ if (this.s._devForceAIAdd) {
 
     const nonT = cands.filter(c => !this.isTrump(c));
 
-    // Level 1 — редко подкидывает, козырями не подкидывает вообще
     if (this.level === 1) {
       if (!nonT.length) return { type: 'pass' };
       if (Math.random() > 0.4) return { type: 'pass' };
       return { type: 'attack', card: nonT[0], dump: false };
     }
 
-    // Level 2 и 3: строгий запрет на подкидывание козырей,
-    // пока колода не пуста. Если некозырей нет — просто пасуем.
     let pool;
     if (this.deckLeft > 0) {
       if (!nonT.length) return { type: 'pass' };
       pool = nonT;
     } else {
-      // Эндшпиль: можно и козырями добивать
       pool = nonT.length ? nonT : cands;
     }
 
-    // Чем ближе конец — тем активнее атакуем
-    const chance = this.deckLeft === 0
-      ? 0.95
-      : (this.deckLeft < 6 ? 0.8 : (this.level >= 3 ? 0.7 : 0.55));
+    let chance = this.deckLeft === 0 ? 0.95 : (this.deckLeft < 6 ? 0.8 : (this.level >= 3 ? 0.7 : 0.55));
+    
+    // Если у врага мало карт — дожимаем
+    if (this.playerHandSize <= 2) chance = 0.99;
+
     if (Math.random() > chance) return { type: 'pass' };
 
     pool.sort((a, b) => this.attackValue(a) - this.attackValue(b));
     return { type: 'attack', card: pool[0], dump: false };
   }
 
+  /* ============ СБРОС (A_DUMP) ============ */
   _decideDump() {
     const r = this.s.round;
     if (this.defSize === 0) return { type: 'done' };
@@ -184,7 +148,6 @@ if (this.s._devForceAIAdd) {
     const limit = Math.min(6, this.defSize);
     if (r.table.length >= limit) return { type: 'done' };
 
-    // Level 1 — «новичок»: сбрасывает что есть, но без козырей
     if (this.level === 1) {
       const nonT = cands.filter(c => !this.isTrump(c));
       if (!nonT.length) return { type: 'done' };
@@ -192,43 +155,37 @@ if (this.s._devForceAIAdd) {
       return { type: 'attack', card: nonT[0], dump: true };
     }
 
-    // Level 2, 3: пока колода не пуста — сбрасываем ТОЛЬКО некозырей.
-    // Если некозырей нет — просто заканчиваем дамп, не тратя козыря.
     const nonT = cands.filter(c => !this.isTrump(c));
-
     if (this.deckLeft > 0) {
-      if (!nonT.length) return { type: 'done' };      // козыри — не трогаем
+      if (!nonT.length) return { type: 'done' };
       nonT.sort((a, b) => this.attackValue(a) - this.attackValue(b));
       return { type: 'attack', card: nonT[0], dump: true };
     }
 
-    // Эндшпиль (колода пуста): можно и козырем, но только низким (≤10).
-    // Дамы, Короли, Тузы — не тратим даже в дампе.
     const lowTrumps = cands.filter(c => this.isTrump(c) && this.rank(c) <= 10);
     const pool = nonT.length ? nonT : lowTrumps;
     if (!pool.length) return { type: 'done' };
-
     pool.sort((a, b) => this.attackValue(a) - this.attackValue(b));
     return { type: 'attack', card: pool[0], dump: true };
   }
 
+  /* ============ ЗАЩИТА (D_ACT) — ГЛАВНЫЕ ИЗМЕНЕНИЯ ============ */
   _decideDefense() {
     const r = this.s.round;
     const unbeaten = r.table.filter(p => p.atk && !p.def);
     if (!unbeaten.length) return { type: 'take' };
-	
-	// Level 1 — без перевода, без плана, 25% шанс «взять» даже при возможности отбиться
+
+    // Level 1 — без изменений
     if (this.level === 1) {
       if (Math.random() < 0.25) return { type: 'take' };
-
       const atk = unbeaten[0].atk;
       const cands = this.hand.filter(c => canBeat(c, atk, this.trump));
       if (!cands.length) return { type: 'take' };
       const pairIdx = r.table.findIndex(p => p.atk === atk);
       return { type: 'defense', card: cands[0], pairIdx };
     }
-	
-    // ---------- Перевод ----------
+
+    // === ПЕРЕВОД ===
     if (this.s.translateMode && !r.anyBeaten) {
       const firstAtk = unbeaten[0].atk;
       const translators = this.hand.filter(c => canTranslate(c, firstAtk, false, {
@@ -240,77 +197,68 @@ if (this.s._devForceAIAdd) {
         const nonT = translators.filter(c => !this.isTrump(c));
         const trumps = translators.filter(c => this.isTrump(c));
         const trumpsInHand = this.hand.filter(c => this.isTrump(c)).length;
-        const oppLow = this.playerHandSize <= 3;    // у оппонента почти нет карт
-        const endgame = this.deckLeft === 0;        // колода пуста
 
-        let wantTranslate = false;
-        let pool = [];
+        if (nonT.length && (this.level >= 3 || Math.random() < 0.75)) {
+          nonT.sort((a, b) => this.attackValue(a) - this.attackValue(b));
+          return { type: 'translate', card: nonT[0] };
+        }
 
-        if (nonT.length) {
-          // Некозырем переводить почти всегда хорошо:
-          // сбрасываем мусор, атака переходит к оппоненту.
-          // Level 3: 85% (агрессивно, но не всегда)
-          // Level 2: 60% (осторожно)
-          const p = (this.level >= 3) ? 0.85 : 0.6;
-          wantTranslate = Math.random() < p;
-          pool = nonT;
-        } else if (trumps.length) {
-          // Только козыри. Смотрим, есть ли низкие (2–10)
+        if (trumps.length && trumpsInHand >= 3 && this.level >= 2) {
           const lowTrumps = trumps.filter(c => this.rank(c) < 11);
-
-          if (!lowTrumps.length) {
-            // Только J/Q/K/A-козыри — не переводим ни на каком уровне
-            wantTranslate = false;
-          } else if (this.level >= 3) {
-            // ЭКСПЕРТ: переводит козырем ТОЛЬКО в безопасной ситуации:
-            //   • у самого ≥ 4 козырей (не жалко одного)
-            //   • оппонент почти без карт (заставим взять)
-            //   • эндшпиль (колода пуста — любая ошибка критична)
-            // И только 30% шанс, а не 60%.
-            const safe = (trumpsInHand >= 4) || oppLow || endgame;
-            wantTranslate = safe && Math.random() < 0.3;
-            if (wantTranslate) pool = lowTrumps;
-          } else if (this.level === 2) {
-            // ОБЫЧНЫЙ: переводит козырем только в эндшпиле, 15% шанс.
-            // В середине игры — никогда (сохраняет на финал).
-            wantTranslate = endgame && Math.random() < 0.15;
-            if (wantTranslate) pool = lowTrumps;
+          if (lowTrumps.length && (this.deckLeft === 0 || this.playerHandSize <= 3)) {
+            lowTrumps.sort((a, b) => this.attackValue(a) - this.attackValue(b));
+            return { type: 'translate', card: lowTrumps[0] };
           }
         }
-
-        if (wantTranslate && pool.length) {
-          pool.sort((a, b) => this.attackValue(a) - this.attackValue(b));
-          return { type: 'translate', card: pool[0] };
-        }
-        // если не решили переводить — идём к защите/взятию
       }
     }
 
-
-    // ---------- План полной защиты ----------
+    // === ПЛАН ЗАЩИТЫ ===
     const plan = this.planDefenseAll(unbeaten);
-    if (!plan) {
-      return { type: 'take' };
+    if (!plan) return { type: 'take' };
+
+    // Анализируем стоимость защиты
+    const trumpsInHand = this.hand.filter(c => this.isTrump(c)).length;
+    const rankCounts = this.rankCountMap();
+
+    let trumpCost = 0;
+    let highCost = 0;
+    let pairBreaking = 0;
+    let totalRank = 0;
+
+    for (const { def } of plan) {
+      if (this.isTrump(def)) trumpCost++;
+      if (this.rank(def) >= 11) highCost++;
+      if (rankCounts[def.data.rank] > 1) pairBreaking++;
+      totalRank += this.rank(def);
     }
 
-    // Защитник (я) не должен светить карты: если начал крыть — соперник
-    // может подкинуть, и я останусь без козырей. Поэтому:
-    //  • пока колода не пуста — крыть, только если план ЦЕЛИКОМ некозырный,
-    //  • иначе — сразу брать (сохраняем козыри и не раскрываем руку).
-    const trumpsInHand = this.hand.filter(c => this.isTrump(c)).length;
-    const planHasTrump = plan.some(p => this.isTrump(p.def));
-    const cheapPlan    = !planHasTrump || plan.every(p => this.rank(p.def) < 11);
-
-    // В эндшпиле (колода пуста) защита важнее сохранения козырей
+    // === ФАЗА ДОБОРА (колода не пуста) — берём агрессивно ===
     if (this.deckLeft > 0) {
-      // Не крыть козырями вообще, пока есть альтернатива взять
-      if (planHasTrump) return { type: 'take' };
-      // Очень дорогой некозырный план (например, 3 высокие карты) — тоже брать
-      const cost = plan.reduce((s, p) => s + this.attackValue(p.def), 0);
-      if (cost >= 8 && plan.length >= 2) return { type: 'take' };
+      // Сохраняем козыри
+      if (trumpCost >= 2) return { type: 'take' };
+      if (trumpCost === 1 && trumpsInHand < 3) return { type: 'take' };
+
+      // Сохраняем старшие карты
+      if (highCost >= 2) return { type: 'take' };
+      if (highCost === 1 && plan.length >= 2 && totalRank >= 22) return { type: 'take' };
+
+      // Не ломаем пары ради защиты
+      if (pairBreaking >= 2) return { type: 'take' };
+      if (pairBreaking === 1 && this.level >= 3 && Math.random() < 0.35) return { type: 'take' };
+
+      // Слишком дорого
+      if (plan.length >= 3) return { type: 'take' };
+
+      // Стратегическое refresh (эксперт)
+      if (this.level >= 3 && Math.random() < 0.2) return { type: 'take' };
     } else {
-      // Эндшпиль: защищаемся, если хватает козырей
-      if (planHasTrump && trumpsInHand < plan.length) return { type: 'take' };
+      // === ЭНДШПИЛЬ (колода пуста) — защищаемся изо всех сил ===
+      // В эндшпиле «взять» = проиграть, поэтому защищаемся, если вообще можем.
+      // Единственное исключение — если защита требует последнего козыря,
+      // а у нас ещё есть чем атаковать.
+      if (trumpCost === 1 && trumpsInHand < 1) return { type: 'take' };
+      if (trumpsInHand === 0 && highCost >= 1 && plan.length >= 2) return { type: 'take' };
     }
 
     // Играем первую карту плана

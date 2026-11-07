@@ -505,6 +505,18 @@ _createDevTools() {
     );
   }));
 
+  // Dev: Показать/скрыть карты ИИ
+  let eyeOn = false;
+  const eyeBtn = mkBtn('EYE', '#37474f', '#78909c', () => {
+    eyeOn = !eyeOn;
+    eyeBtn.style.background = eyeOn ? '#00c853' : '#37474f'; // Зелёная если включено
+    
+    if (this.accordionCpu) {
+      this.accordionCpu.cards.forEach(c => c.setFaceUp(eyeOn));
+    }
+  });
+  wrap.appendChild(eyeBtn);
+
   // Тест погон
   let pogonTest = 0;
   wrap.appendChild(mkBtn('ПОГОНЫ+', '#7c3aed', '#a78bfa', () => {
