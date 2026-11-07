@@ -48,7 +48,7 @@
   align-items: center;
   gap: calc(8px * var(--ui, 1));
   text-align: center;
-  overflow-y: auto;
+  overflow: hidden;              /* было: overflow-y: auto */
   padding-top: max(14px, calc(18px * var(--ui, 1)));
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -97,12 +97,18 @@
 }
 
 .tutorial__body {
-  flex: 0 0 auto;              /* ← ДОБАВИТЬ: не растёт, по содержимому */
+  flex: 0 1 auto;
+  min-height: 0;                 /* ← ДОБАВИТЬ */
+  max-height: 20vh;              /* ← ДОБАВИТЬ, чтобы точно не вылезал */
+  overflow-y: auto;              /* ← ДОБАВИТЬ */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   font-size: calc(16px * var(--ui, 1));
   color: #ccc;
   line-height: 1.55;
   max-width: calc(540px * var(--ui, 1));
 }
+.tutorial__body::-webkit-scrollbar { display: none; }
 /* Нижняя полоса: ←, точки, [→ | CTA] */
 .tutorial__nav {
   display: flex;
@@ -224,10 +230,11 @@ body.is-mobile .tutorial__slide {
 /* Картинка — существенно крупнее (было 22vh) */
 /* Картинка растягивается на всё свободное место */
 body.is-mobile .tutorial__img-wrap {
-  flex: 1 1 auto;
+  flex: 1 1 0;                         /* было: 1 1 auto */
   min-height: 100px;
   max-height: none;
   width: 100%;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -244,7 +251,7 @@ body.is-mobile .tutorial__img {
 /* Счётчик 1/8 — мелкий, серый */
 body.is-mobile .tutorial__counter {
   flex: 0 0 auto;
-  font-size: max(11px, calc(13px * var(--ui, 1)));
+  font-size: clamp(11px, calc(13px * var(--ui, 1)), 2.5vh);   /* было max(...) */
   color: #888;
   letter-spacing: 1px;
   font-weight: 400;
@@ -254,7 +261,7 @@ body.is-mobile .tutorial__counter {
 /* Заголовок — всегда виден */
 body.is-mobile .tutorial__title {
   flex: 0 0 auto;
-  font-size: max(17px, calc(20px * var(--ui, 1)));
+  font-size: clamp(17px, calc(20px * var(--ui, 1)), 4vh);     /* было max(...) */
   line-height: 1.15;
   padding: 0 max(4px, calc(6px * var(--ui, 1)));
 }
@@ -263,10 +270,10 @@ body.is-mobile .tutorial__title {
 /* Body — по содержимому, но может сжаться, если текст длинный */
 body.is-mobile .tutorial__body {
   flex: 0 1 auto;
-  min-height: 30px;
-  max-height: 35vh;
+  min-height: 0;                       /* ← ключевое */
+  max-height: 32vh;                    /* ← ограничивает по высоте экрана */
   overflow-y: auto;
-  font-size: max(14px, calc(16px * var(--ui, 1)));
+  font-size: clamp(14px, calc(16px * var(--ui, 1)), 3.5vh);
   line-height: 1.4;
   padding: 0 max(4px, calc(8px * var(--ui, 1)));
   max-width: 100%;

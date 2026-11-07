@@ -101,13 +101,14 @@ export class Tutorial {
       .join('');
 
     // При клике мышью — обновляем фокус на нажатую кнопку
-    this.el.addEventListener('click', (e) => {
-      const btn = e.target.closest('[data-action]');
-      if (btn) {
-        this._focusTarget = btn.dataset.action;
-        this._onAction(btn.dataset.action);
-      }
-    });
+	this.el.addEventListener('click', (e) => {
+	  window.__lastInputWasKeyboard = false;            // ← ДОБАВИТЬ
+	  const btn = e.target.closest('[data-action]');
+	  if (btn) {
+		this._focusTarget = btn.dataset.action;
+		this._onAction(btn.dataset.action);
+	  }
+	});
 
     document.getElementById('scene').appendChild(this.el);
   }
@@ -171,6 +172,9 @@ export class Tutorial {
     // Снимаем старый фокус
     this.el.querySelectorAll('.kbd-focus').forEach(el => el.classList.remove('kbd-focus'));
     
+	  // Не показываем курсор, если игрок в режиме мыши/тача
+	  if (!window.__lastInputWasKeyboard) return;      // ← ДОБАВИТЬ
+
     let targetEl = null;
     if (this._focusTarget === 'skip' && this.refs.skip.style.visibility !== 'hidden') targetEl = this.refs.skip;
     if (this._focusTarget === 'prev' && this.refs.prev.style.visibility !== 'hidden') targetEl = this.refs.prev;
@@ -185,7 +189,7 @@ export class Tutorial {
       if (!this.el) return;
       // Блокируем ВСЕХ остальных — main_menu, app.js, msg-overlay и т.д.
       e.stopImmediatePropagation();
-      
+      window.__lastInputWasKeyboard = true;             // ← ДОБАВИТЬ
       const total = this.slides.length;
       const isLast = this.currentSlide === total - 1;
       const isFirst = this.currentSlide === 0;
