@@ -161,7 +161,7 @@
   transform: scale(1.4);
 }
 /* ============================================================
-   МОБИЛКА — почти во весь вьюпорт, крупные шрифты и кнопки
+   МОБИЛКА — почти на весь вьюпорт, читаемые шрифты
    ============================================================ */
 
 body.is-mobile .tutorial-overlay {
@@ -169,97 +169,131 @@ body.is-mobile .tutorial-overlay {
 }
 
 body.is-mobile .tutorial__box {
-  width: calc(100% - 8px);
-  height: calc(100% - 8px);
+  width: calc(100% - 6px);
+  height: calc(100% - 6px);
   max-width: none;
   max-height: none;
-  padding: max(8px, calc(10px * var(--ui, 1))) max(10px, calc(12px * var(--ui, 1))) max(6px, calc(8px * var(--ui, 1)));
-  gap: max(6px, calc(8px * var(--ui, 1)));
-  border-radius: calc(10px * var(--ui, 1));
+  padding: max(6px, calc(8px * var(--ui, 1)));
+  gap: max(3px, calc(4px * var(--ui, 1)));
+  border-radius: calc(8px * var(--ui, 1));
   border-width: 1px;
 }
 
-/* Кнопка ПРОПУСТИТЬ — компактная, но крупнее десктопной */
+/* Skip — как ОБУЧЕНИЕ в help-nav, top-right */
 body.is-mobile .tutorial__skip {
-  top: max(10px, calc(12px * var(--ui, 1)));
-  right: max(10px, calc(12px * var(--ui, 1)));
-  font-size: max(16px, calc(18px * var(--ui, 1))) !important;
-  padding: max(8px, calc(10px * var(--ui, 1))) max(14px, calc(18px * var(--ui, 1))) !important;
-  letter-spacing: 1px;
+  position: absolute;
+  top: max(6px, calc(8px * var(--ui, 1)));
+  right: max(6px, calc(8px * var(--ui, 1)));
+  min-height: calc(36px * var(--ui, 1));
+  font-size: max(13px, calc(16px * var(--ui, 1))) !important;
+  padding: max(6px, calc(8px * var(--ui, 1))) max(10px, calc(14px * var(--ui, 1))) !important;
+  z-index: 5;
 }
 
-/* Контент слайда */
+/* Слайд — flex column, всё помещается */
 body.is-mobile .tutorial__slide {
-  padding-top: max(38px, calc(46px * var(--ui, 1)));
-  gap: max(6px, calc(8px * var(--ui, 1)));
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  padding-top: max(22px, calc(26px * var(--ui, 1)));
+  gap: max(2px, calc(4px * var(--ui, 1)));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: flex-start;
 }
 
-/* Картинка — растёт с экраном, но не съедает текст на низких экранах */
+/* Картинка: 22vh — компромисс между "не мелкая" и "тексту место остаётся" */
 body.is-mobile .tutorial__img-wrap {
-  height: clamp(120px, 35vh, 300px);
-  min-height: 120px;
-  flex-shrink: 0;
+  flex: 0 0 auto;
+  height: 22vh;
+  min-height: 60px;
+  max-height: 160px;
   width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Счётчик "3 / 8" — крупнее и заметнее */
-body.is-mobile .tutorial__counter {
-  font-size: max(18px, calc(22px * var(--ui, 1)));
-  letter-spacing: 2px;
-  margin-top: max(2px, calc(4px * var(--ui, 1)));
-  font-weight: 700;
-}
-
-/* Заголовок слайда */
-body.is-mobile .tutorial__title {
-  font-size: max(24px, calc(34px * var(--ui, 1)));
-  line-height: 1.15;
-}
-
-/* Основной текст — читаемый на любом телефоне */
-body.is-mobile .tutorial__body {
-  font-size: max(18px, calc(22px * var(--ui, 1)));
-  line-height: 1.5;
+body.is-mobile .tutorial__img {
   max-width: 100%;
-  padding: 0 max(4px, calc(8px * var(--ui, 1)));
+  max-height: 100%;
+  object-fit: contain;
 }
 
-/* Полоса CTA — фикс. высота, чтобы вёрстка не дёргалась */
+/* Счётчик 1/8 — мелкий, серый */
+body.is-mobile .tutorial__counter {
+  flex: 0 0 auto;
+  font-size: max(11px, calc(13px * var(--ui, 1)));
+  color: #888;
+  letter-spacing: 1px;
+  font-weight: 400;
+  margin-top: max(2px, calc(3px * var(--ui, 1)));
+}
+
+/* Заголовок — всегда виден */
+body.is-mobile .tutorial__title {
+  flex: 0 0 auto;
+  font-size: max(17px, calc(20px * var(--ui, 1)));
+  line-height: 1.15;
+  padding: 0 max(4px, calc(6px * var(--ui, 1)));
+}
+
+/* Body — скроллится внутри, если не влезает. НЕ обрезается */
+body.is-mobile .tutorial__body {
+  flex: 1 1 auto;
+  min-height: 30px;
+  overflow-y: auto;
+  font-size: max(14px, calc(16px * var(--ui, 1)));
+  line-height: 1.4;
+  padding: 0 max(4px, calc(8px * var(--ui, 1)));
+  max-width: 100%;
+  text-align: center;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+body.is-mobile .tutorial__body::-webkit-scrollbar {
+  display: none;
+}
+
+/* CTA-wrap — фикс. высота, не дёргается */
 body.is-mobile .tutorial__cta-wrap {
-  height: max(56px, calc(72px * var(--ui, 1)));
+  flex: 0 0 auto;
+  height: max(42px, calc(48px * var(--ui, 1)));
 }
 
 body.is-mobile .tutorial__cta {
-  padding: max(12px, calc(16px * var(--ui, 1))) max(32px, calc(48px * var(--ui, 1)));
-  font-size: max(20px, calc(24px * var(--ui, 1))) !important;
-  min-width: max(200px, calc(260px * var(--ui, 1)));
-  letter-spacing: 2px;
+  padding: max(8px, calc(10px * var(--ui, 1))) max(20px, calc(32px * var(--ui, 1)));
+  font-size: max(15px, calc(18px * var(--ui, 1))) !important;
+  min-width: max(150px, calc(180px * var(--ui, 1)));
+  letter-spacing: 1.5px;
 }
 
-/* Навигация: стрелки + точки */
+/* Нижняя панель: стрелки + точки */
 body.is-mobile .tutorial__nav {
-  padding-top: max(6px, calc(10px * var(--ui, 1)));
-  gap: max(8px, calc(10px * var(--ui, 1)));
+  flex: 0 0 auto;
+  padding-top: max(4px, calc(6px * var(--ui, 1)));
+  gap: max(6px, calc(8px * var(--ui, 1)));
 }
 
+/* Стрелки — как help-nav__btn на мобилке */
 body.is-mobile .tutorial__arrow {
-  min-width: max(76px, calc(90px * var(--ui, 1)));
-  height: max(52px, calc(64px * var(--ui, 1)));
-  font-size: max(26px, calc(32px * var(--ui, 1))) !important;
+  min-width: max(72px, calc(96px * var(--ui, 1)));
+  height: max(40px, calc(44px * var(--ui, 1)));
+  font-size: max(22px, calc(28px * var(--ui, 1))) !important;
   padding: 0 max(12px, calc(20px * var(--ui, 1))) !important;
   line-height: 1;
 }
 
 body.is-mobile .tutorial__dots {
-  gap: max(6px, calc(8px * var(--ui, 1)));
+  gap: max(4px, calc(5px * var(--ui, 1)));
 }
 
 body.is-mobile .tutorial__dot {
-  width: max(10px, calc(12px * var(--ui, 1)));
-  height: max(10px, calc(12px * var(--ui, 1)));
+  width: max(7px, calc(9px * var(--ui, 1)));
+  height: max(7px, calc(9px * var(--ui, 1)));
 }
 
 body.is-mobile .tutorial__dot--active {
-  transform: scale(1.5);
+  transform: scale(1.3);
 }
