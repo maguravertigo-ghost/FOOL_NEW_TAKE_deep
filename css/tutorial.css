@@ -52,7 +52,6 @@
   padding-top: max(14px, calc(18px * var(--ui, 1)));
   scrollbar-width: none;
   -ms-overflow-style: none;
-  justify-content: center;      /* <-- ДОБАВЛЕНО */
 }
 
 /* Скрываем для Chrome/Safari */
@@ -61,10 +60,12 @@
 }
 
 /* Фиксированная область картинки — БЕЗ прыжков при разном аспекте SVG */
+/* Гибкая область картинки — растягивается на всё свободное место */
 .tutorial__img-wrap {
+  flex: 1 1 auto;              /* было: фиксированная height */
+  min-height: 200px;
+  max-height: 420px;
   width: 100%;
-  height: calc(320px * var(--ui, 1));   /* было 260 */
-  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -96,6 +97,7 @@
 }
 
 .tutorial__body {
+  flex: 0 0 auto;              /* ← ДОБАВИТЬ: не растёт, по содержимому */
   font-size: calc(16px * var(--ui, 1));
   color: #ccc;
   line-height: 1.55;
@@ -220,11 +222,11 @@ body.is-mobile .tutorial__slide {
 }
 
 /* Картинка — существенно крупнее (было 22vh) */
+/* Картинка растягивается на всё свободное место */
 body.is-mobile .tutorial__img-wrap {
-  flex: 0 0 auto;
-  height: 38vh;
+  flex: 1 1 auto;
   min-height: 100px;
-  max-height: 280px;
+  max-height: none;
   width: 100%;
   display: flex;
   align-items: center;
@@ -258,9 +260,11 @@ body.is-mobile .tutorial__title {
 }
 
 /* Body — скроллится внутри, если не влезает. НЕ обрезается */
+/* Body — по содержимому, но может сжаться, если текст длинный */
 body.is-mobile .tutorial__body {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-height: 30px;
+  max-height: 35vh;
   overflow-y: auto;
   font-size: max(14px, calc(16px * var(--ui, 1)));
   line-height: 1.4;

@@ -1089,12 +1089,23 @@ _updateQuestBadge() {
         </div>`;
       this._bindClose(ov);
 	  
-	  const tutBtn = ov.querySelector('[data-tutorial-btn]');
+      const tutBtn = ov.querySelector('[data-tutorial-btn]');
       if (tutBtn) {
         tutBtn.addEventListener('click', async () => {
           audio.playSfx('tap');
+          const wasKeyboard = window.__lastInputWasKeyboard;
           const tut = new Tutorial();
           await tut.open({ mode: 'review' });
+
+          // После закрытия — вернуть фокус на кнопку ОБУЧЕНИЕ
+          if (wasKeyboard) {
+            requestAnimationFrame(() => {
+              if (tutBtn && ov.style.display !== 'none') {
+                ov.querySelectorAll('.kbd-focus').forEach(x => x.classList.remove('kbd-focus'));
+                tutBtn.classList.add('kbd-focus');
+              }
+            });
+          }
         });
       }
 
@@ -1142,8 +1153,9 @@ _updateQuestBadge() {
     // ←/→ — переключение между кнопками ↑ / ↓ / В МЕНЮ
     const upBtn    = ov.querySelector('[data-help-up]');
     const downBtn  = ov.querySelector('[data-help-down]');
+    const tutBtn   = ov.querySelector('[data-tutorial-btn]');
     const closeBtn = ov.querySelector('[data-close]');
-    const list = [upBtn, downBtn, closeBtn].filter(Boolean);
+    const list = [upBtn, downBtn, tutBtn, closeBtn].filter(Boolean);
     if (!list.length) return;
 
     let cur = ov.querySelector('.kbd-focus');

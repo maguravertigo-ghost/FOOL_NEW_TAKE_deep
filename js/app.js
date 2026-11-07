@@ -125,7 +125,9 @@ class App {
           if (cancelBtn) { cancelBtn.click(); e.preventDefault(); return; }
         }
       }
-
+      // 1.5. Туториал открыт — не реагируем, туториал сам ловит Escape
+      if (document.querySelector('.tutorial-overlay')) return;
+	  
       // 2. Оверлей меню
       if (this.menu && this.menu._activeOverlay) {
         // Дать оверлею шанс «сделать шаг назад» (например, магазин → категории)

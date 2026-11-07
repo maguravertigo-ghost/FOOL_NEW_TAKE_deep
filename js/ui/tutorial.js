@@ -41,7 +41,7 @@ export class Tutorial {
 
   close() {
     if (this._keyHandler) {
-      window.removeEventListener('keydown', this._keyHandler);
+      window.removeEventListener('keydown', this._keyHandler, true);
       this._keyHandler = null;
     }
     if (this.el) {
@@ -183,6 +183,9 @@ export class Tutorial {
   _bindKeys() {
     this._keyHandler = (e) => {
       if (!this.el) return;
+      // Блокируем ВСЕХ остальных — main_menu, app.js, msg-overlay и т.д.
+      e.stopImmediatePropagation();
+      
       const total = this.slides.length;
       const isLast = this.currentSlide === total - 1;
       const isFirst = this.currentSlide === 0;
@@ -244,6 +247,6 @@ export class Tutorial {
         else if (this._focusTarget === 'cta')  this.refs.cta.click();
       }
     };
-    window.addEventListener('keydown', this._keyHandler);
+    window.addEventListener('keydown', this._keyHandler, true);
   }
 }
