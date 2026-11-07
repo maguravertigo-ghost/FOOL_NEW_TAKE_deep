@@ -438,6 +438,59 @@ body.is-mobile .card--stack-sub {
   overflow: hidden;
   box-shadow: 0 calc(20px * var(--ui)) calc(60px * var(--ui)) rgba(0,0,0,0.7);
 }
+.game-over__feedback {
+  position: absolute;
+  bottom: calc(20px * var(--ui));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: calc(14px * var(--ui));
+  padding: calc(10px * var(--ui)) calc(20px * var(--ui));
+  background: rgba(15, 15, 20, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: calc(10px * var(--ui));
+  font-size: calc(14px * var(--ui));
+  color: #bbb;
+  white-space: nowrap;
+  box-shadow: 0 calc(4px * var(--ui)) calc(14px * var(--ui)) rgba(0, 0, 0, 0.5);
+  z-index: 1;
+}
+
+.game-over__feedback-q {
+  letter-spacing: calc(0.5px * var(--ui));
+}
+
+.game-over__feedback-btn {
+  padding: calc(8px * var(--ui)) calc(16px * var(--ui));
+  background: linear-gradient(180deg, #ff9800 0%, #e65100 100%);
+  color: #fff;
+  border: calc(2px * var(--ui)) solid #8f4300;
+  border-radius: calc(8px * var(--ui));
+  font-size: calc(14px * var(--ui));
+  font-weight: 700;
+  letter-spacing: calc(1px * var(--ui));
+  cursor: pointer;
+  transition: filter 0.1s ease;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+.game-over__feedback-btn:hover { filter: brightness(1.1); }
+
+/* Мобилка — крупнее */
+body.is-mobile .game-over__feedback {
+  bottom: calc(12px * var(--ui));
+  padding: calc(12px * var(--ui)) calc(18px * var(--ui));
+  gap: calc(12px * var(--ui));
+  font-size: max(13px, calc(16px * var(--ui)));
+  flex-direction: column;
+  white-space: normal;
+  text-align: center;
+  max-width: calc(100% - calc(40px * var(--ui)));
+}
+body.is-mobile .game-over__feedback-btn {
+  font-size: max(14px, calc(18px * var(--ui)));
+  padding: calc(10px * var(--ui)) calc(20px * var(--ui));
+}
 .game-over__joker {
   flex: 0 0 auto;
   display: flex;

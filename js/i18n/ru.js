@@ -302,4 +302,13 @@ export const RU = {
 'help.tutorial': 'ОБУЧЕНИЕ',   // ru
 'gift.tutorial': 'ПРОЙТИ ОБУЧЕНИЕ',   // ru
 'tutorial.close': 'ПОНЯТНО',
+
+// ---- Game over feedback ----
+  'feedback.easy_win':    'Показалось слишком легко?',
+  'feedback.expert_lose': 'Слишком сложно?',
+  'feedback.normal_win':  'Слишком легко?',
+  'feedback.normal_lose': 'Сложновато?',
+  'feedback.try_normal':  'Попробуй НОРМУ →',
+  'feedback.try_expert':  'Попробуй ЭКСПЕРТА →',
+  'feedback.try_easy':    'Попробуй ЛЕГКО →',
 };

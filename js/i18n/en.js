@@ -292,4 +292,13 @@ export const EN = {
 'help.tutorial': 'TUTORIAL',   // en
 'gift.tutorial': 'TAKE TUTORIAL',     // en
 'tutorial.close': 'GOT IT',
+
+// ---- Game over feedback ----
+  'feedback.easy_win':    'Too easy?',
+  'feedback.expert_lose': 'Too tough?',
+  'feedback.normal_win':  'Getting easy?',
+  'feedback.normal_lose': 'A bit hard?',
+  'feedback.try_normal':  'Try NORMAL →',
+  'feedback.try_expert':  'Try EXPERT →',
+  'feedback.try_easy':    'Try EASY →',
 };

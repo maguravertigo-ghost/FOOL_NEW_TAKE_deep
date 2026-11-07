@@ -300,4 +300,13 @@ export const TR = {
 'help.tutorial': 'EĞİTİM',     // tr
 'gift.tutorial': 'EĞİTİMİ GÖR',       // tr
 'tutorial.close': 'ANLADIM',
+
+// ---- Game over feedback ----
+  'feedback.easy_win':    'Çok kolay mı geldi?',
+  'feedback.expert_lose': 'Çok mu zor?',
+  'feedback.normal_win':  'Kolaylaşıyor mu?',
+  'feedback.normal_lose': 'Biraz zor mu?',
+  'feedback.try_normal':  'NORMAL dene →',
+  'feedback.try_expert':  'UZMAN dene →',
+  'feedback.try_easy':    'KOLAY dene →',
 };

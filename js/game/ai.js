@@ -142,29 +142,30 @@ export class AI {
       return { type: 'attack', card: sorted[0] };
     }
 
-    // === ФИНАЛ: колода пуста (ЭНДШПИЛЬ) ===
     if (this.deckLeft === 0) {
-      // 1. Ищем карты, которые игрок ТОЧНО не побьет (гарантированный удар)
-      const unbeatable = pool.filter(c => this._isCardUnbeatable(c));
-      if (unbeatable.length) {
-        // Атакуем самой сильной из них (или козырем, если это козырь)
-        unbeatable.sort((a, b) => this.attackValue(b) - this.attackValue(a));
-        return { type: 'attack', card: unbeatable[0] };
+      // Level 3 — использует подсчёт карт для поиска непобедимых
+      if (this.level >= 3) {
+        const unbeatable = pool.filter(c => this._isCardUnbeatable(c));
+        if (unbeatable.length) {
+          unbeatable.sort((a, b) => this.attackValue(b) - this.attackValue(a));
+          return { type: 'attack', card: unbeatable[0] };
+        }
       }
-      
-      // 2. Если таких нет, играем по классике (слабую)
+      // Level 1-2 (и level 3 без непобедимых) — по классике
       const sorted = pool.slice().sort((a, b) => this.rank(a) - this.rank(b));
       return { type: 'attack', card: sorted[0] };
     }
 
-    // === ЭКСПЕРТ: серия (3+ карт одного ранга) ===
-    if (this.level >= 3) {
+    // === LEVEL 2 и 3: серия карт одного ранга ===
+    // Level 2 — пара (2+), Level 3 — тройка (3+)
+    if (this.level >= 2) {
+      const minGroupSize = (this.level >= 3) ? 3 : 2;
       const rankGroups = {};
       for (const c of pool) {
         rankGroups[c.data.rank] = (rankGroups[c.data.rank] || 0) + 1;
       }
       const groups = Object.entries(rankGroups)
-        .filter(([_, n]) => n >= 3)
+        .filter(([_, n]) => n >= minGroupSize)
         .sort(([r1], [r2]) => RANK_VALUE[r1] - RANK_VALUE[r2]);
 
       if (groups.length) {
@@ -216,7 +217,13 @@ export class AI {
 
     let chance = this.deckLeft === 0 ? 0.95 : (this.deckLeft < 6 ? 0.85 : 0.75);
 
-    if (this.level >= 3) {
+    if (this.level === 1) {
+      chance = 0.5;
+    } else if (this.level === 2) {
+      const sameRankCount = pool.filter(c => tR.has(c.data.rank)).length;
+      if (sameRankCount >= 3) chance = 0.95;
+      else if (sameRankCount === 2) chance = 0.85;
+    } else {
       const sameRankCount = pool.filter(c => tR.has(c.data.rank)).length;
       if (sameRankCount >= 3) chance = 1.0;
       else if (sameRankCount === 2) chance = 0.95;
@@ -337,19 +344,40 @@ export class AI {
       totalRank += this.rank(def);
     }
 
-    if (trumpCost >= 2) return { type: 'take' };
-    if (trumpCost === 1 && trumpsInHand < 3) return { type: 'take' };
+    // === РАЗНЫЕ ПОРОГИ ПО УРОВНЮ ===
+    if (this.level === 1) {
+      // Level 1 (новичок): часто берёт, плохо защищается
+      if (Math.random() < 0.4) return { type: 'take' };
+      if (trumpCost >= 2) return { type: 'take' };
+    }
+    else if (this.level === 2) {
+      // Level 2 (норма): защищается охотнее, но экономит козыри
+      if (trumpCost >= 3) return { type: 'take' };
+      if (trumpCost === 2 && trumpsInHand < 3) return { type: 'take' };
+      if (trumpCost === 1 && trumpsInHand < 2) return { type: 'take' };
 
-    if (highCost >= 2) return { type: 'take' };
-    if (highCost === 1 && plan.length >= 2 && totalRank >= 22) return { type: 'take' };
+      if (highCost >= 3) return { type: 'take' };
+      if (highCost === 2 && plan.length >= 3 && totalRank >= 30) return { type: 'take' };
 
-    if (pairBreaking >= 2) return { type: 'take' };
-    if (pairBreaking === 1 && this.level >= 3 && Math.random() < 0.3) return { type: 'take' };
+      if (pairBreaking >= 2) return { type: 'take' };
+      if (plan.length >= 4) return { type: 'take' };
+    }
+    else {
+      // Level 3 (эксперт): экономный, со strategic take
+      if (trumpCost >= 2) return { type: 'take' };
+      if (trumpCost === 1 && trumpsInHand < 3) return { type: 'take' };
 
-    if (plan.length >= 3) return { type: 'take' };
+      if (highCost >= 2) return { type: 'take' };
+      if (highCost === 1 && plan.length >= 2 && totalRank >= 22) return { type: 'take' };
 
-    if (this.level >= 3 && plan.length === 1 && trumpCost === 0 && Math.random() < 0.15) {
-      return { type: 'take' };
+      if (pairBreaking >= 2) return { type: 'take' };
+      if (pairBreaking === 1 && Math.random() < 0.3) return { type: 'take' };
+
+      if (plan.length >= 3) return { type: 'take' };
+
+      if (plan.length === 1 && trumpCost === 0 && Math.random() < 0.15) {
+        return { type: 'take' };
+      }
     }
 
     const first = plan[0];

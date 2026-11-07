@@ -1126,7 +1126,7 @@ else if (winner === 'cpu')     this._jokerFrame('nice');  // джокер поб
 else                           this._jokerFrame('five');  // ничья
 
     if (points > 0) addStylePoints(points);
-    recordOutcome(winner);
+    recordOutcome(winner, GameSettings.aiLevel);
  
     // ---- Обновление жетона дурака ----
     const prevOwner = Progress.foolToken ? Progress.foolToken.owner : null;
@@ -1392,6 +1392,52 @@ el.querySelector('[data-action="ad"]').addEventListener('click', async () => {
     
     // ---- Анимация перемещения жетона (параллельно, не ждём) ----
     this._animateTokenTransfer(prevOwner, newOwner);
+
+    // ---- Плашка обратной связи по сложности ----
+    this._renderDifficultyFeedback(winner);   // ← ДОБАВИТЬ ЭТУ СТРОКУ
+  }
+
+  _renderDifficultyFeedback(result) {
+    const go = document.getElementById('game-over');
+    if (!go) return;
+
+    const lvl = GameSettings.aiLevel || 1;
+    const streak = Progress.streak || { level: lvl, wins: 0, losses: 0 };
+    if (streak.level !== lvl) return;
+
+    let questionKey = null;
+    let actionKey   = null;
+    let targetLevel = null;
+
+    if (lvl === 1 && result === 'player' && streak.wins >= 2) {
+      questionKey = 'feedback.easy_win';    actionKey = 'feedback.try_normal'; targetLevel = 2;
+    } else if (lvl === 3 && result === 'cpu' && streak.losses >= 2) {
+      questionKey = 'feedback.expert_lose'; actionKey = 'feedback.try_normal'; targetLevel = 2;
+    } else if (lvl === 2 && result === 'player' && streak.wins >= 3) {
+      questionKey = 'feedback.normal_win';  actionKey = 'feedback.try_expert'; targetLevel = 3;
+    } else if (lvl === 2 && result === 'cpu' && streak.losses >= 3) {
+      questionKey = 'feedback.normal_lose'; actionKey = 'feedback.try_easy';   targetLevel = 1;
+    }
+
+    if (questionKey === null) return;
+
+    const bar = document.createElement('div');
+    bar.className = 'game-over__feedback';
+    bar.innerHTML = `
+      <span class="game-over__feedback-q">${t(questionKey)}</span>
+      <button class="game-over__feedback-btn" data-action="change-diff">${t(actionKey)}</button>
+    `;
+
+    bar.querySelector('[data-action="change-diff"]').addEventListener('click', () => {
+      audio.playSfx('switch');
+      GameSettings.aiLevel = targetLevel;
+      saveSettings();
+      Progress.streak = { level: targetLevel, wins: 0, losses: 0 };
+      saveProgress();
+      if (window.__app) window.__app._playAgain(window.__app._lastMode || 'podkidnoy');
+    });
+
+    go.appendChild(bar);
   }
 
   /**

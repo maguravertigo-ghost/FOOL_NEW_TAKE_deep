@@ -17,6 +17,11 @@ function defaultState() {
 	giftGiven: false,
 	tempItems: null,
 	trialUnlocked: false,
+	
+	  // Счётчик подряд идущих побед/поражений на текущей сложности.
+	  // Сбрасывается при смене сложности или ничьей.
+	  streak: { level: 1, wins: 0, losses: 0 },
+	  
     // какие индексы элементов куплены
 	purchases: {
 	  shirt:  [0],
@@ -46,6 +51,7 @@ function load() {
 	  giftGiven: p.giftGiven ?? false,
 	  tempItems: p.tempItems ?? null,
 	  trialUnlocked: p.trialUnlocked ?? false,   // ← ДОБАВИТЬ
+	  streak:        p.streak || { level: 1, wins: 0, losses: 0 },   // ← ДОБАВИТЬ
     };
   } catch { return defaultState(); }
 }
@@ -71,13 +77,23 @@ export function addStylePoints(n) {
   saveProgress();
 }
 
-export function recordOutcome(winner) {
+export function recordOutcome(winner, aiLevel) {
   const s = Progress.stats;
   s.games++;
   if (winner === 'player') s.wins++;
   else if (winner === 'cpu') s.losses++;
   else s.draws++;
-  //ysdk.saveProgress(Progress);
+
+  // Обновляем streak по сложности
+  const lvl = aiLevel || 1;
+  if (!Progress.streak) Progress.streak = { level: lvl, wins: 0, losses: 0 };
+  if (Progress.streak.level !== lvl) {
+    Progress.streak = { level: lvl, wins: 0, losses: 0 };
+  }
+  if (winner === 'player')      { Progress.streak.wins++;   Progress.streak.losses = 0; }
+  else if (winner === 'cpu')    { Progress.streak.losses++; Progress.streak.wins   = 0; }
+  // draw — streak не трогаем
+
   saveProgress();
 }
 
@@ -303,10 +319,8 @@ export function resetAll() {
   Progress.tempItems = null;
   Progress.trialUnlocked = false;
 
-  // зарезервировано для будущих этапов:
-  // Progress.tempItems = null;
-  // Progress.firstRunShown = false;
-
+  Progress.trialUnlocked = false;
+  Progress.streak = { level: 1, wins: 0, losses: 0 };   // ← ДОБАВИТЬ
   saveProgress();
 }
 
