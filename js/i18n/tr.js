@@ -269,4 +269,35 @@ export const TR = {
   'shop.buy.adTitle':     'Reklam ödülü',
   'shop.buy.adQuestion':  '<b>{label}</b> öğesini reklam izleyerek almak ister misiniz?',
   'shop.buy.adSuccess':   'Öğe başarıyla açıldı!',
+
+  'tutorial.skip':  'Atla',
+  'tutorial.start': 'OYUNU BAŞLAT',
+
+  'tutorial.s1.title': 'Amaç',
+  'tutorial.s1.body':  'Tüm kartlarını Joker\'den önce bitir. Kartı kalan «aptal» olur.',
+
+  'tutorial.s2.title': 'Koz',
+  'tutorial.s2.body':  'Koz rengi herhangi bir kartı yener. Deste altındaki kart kozdur.',
+
+  'tutorial.s3.title': 'Senin sıran',
+  'tutorial.s3.body':  'Elindeki bir kartı seç — masadaki uygun yerler vurgulanacak.',
+
+  'tutorial.s4.title': 'Savunma',
+  'tutorial.s4.body':  'Saldırıldığında — aynı renkten daha yüksek bir kartla ya da herhangi bir kozla yen.',
+
+  'tutorial.s5.title': 'Eylem düğmesi',
+  'tutorial.s5.body':  'Sağ alt düğme. Şu an ne yapabileceğini gösterir: PAS, AL, ya da BENİM SIRAM.',
+
+  'tutorial.s6.title': 'Ekleme',
+  'tutorial.s6.body':  'Savunduktan sonra — masadakiyle aynı değerde kart ekleyebilirsin.',
+
+  'tutorial.s7.title': 'Aktarma',
+  'tutorial.s7.body':  '«Perevodnoy» modunda — aynı değerde bir kartla saldırıyı Joker\'e aktarabilirsin.',
+
+  'tutorial.s8.title': 'Omuzluk ve görevler',
+  'tutorial.s8.body':  'Maçı tek değerde kart serisiyle bitir — omuzluk, stil puanı ve görev ilerlemesi kazan.',
+
+'help.tutorial': 'EĞİTİM',     // tr
+'gift.tutorial': 'EĞİTİMİ GÖR',       // tr
+'tutorial.close': 'ANLADIM',
 };

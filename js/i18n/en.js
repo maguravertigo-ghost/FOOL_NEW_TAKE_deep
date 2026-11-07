@@ -261,4 +261,35 @@ export const EN = {
   'shop.buy.adTitle':     'Reward for watching ad',
   'shop.buy.adQuestion':  'Get <b>{label}</b> by watching an ad?',
   'shop.buy.adSuccess':   'Item successfully unlocked!',
+
+  'tutorial.skip':  'Skip',
+  'tutorial.start': 'START GAME',
+
+  'tutorial.s1.title': 'Goal',
+  'tutorial.s1.body':  'Get rid of all your cards before the Joker. Whoever is left with cards is the «fool».',
+
+  'tutorial.s2.title': 'Trump',
+  'tutorial.s2.body':  'The trump suit beats any other card. Look at the card under the deck — that\'s the trump.',
+
+  'tutorial.s3.title': 'Your turn',
+  'tutorial.s3.body':  'Pick a card in your hand — available table slots will highlight.',
+
+  'tutorial.s4.title': 'Defense',
+  'tutorial.s4.body':  'When you\'re attacked — beat the card with a higher card of the same suit, or any trump.',
+
+  'tutorial.s5.title': 'Action button',
+  'tutorial.s5.body':  'Bottom-right button. It shows what you can do now: PASS, TAKE, or MY TURN.',
+
+  'tutorial.s6.title': 'Adding',
+  'tutorial.s6.body':  'After defending — you can add cards of the same rank as those already on the table.',
+
+  'tutorial.s7.title': 'Translating',
+  'tutorial.s7.body':  'In «Perevodnoy» mode you can translate the attack to the Joker — with a card of the same rank.',
+
+  'tutorial.s8.title': 'Epaulettes & quests',
+  'tutorial.s8.body':  'Finish the match with a series of cards of one rank — get epaulettes, style points and quest progress.',
+
+'help.tutorial': 'TUTORIAL',   // en
+'gift.tutorial': 'TAKE TUTORIAL',     // en
+'tutorial.close': 'GOT IT',
 };

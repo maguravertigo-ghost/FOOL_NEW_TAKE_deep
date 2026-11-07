@@ -22,6 +22,7 @@ import { bus } from '../core/event_bus.js';
 import { attachTokenMark } from './fool_token_mark.js';
 
 import { t, getLang, getAvailableLangs } from '../i18n/index.js';
+import { Tutorial } from './tutorial.js';
 
 // Если SVG-файлы ещё не добавлены — используется эмодзи как fallback.
 // Как только появятся assets/flags/ru.svg (en.svg, tr.svg) — картинка
@@ -946,6 +947,7 @@ _updateQuestBadge() {
           <div class="mm-overlay__header">
             <div class="mm-overlay__title">${t('help.title')}</div>
             <div class="help-nav">
+			  <button class="mm-btn mm-btn--small mm-btn--primary" data-tutorial-btn>${t('help.tutorial')}</button>
               <button class="mm-btn mm-btn--small help-nav__btn" data-help-up title="${t('help.scrollUp')}">↑</button>
               <button class="mm-btn mm-btn--small help-nav__btn" data-help-down title="${t('help.scrollDown')}">↓</button>
               <button class="mm-btn mm-btn--small" data-close>${t('help.close')}</button>
@@ -1086,6 +1088,15 @@ _updateQuestBadge() {
           </div>
         </div>`;
       this._bindClose(ov);
+	  
+	  const tutBtn = ov.querySelector('[data-tutorial-btn]');
+      if (tutBtn) {
+        tutBtn.addEventListener('click', async () => {
+          audio.playSfx('tap');
+          const tut = new Tutorial();
+          await tut.open({ mode: 'review' });
+        });
+      }
 
       const helpBody = ov.querySelector('.help-body');
       const upBtn = ov.querySelector('[data-help-up]');

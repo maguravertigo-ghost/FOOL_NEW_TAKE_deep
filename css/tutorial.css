@@ -1,0 +1,222 @@
+/* Tutorial — серия оверлеев с прогрессией */
+
+.tutorial-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.88);
+  animation: tutorial-fade-in 0.2s ease;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@keyframes tutorial-fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* ---- Окно: ЖЁСТКО фиксированная высота ---- */
+.tutorial__box {
+  position: relative;
+  width: min(calc(720px * var(--ui, 1)), calc(100% - calc(40px * var(--ui, 1))));
+  height: calc(600px * var(--ui, 1));                /* фикс */
+  max-height: calc(100% - calc(40px * var(--ui, 1)));
+  background: rgba(25, 25, 30, 0.98);
+  border: 2px solid #444;
+  border-radius: calc(14px * var(--ui, 1));
+  padding: calc(20px * var(--ui, 1)) calc(24px * var(--ui, 1)) calc(16px * var(--ui, 1));
+  display: flex;
+  flex-direction: column;
+  gap: calc(12px * var(--ui, 1));
+  overflow: hidden;
+  box-sizing: border-box;
+  box-shadow: 0 calc(20px * var(--ui, 1)) calc(60px * var(--ui, 1)) rgba(0, 0, 0, 0.7);
+}
+
+/* ---- Skip — нормальная кнопка, top-right ---- */
+.tutorial__skip {
+  position: absolute;
+  top: calc(12px * var(--ui, 1));
+  right: calc(12px * var(--ui, 1));
+  z-index: 2;
+}
+
+/* ---- Контент слайда ---- */
+.tutorial__slide {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(8px * var(--ui, 1));
+  text-align: center;
+  overflow-y: auto;
+  padding-top: calc(36px * var(--ui, 1));
+  
+  /* Скрываем системный скролл-бар во всех браузерах */
+  scrollbar-width: none;       /* Firefox */
+  -ms-overflow-style: none;    /* IE/Edge */
+}
+
+/* Скрываем для Chrome/Safari */
+.tutorial__slide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Фиксированная область картинки — БЕЗ прыжков при разном аспекте SVG */
+.tutorial__img-wrap {
+  width: 100%;
+  height: calc(260px * var(--ui, 1));
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tutorial__img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 calc(4px * var(--ui, 1)) calc(12px * var(--ui, 1)) rgba(0, 0, 0, 0.5));
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Счётчик — крупнее */
+.tutorial__counter {
+  font-size: calc(18px * var(--ui, 1));
+  color: #aaa;
+  letter-spacing: calc(2px * var(--ui, 1));
+  font-weight: 600;
+}
+
+.tutorial__title {
+  font-size: calc(26px * var(--ui, 1));
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: calc(1px * var(--ui, 1));
+  line-height: 1.2;
+}
+
+.tutorial__body {
+  font-size: calc(16px * var(--ui, 1));
+  color: #ccc;
+  line-height: 1.55;
+  max-width: calc(540px * var(--ui, 1));
+}
+
+/* ---- CTA — фикс. обёртка, скрываем только видимость кнопки ---- */
+.tutorial__cta-wrap {
+  height: calc(52px * var(--ui, 1));
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tutorial__cta {
+  padding: calc(12px * var(--ui, 1)) calc(36px * var(--ui, 1));
+  font-size: calc(18px * var(--ui, 1));
+  letter-spacing: calc(2px * var(--ui, 1));
+}
+
+/* ---- Нижняя полоса: ← точки → ---- */
+.tutorial__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(12px * var(--ui, 1));
+  padding-top: calc(10px * var(--ui, 1));
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+/* Стрелки — прямоугольные кнопки в стиле help-nav__btn */
+.tutorial__arrow {
+  min-width: calc(64px * var(--ui, 1));
+  height: calc(48px * var(--ui, 1));
+  padding: 0 calc(16px * var(--ui, 1)) !important;
+  font-size: calc(22px * var(--ui, 1)) !important;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tutorial__dots {
+  display: flex;
+  gap: calc(6px * var(--ui, 1));
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 auto;
+}
+
+.tutorial__dot {
+  width: calc(10px * var(--ui, 1));
+  height: calc(10px * var(--ui, 1));
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.tutorial__dot--active {
+  background: #4caf50;
+  transform: scale(1.4);
+}
+
+/* ============================================================
+   МОБИЛКА — на весь вьюпорт, крупнее
+   ============================================================ */
+body.is-mobile .tutorial__box {
+  width: calc(100% - calc(16px * var(--ui, 1)));
+  max-width: none;
+  height: calc(100% - calc(16px * var(--ui, 1)));
+  max-height: none;
+  padding: calc(16px * var(--ui, 1)) calc(16px * var(--ui, 1)) calc(12px * var(--ui, 1));
+  gap: calc(10px * var(--ui, 1));
+}
+
+body.is-mobile .tutorial__skip {
+  font-size: calc(18px * var(--ui, 1)) !important;
+  padding: calc(10px * var(--ui, 1)) calc(16px * var(--ui, 1)) !important;
+}
+
+body.is-mobile .tutorial__slide {
+  gap: calc(6px * var(--ui, 1));
+  padding-top: calc(52px * var(--ui, 1));
+}
+
+/* На мобилке картинка может занять ~40% от высоты экрана */
+body.is-mobile .tutorial__img-wrap {
+  height: calc(240px * var(--ui, 1));
+}
+
+body.is-mobile .tutorial__counter {
+  font-size: calc(22px * var(--ui, 1));
+}
+
+body.is-mobile .tutorial__title {
+  font-size: calc(32px * var(--ui, 1));
+}
+
+body.is-mobile .tutorial__body {
+  font-size: calc(20px * var(--ui, 1));
+  line-height: 1.5;
+}
+
+body.is-mobile .tutorial__cta-wrap {
+  height: calc(60px * var(--ui, 1));
+}
+
+body.is-mobile .tutorial__cta {
+  padding: calc(14px * var(--ui, 1)) calc(44px * var(--ui, 1));
+  font-size: calc(22px * var(--ui, 1)) !important;
+}
+
+body.is-mobile .tutorial__arrow {
+  min-width: calc(80px * var(--ui, 1));
+  height: calc(60px * var(--ui, 1));
+  font-size: calc(28px * var(--ui, 1)) !important;
+}
+
+body.is-mobile .tutorial__dot {
+  width: calc(12px * var(--ui, 1));
+  height: calc(12px * var(--ui, 1));
+}

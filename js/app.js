@@ -29,6 +29,7 @@ import { showMessage, showConfirm } from './ui/message_overlay.js';
 import { CoinToss } from './ui/coin_toss.js';
 import { clearCache } from './game/card_cache.js';
 import { t } from './i18n/index.js';
+import { Tutorial } from './ui/tutorial.js';
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
@@ -1022,34 +1023,74 @@ async _startGameFromMenu(mode) {
       const el = document.createElement('div');
       el.className = 'msg-overlay';
       el.style.display = 'flex';
-		el.innerHTML = `
-		  <div class="msg-overlay__box msg-overlay__box--gift">
-			<div class="msg-overlay__title">${t('gift.title')}</div>
-			<div class="gift-joker">
-			  <img src="${ASSETS.jokerFaceSmiling}" alt="">
-			</div>
-			<div class="msg-overlay__body">
-			  ${t('gift.text')}
-			  <div class="gift-hint">${t('gift.hint')}</div>
-			</div>
-			<button class="mm-btn mm-btn--small" data-msg-btn data-close>${t('gift.ok')}</button>
-		  </div>
-		`;
+      el.innerHTML = `
+        <div class="msg-overlay__box msg-overlay__box--gift">
+          <div class="msg-overlay__title">${t('gift.title')}</div>
+          <div class="gift-joker">
+            <img src="${ASSETS.jokerFaceSmiling}" alt="">
+          </div>
+          <div class="msg-overlay__body">
+            ${t('gift.text')}
+            <div class="gift-hint">${t('gift.hint')}</div>
+          </div>
+          <div class="msg-overlay__actions">
+            <button class="mm-btn mm-btn--small" data-action="ok">${t('gift.ok')}</button>
+            <button class="mm-btn mm-btn--small mm-btn--primary" data-action="tutorial">${t('gift.tutorial')}</button>
+          </div>
+        </div>
+      `;
       document.getElementById('scene').appendChild(el);
 
-      // Автофокус на OK — если предыдущее действие было с клавиатуры/ТВ
-      const wasKbd = this.menu && this.menu._lastInputWasKeyboard === true;
-      if (wasKbd) {
-        requestAnimationFrame(() => {
-          const okBtn = el.querySelector('[data-close]');
-          if (okBtn) okBtn.classList.add('kbd-focus');
-        });
+      const btnOk = el.querySelector('[data-action="ok"]');
+      const btnTut = el.querySelector('[data-action="tutorial"]');
+      
+      // Автофокус на ОК (по умолчанию)
+      if (window.__lastInputWasKeyboard) {
+        requestAnimationFrame(() => btnOk.classList.add('kbd-focus'));
       }
 
-      el.querySelector('[data-close]').addEventListener('click', () => {
-        audio.playSfx('tap_up');
+      // Навигация стрелками внутри окна подарка
+      const navHandler = (e) => {
+        if (!el.parentNode) return; // Если окно закрыто
+        if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Enter'].includes(e.key)) {
+          e.preventDefault();
+          e.stopImmediatePropagation(); // Блокируем глобальные обработчики
+          
+          if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+            audio.playSfx('tap');
+            if (btnOk.classList.contains('kbd-focus')) {
+              btnOk.classList.remove('kbd-focus');
+              btnTut.classList.add('kbd-focus');
+            } else {
+              btnTut.classList.remove('kbd-focus');
+              btnOk.classList.add('kbd-focus');
+            }
+          }
+          if (e.key === 'Enter') {
+            const active = el.querySelector('.kbd-focus');
+            if (active) active.click();
+          }
+        }
+      };
+      window.addEventListener('keydown', navHandler);
+
+      const cleanup = () => {
+        window.removeEventListener('keydown', navHandler);
         el.remove();
-        resolve();
+      };
+
+      btnOk.addEventListener('click', () => {
+        audio.playSfx('tap_up');
+        cleanup();
+        resolve(false);
+      });
+
+      btnTut.addEventListener('click', async () => {
+        audio.playSfx('tap');
+        cleanup();
+        const tut = new Tutorial();
+        await tut.open();
+        resolve(true);
       });
     });
   }
