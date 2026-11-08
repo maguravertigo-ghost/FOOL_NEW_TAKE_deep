@@ -99,6 +99,9 @@ shirts: [
   `${BASE}/card_shirt/default/shirt_M2.webp`,
   `${BASE}/card_shirt/default/shirt_M3.webp`,
   `${BASE}/card_shirt/default/shirt_M4.webp`,
+  
+  `${BASE}/card_shirt/default/classic_1.webp`,
+  `${BASE}/card_shirt/default/classic_2.webp`,
 ],
   designs: [
     `${BASE}/card_body/body/default/card_body.svg`,

@@ -278,7 +278,11 @@ _onTrackEnded(isFirst) {
       }
       this._sfxPool.clear();
     }
-    // Web Audio останавливать не нужно, он проигрывает короткие буферы сам
+    // Замораживаем ВСЁ, включая длинные Web Audio буферы (card_shuffle и т.п.)
+    // resumeAllSfx() разморозит на той же позиции.
+    if (this._audioCtx && this._audioCtx.state === 'running') {
+      this._audioCtx.suspend().catch(() => {});
+    }
   }
 
 pauseAllSfx() {
