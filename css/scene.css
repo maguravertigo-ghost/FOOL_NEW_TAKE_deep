@@ -996,7 +996,53 @@ body.is-mobile .mm-style-points__value {
   max-height: calc(220px * var(--ui));
   object-fit: contain;
 }
+.mm-credits {
+  margin-top: calc(16px * var(--ui));
+  padding: calc(12px * var(--ui)) calc(14px * var(--ui));
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: calc(8px * var(--ui));
+  font-size: calc(13px * var(--ui));
+  color: #aaa;
+  line-height: 1.6;
+  text-align: left;
+}
 
+.mm-credits__title {
+  font-size: calc(12px * var(--ui));
+  font-weight: 700;
+  letter-spacing: calc(2px * var(--ui));
+  color: #9f9;
+  margin-bottom: calc(8px * var(--ui));
+  text-transform: uppercase;
+}
+
+.mm-credits__row {
+  margin-bottom: calc(6px * var(--ui));
+}
+
+.mm-credits__row b {
+  color: #ddd;
+  font-weight: 600;
+  margin-right: calc(4px * var(--ui));
+}
+
+.mm-credits__row a {
+  color: #4fc3f7;
+  text-decoration: underline;
+  transition: color 0.15s ease;
+}
+.mm-credits__row a:hover {
+  color: #81d4fa;
+}
+
+body.is-mobile .mm-credits {
+  font-size: max(12px, calc(16px * var(--ui)));
+  padding: calc(10px * var(--ui));
+}
+body.is-mobile .mm-credits__title {
+  font-size: max(11px, calc(14px * var(--ui)));
+}
 /* ---------- Настройки (строки) ---------- */
 .mm-rows {
   display: flex;

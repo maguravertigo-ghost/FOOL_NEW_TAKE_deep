@@ -301,4 +301,8 @@ export const EN = {
   'feedback.try_normal':  'Try NORMAL →',
   'feedback.try_expert':  'Try EXPERT →',
   'feedback.try_easy':    'Try EASY →',
+
+'credits.title':     'CREDITS',
+'credits.cardbacks': 'Card backs',
+'credits.sfx':       'Sound effects',
 };

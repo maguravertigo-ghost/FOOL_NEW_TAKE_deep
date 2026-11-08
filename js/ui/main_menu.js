@@ -921,6 +921,20 @@ _updateQuestBadge() {
 		  <p>${t('about.text1')}</p>
 		  <p>${t('about.text2')}</p>
 		  <p>${t('about.text3')}</p>
+
+		  <div class="mm-credits">
+		    <div class="mm-credits__title">${t('credits.title')}</div>
+		    <div class="mm-credits__row">
+		      <b>${t('credits.cardbacks')}:</b>
+		      <a href="https://www.magnific.com" target="_blank" rel="noopener">designed by Freepik - Magnific.com</a>
+		    </div>
+		    <div class="mm-credits__row">
+		      <b>${t('credits.sfx')}:</b>
+		      Freesound.org — AleXZavesa, Dan_AudioFile, EricsSoundschmiede,
+		      HogantheLogan, Krnfa, Sidequesting, SoundFridge, Cmorris035,
+		      Ienba (CC0 / CC BY 4.0)
+		    </div>
+		  </div>
 		</div>
 		<div class="mm-about-joker">
 		  <img src="${ASSETS.jokerLies}" alt="">

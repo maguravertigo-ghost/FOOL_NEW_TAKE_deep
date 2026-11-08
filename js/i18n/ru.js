@@ -311,4 +311,8 @@ export const RU = {
   'feedback.try_normal':  'Попробуй НОРМУ →',
   'feedback.try_expert':  'Попробуй ЭКСПЕРТА →',
   'feedback.try_easy':    'Попробуй ЛЕГКО →',
+
+'credits.title':     'БЛАГОДАРНОСТИ',
+'credits.cardbacks': 'Рубашки карт',
+'credits.sfx':       'Звуковые эффекты',
 };

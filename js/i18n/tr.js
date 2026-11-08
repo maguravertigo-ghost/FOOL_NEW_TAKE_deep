@@ -309,4 +309,8 @@ export const TR = {
   'feedback.try_normal':  'NORMAL dene →',
   'feedback.try_expert':  'UZMAN dene →',
   'feedback.try_easy':    'KOLAY dene →',
+
+'credits.title':     'TEŞEKKÜRLER',
+'credits.cardbacks': 'Kart sırtları',
+'credits.sfx':       'Ses efektleri',
 };
